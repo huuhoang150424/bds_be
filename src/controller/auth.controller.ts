@@ -14,7 +14,7 @@ class AuthController {
   //[login]
   static async login(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
-
+			
 			return res.status(200).json({ message: 'Đăng nhập thành công'});
     } catch (error) {
       next(error);
@@ -25,7 +25,7 @@ class AuthController {
   static async register(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const { name, email, password, confirmPassword } = req.body;
-
+			
 
       return res.status(201).json({ message: 'Đăng ký thành công' });
     } catch (error) {
