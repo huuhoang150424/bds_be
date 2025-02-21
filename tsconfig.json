@@ -58,6 +58,12 @@
 			],
 			"@service": [
 				"service/index"
+			],
+			"@api-doc/*": [
+				"api-doc/*"
+			],
+			"@api-doc": [
+				"api-doc/index"
 			]
 		}
 	}

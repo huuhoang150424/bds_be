@@ -1,4 +1,4 @@
-import redisClient from '../config/redis';
+import redisClient from '@config/redis';
 
 class CacheRepository {
   async set(key: string, value: string, ttl?: number) {
