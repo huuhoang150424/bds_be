@@ -4,9 +4,9 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import bcrypt from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
-import { User } from '../models';
-import { generaAccessToken, generaRefreshToken } from '../helper/genera-token';
-import { NotFoundError, UnauthorizedError, TokenError, transporter, CacheRepository } from '../helper';
+import { User } from '@models';
+import { generaAccessToken, generaRefreshToken } from '@helper/genera-token';
+import { NotFoundError, UnauthorizedError, TokenError, transporter, CacheRepository } from '@helper';
 
 dotenv.config({ path: '.env.local' });
 

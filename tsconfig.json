@@ -1,12 +1,64 @@
 {
-  "compilerOptions": {
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "target": "ES2020",
-    "module": "commonjs",
-    "outDir": "./dist",
-    "rootDir": "./src",
-    "strict": true,
-    "esModuleInterop": true
-  }
+	"compilerOptions": {
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"target": "ES2020",
+		"module": "commonjs",
+		"outDir": "./dist",
+		"rootDir": "./src",
+		"strict": true,
+		"esModuleInterop": true,
+		"moduleResolution": "node",
+		"baseUrl": "./src",
+		"paths": {
+			"@models/*": [
+				"models/*"
+			],
+			"@models": [
+				"models/index"
+			],
+			"@controller/*": [
+				"controller/*"
+			],
+			"@controller": [
+				"controller/index"
+			],
+			"@middleware/*": [
+				"middleware/*"
+			],
+			"@middleware": [
+				"middleware/index"
+			],
+			"@router/*": [
+				"router/*"
+			],
+			"@router": [
+				"router/index"
+			],
+			"@helper/*": [
+				"helper/*"
+			],
+			"@helper": [
+				"helper/index"
+			],
+			"@config/*": [
+				"config/*"
+			],
+			"@config": [
+				"config/index"
+			],
+			"@validation/*": [
+				"validation/*"
+			],
+			"@validation": [
+				"validation/index"
+			],
+			"@service/*": [
+				"service/*"
+			],
+			"@service": [
+				"service/index"
+			]
+		}
+	}
 }

@@ -2,9 +2,9 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import body_parser from 'body-parser';
 import morgan from 'morgan';
-import { connectDatabase } from './models/connect';
-import { errorMiddleware,apiLimiter } from './middleware';
-import route from './router';
+import { connectDatabase } from '@models/connect';
+import { errorMiddleware,apiLimiter } from '@middleware';
+import route from '@router';
 import cookieParser from 'cookie-parser'
 
 const app = express();

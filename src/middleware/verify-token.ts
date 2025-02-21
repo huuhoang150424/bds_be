@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { TokenError } from '../helper';
+import { TokenError } from '@helper';
 dotenv.config({ path: '.env.local' });
 
 

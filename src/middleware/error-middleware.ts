@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ValidationError, NotFoundError, UnauthorizedError, TokenError } from '../helper';
+import { ValidationError, NotFoundError, UnauthorizedError, TokenError } from '@helper';
 
 const errorMiddleware = (
   err: any,

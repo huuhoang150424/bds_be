@@ -18,7 +18,7 @@ import {
 	Wishlist,
 	UserPricing,
 	Log,
-	Comment} from '../models';
+	Comment} from '@models/index';
 
 dotenv.config({ path: '.env.local' });
 
