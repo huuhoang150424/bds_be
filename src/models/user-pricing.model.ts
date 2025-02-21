@@ -19,16 +19,16 @@ export default class UserPricing extends Model {
 
   @ForeignKey(() => User)
   @AllowNull(false)
-  @Column(DataType.INTEGER)
-  user_id!: number;
+  @Column(DataType.UUID)
+  user_id!: string;
 
   @BelongsTo(() => User)
   user!: User;
 
   @ForeignKey(() => Pricing)
   @AllowNull(false)
-  @Column(DataType.INTEGER)
-  pricing_id!: number;
+  @Column(DataType.UUID)
+  pricing_id!: string;
 
   @BelongsTo(() => Pricing)
   pricing!: Pricing;
