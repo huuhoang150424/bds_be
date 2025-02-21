@@ -5,21 +5,18 @@ import {
   DataType,
   PrimaryKey,
   Default,
-  AllowNull,
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import User  from './user.model';
+import User from './user.model';
+import Post from './post.model';
 
-@Table({
-  tableName: 'search_history',
-  timestamps: false,
-})
-export default class SearchHistory extends Model {
+@Table({ tableName: 'wishlists', timestamps: true })
+export default class Wishlist extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  searchId!: string;
+  wishlistId!: string;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
@@ -28,12 +25,11 @@ export default class SearchHistory extends Model {
   @BelongsTo(() => User)
   user!: User;
 
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  searchQuery!: string;
+  @ForeignKey(() => Post)
+  @Column(DataType.UUID)
+  postId!: string;
 
-  @AllowNull(false)
-  @Column(DataType.DATE)
-  searchDate!: Date;
+  @BelongsTo(() => Post)
+  post!: Post;
 }
 //done

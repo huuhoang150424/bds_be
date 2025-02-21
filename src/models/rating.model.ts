@@ -9,13 +9,14 @@ import {
   BelongsTo,
 } from 'sequelize-typescript';
 import User from './user.model';
+import Post from './post.model';
 
-@Table({ tableName: 'notifications', timestamps: true })
-export default class Notification extends Model {
+@Table({ tableName: 'ratings', timestamps: true })
+export default class Rating extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  notificationId!: string;
+  ratingId!: string;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
@@ -24,10 +25,14 @@ export default class Notification extends Model {
   @BelongsTo(() => User)
   user!: User;
 
-  @Column(DataType.STRING)
-  message!: string;
+  @ForeignKey(() => Post)
+  @Column(DataType.UUID)
+  postId!: string;
 
-  @Column(DataType.BOOLEAN)
-  isRead!: boolean;
+  @BelongsTo(() => Post)
+  post!: Post;
+
+  @Column(DataType.INTEGER)
+  rating!: number;
 }
 //done

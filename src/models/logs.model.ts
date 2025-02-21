@@ -9,7 +9,7 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import  User  from './user.model';
+import User from './user.model';
 
 @Table({
   tableName: 'logs',
@@ -21,19 +21,25 @@ export default class Log extends Model {
   @Column(DataType.UUID)
   logId!: string;
 
+  @AllowNull(false)
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   userId!: string;
 
-  @BelongsTo(() => User)
-  user!: User;
-
   @AllowNull(false)
   @Column(DataType.STRING)
-  action!: string;
+  action!: string; 
+
+  @AllowNull(true)
+  @Column(DataType.TEXT)
+  details!: string; 
 
   @AllowNull(false)
-  @Column(DataType.TEXT)
-  description!: string;
+  @Default(DataType.NOW)
+  @Column(DataType.DATE)
+  createdAt!: Date;
+
+  @BelongsTo(() => User)
+  user!: User;
 }
 //done

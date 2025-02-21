@@ -21,28 +21,20 @@ const verifyToken = (req: Request, res: Response, next: NextFunction) => {
 };
 
 const verifyAdmin=(req: Request, res: Response, next: NextFunction)=>{
-	verifyToken(req, res,()=>{
-		if ((req as any).user  &&  (req as any).user.role==="Admin") {
-			next();
-		} else {
-			throw new TokenError('Bạn không có quyền', 403);
-		}
-	})
+	verifyToken(req, res,()=>{})
 }
 
 const verifyUser=(req: Request, res: Response, next: NextFunction)=>{
-	verifyToken(req, res,()=>{
-		if ((req as any).user  &&  (req as any).user.role==="User") {
-			next();
-		} else {
-			throw new TokenError('Bạn không có quyền ', 403);
-		}
-	})
+	verifyToken(req, res,()=>{})
 }
 
+const verifyAgent=(req: Request, res: Response, next: NextFunction)=>{
+	verifyToken(req, res,()=>{})
+}
 
 export {
 	verifyToken,
 	verifyAdmin,
-	verifyUser
+	verifyUser,
+	verifyAgent
 }

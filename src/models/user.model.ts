@@ -1,27 +1,15 @@
-import {
-  Table,
-  Column,
-  Model,
-  DataType,
-  PrimaryKey,
-  Default,
-  AllowNull,
-  HasMany,
-  ForeignKey,
-  BelongsTo,
-} from 'sequelize-typescript';
-import Booking  from './booking.model';
-import Review  from './review.model';
-import SearchHistory  from './search-history.model';
-import Log  from './logs.model';
-import Notification  from './notification.model';
-import  UserRole from './user-role.model';
+import { Table, Column, Model, DataType, PrimaryKey, Default, AllowNull, HasMany } from 'sequelize-typescript';
+import Post from './post.model';
+import Transaction from './transactions.model';
+import Comment from './comment.model';
+import Rating from './rating.model';
+import Wishlist from './wish-list.model';
+import Report from './reports.model';
+import Notification from './notification.model';
+import News from './new.model';
+import { Roles } from './enums';
 
-
-@Table({
-  tableName: 'users',
-  timestamps: true,
-})
+@Table({ tableName: 'users', timestamps: true })
 export default class User extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
@@ -30,13 +18,16 @@ export default class User extends Model {
 
   @AllowNull(false)
   @Column(DataType.STRING)
-  name!: string;
+  fullname!: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
   email!: string;
 
-  @AllowNull(true)
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  emailVerified!: boolean;
+
   @Column(DataType.STRING)
   phone!: string;
 
@@ -44,21 +35,42 @@ export default class User extends Model {
   @Column(DataType.STRING)
   password!: string;
 
-  @HasMany(() => Booking)
-  bookings!: Booking[];
+  @Column(DataType.STRING)
+  avatar!: string;
 
-  @HasMany(() => Review)
-  reviews!: Review[];
+  @AllowNull(false)
+  @Default(0)
+  @Column(DataType.DOUBLE)
+  balance!: number;
 
-	@HasMany(() => UserRole)
-  user_roles!: UserRole[];
+  @AllowNull(false)
+  @Column({ type: DataType.ENUM(...Object.values(Roles)) })
+  Roles!: number;
 
-  @HasMany(() => Log)
-  logs!: Log[];
+  @Column({ type: DataType.INTEGER, defaultValue: 0 })
+  score!: number;
 
-	@HasMany(() => Notification)
+  @HasMany(() => Post)
+  posts!: Post[];
+
+  @HasMany(() => Transaction)
+  transactions!: Transaction[];
+
+  @HasMany(() => Comment)
+  comments!: Comment[];
+
+  @HasMany(() => Rating)
+  ratings!: Rating[];
+
+  @HasMany(() => Wishlist)
+  wishlist!: Wishlist[];
+
+  @HasMany(() => News)
+  new!: News[];
+
+  @HasMany(() => Report)
+  reports!: Report[];
+
+  @HasMany(() => Notification)
   notifications!: Notification[];
-
-  @HasMany(() => SearchHistory)
-  searchHistories!: SearchHistory[];
 }

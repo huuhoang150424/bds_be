@@ -8,18 +8,15 @@ import {
   ForeignKey,
   BelongsTo,
 } from 'sequelize-typescript';
-import  User  from './user.model';
-import  Role  from './role.model';
+import User from './user.model';
+import Post from './post.model';
 
-@Table({
-  tableName: 'user_roles',
-  timestamps: false,
-})
-export default class UserRole extends Model {
+@Table({ tableName: 'comments', timestamps: true })
+export default class Comment extends Model {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column(DataType.UUID)
-  userRoleId!: string;
+  commentId!: string;
 
   @ForeignKey(() => User)
   @Column(DataType.UUID)
@@ -28,11 +25,14 @@ export default class UserRole extends Model {
   @BelongsTo(() => User)
   user!: User;
 
-  @ForeignKey(() => Role)
+  @ForeignKey(() => Post)
   @Column(DataType.UUID)
-  roleId!: string;
+  postId!: string;
 
-  @BelongsTo(() => Role)
-  role!: Role;
+  @BelongsTo(() => Post)
+  post!: Post;
+
+  @Column(DataType.TEXT)
+  content!: string;
 }
 //done
