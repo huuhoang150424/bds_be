@@ -13,6 +13,16 @@ dotenv.config({ path: '.env.local' });
 
 class AuthService {
   static async login(email: string, password: string) {
+		const loginAttemptKey=`login_attempt:${email}`;
+		const lockKey=`login_lock:${email}`;
+
+		const isLocked=await CacheRepository.get(lockKey);
+		if (isLocked) {
+			throw new BadRequestError('Bạn đã nhập sai quá 10 lần, vui lòng thử lại sau 5 phút')
+		}
+		const attempt=await CacheRepository.get(loginAttemptKey);
+		const failedAttempt = attempt ? parseInt(attempt) : 0;
+
     const user = await User.findOne({ where: { email } });
     if (!user) {
       throw new NotFoundError('Người dùng không tồn tại', 404);
@@ -20,12 +30,18 @@ class AuthService {
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+			await CacheRepository.set(loginAttemptKey,failedAttempt+1,300);
+			if (failedAttempt+1>=10) {
+				await CacheRepository.set(lockKey,'locked',300);
+			}
       throw new UnauthorizedError('Mật khẩu không chính xác', 403);
     }
+		await CacheRepository.delete(loginAttemptKey);
 
-    const access_token = await generaAccessToken(user);
+		const sessionId=uuidv4();
+		await CacheRepository.set(`session:${sessionId}`,user.userId,86400);
+    const access_token = await generaAccessToken(user,sessionId);
     const refresh_token = await generaRefreshToken(user);
-
     return { access_token, refresh_token, user };
   }
 

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError, NotFoundError, UnauthorizedError, TokenError, BadRequestError, ForbiddenError } from '@helper';
-
+import {ApiResponse} from "@helper";
 const errorMiddleware = (
   err: any,
   req: Request,
@@ -28,7 +28,7 @@ const errorMiddleware = (
     status = 500;
   }
 
-  return res.status(status).json({ message, status });
+  return res.status(status).json(ApiResponse.error(message, status));
 };
 
 export default errorMiddleware;

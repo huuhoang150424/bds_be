@@ -1,17 +1,21 @@
 import redisClient from '@config/redis';
 
 class CacheRepository {
-  async set(key: string, value: string, ttl?: number) {
+	async set(key: string, value: any, ttl?: number) {
 		if (!redisClient.isReady) {
-      console.error('❌ Redis chưa kết nối!');
-      return;
-    }
-    if (ttl) {
-      await redisClient.set(key, value, { EX: ttl });
-    } else {
-      await redisClient.set(key, value);
-    }
-  }
+			console.error('❌ Redis chưa kết nối!');
+			return;
+		}
+		
+		const stringValue = JSON.stringify(value); 
+	
+		if (ttl) {
+			await redisClient.set(key, stringValue, { EX: ttl });
+		} else {
+			await redisClient.set(key, stringValue);
+		}
+	}
+	
 
   async get(key: string) {
 		if (!redisClient.isReady) {

@@ -6,6 +6,7 @@ import TokenError from "./error/token-error";
 import BadRequestError from "./error/bad-request-error";
 import ForbiddenError from "./error/forbidden-error";
 import CacheRepository from "./cache.repository";
+import ApiResponse from "./response";
 
 export {
 	BadRequestError,
@@ -15,5 +16,6 @@ export {
   UnauthorizedError,
   TokenError,
 	transporter,
-	CacheRepository
+	CacheRepository,
+	ApiResponse
 }

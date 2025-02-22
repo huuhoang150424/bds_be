@@ -2,8 +2,9 @@
 
 import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
+import { CacheRepository } from '@helper';
 import {AuthService} from "@service";
-
+import {ApiResponse} from "@helper";
 dotenv.config({ path: '.env.local' });
 
 class AuthController {
@@ -21,19 +22,23 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-			return res.status(200).json({
-				message: 'Đăng nhập thành công',
-				access_token,
-				user: {
-					userId: user.userId,
-					fullname: user.fullname,
-					email: user.email,
-					phone: user.phone,
-					avatar: user.avatar,
-					balance: user.balance,
-					score: user.score
-				}
-			});
+      return res.status(200).json(
+        ApiResponse.success(
+          {
+            access_token,
+            user: {
+              userId: user.userId,
+              fullname: user.fullname,
+              email: user.email,
+              phone: user.phone,
+              avatar: user.avatar,
+              balance: user.balance,
+              score: user.score,
+            },
+          },
+          "Đăng nhập thành công"
+        )
+      );
 			
     } catch (error) {
       next(error);
@@ -45,7 +50,7 @@ class AuthController {
     try {
       const { fullname, email, password, confirmPassword } = req.body;
       await AuthService.register(fullname, email, password, confirmPassword);
-      return res.status(201).json({ message: 'Đăng ký thành công' });
+      return res.status(201).json(ApiResponse.success(null, "Đăng ký thành công"));
     } catch (error) {
       next(error);
     }
@@ -54,8 +59,10 @@ class AuthController {
   //[logout]
   static async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
+			const user=(req as any).user;
+			await CacheRepository.delete(`session:${user.sessionId}`);
       res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'strict' });
-      return res.status(200).json({ message: 'Đăng xuất thành công' });
+      return res.status(200).json(ApiResponse.success(null, "Đăng xuất thành công"));
     } catch (error) {
       next(error);
     }
@@ -65,7 +72,8 @@ class AuthController {
   static async refreshToken(req: Request, res: Response, next: NextFunction) {
     try {
       const refresh_token = req.cookies.refreshToken;
-      return res.status(200).json(await AuthService.refreshToken(refresh_token));
+			const data = await AuthService.refreshToken(refresh_token);
+      return res.status(200).json(ApiResponse.success(data, "Làm mới token thành công"));
     } catch (error) {
       next(error);
     }
@@ -75,7 +83,8 @@ class AuthController {
   static async forgotPassword(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      return res.status(200).json(await AuthService.forgotPassword(email));
+      const data = await AuthService.forgotPassword(email);
+      return res.status(200).json(ApiResponse.success(data, "Gửi email đặt lại mật khẩu thành công"));
     } catch (error) {
       next(error);
     }
@@ -85,7 +94,8 @@ class AuthController {
   static async verifyCode(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, otpCode } = req.body;
-      return res.status(200).json(await AuthService.verifyCode(email, otpCode));
+      const data = await AuthService.verifyCode(email, otpCode);
+      return res.status(200).json(ApiResponse.success(data, "Mã OTP hợp lệ"));
     } catch (error) {
       next(error);
     }
@@ -96,7 +106,8 @@ class AuthController {
     try {
       const user = (req as any).user;
       const { oldPassword, newPassword, confirmPassword } = req.body;
-      return res.status(200).json(await AuthService.changePassword(user.userId, oldPassword, newPassword, confirmPassword));
+      const data = await AuthService.changePassword(user.userId, oldPassword, newPassword, confirmPassword);
+      return res.status(200).json(ApiResponse.success(data, "Đổi mật khẩu thành công"));
     } catch (error) {
       next(error);
     }
@@ -106,8 +117,8 @@ class AuthController {
   static async verifyAccount(req: Request, res: Response, next: NextFunction) {
     try {
       const { email } = req.body;
-      const response = await AuthService.verifyAccount(email);
-      res.status(200).json(response);
+      const data = await AuthService.verifyAccount(email);
+      return res.status(200).json(ApiResponse.success(data, "Tài khoản đã được xác minh"));
     } catch (error) {
       next(error);
     }
@@ -116,8 +127,8 @@ class AuthController {
   static async verifyEmail(req: Request, res: Response, next: NextFunction) {
     try {
       const { token, email } = req.query;
-      const response = await AuthService.verifyEmail(token as string, email as string);
-      res.status(200).json(response);
+      const data = await AuthService.verifyEmail(token as string, email as string);
+      return res.status(200).json(ApiResponse.success(data, "Xác minh email thành công"));
     } catch (error) {
       next(error);
     }

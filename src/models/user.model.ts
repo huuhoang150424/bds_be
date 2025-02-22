@@ -28,6 +28,10 @@ export default class User extends Model {
   @Column(DataType.BOOLEAN)
   emailVerified!: boolean;
 
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  isLock!: boolean;
+
   @Column(DataType.STRING)
   phone!: string;
 

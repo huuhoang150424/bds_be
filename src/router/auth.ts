@@ -7,7 +7,7 @@ import { validatorRegister ,validatorLogin} from "@validation";
 
 Router.post("/login",validatorLogin, AuthController.login as any);
 Router.post("/register",validatorRegister, AuthController.register as any);
-Router.post("/logout", AuthController.logout as any);
+Router.post("/logout", verifyUser,AuthController.logout as any);
 Router.post("/refresh-token", AuthController.refreshToken as any);
 Router.post("/forgot-password", AuthController.forgotPassword as any);
 Router.post("/verify-code", AuthController.verifyCode as any);

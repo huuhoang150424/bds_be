@@ -4,7 +4,7 @@ import TokenError from './error/token-error';
 
 dotenv.config({ path: '.env.local' });
 
-const generaAccessToken = async (user:any) => {
+const generaAccessToken = async (user:any,sessionId:string) => {
   const tokenKey=process.env.ACCESS_TOKEN_KEY;
   if (!tokenKey) {
     throw new TokenError('lỗi ',404);
@@ -12,7 +12,8 @@ const generaAccessToken = async (user:any) => {
   return jwt.sign(
     {
       userId: user.userId,
-			role: user.role
+			role: user.roles,
+			sessionId: sessionId
     },
     tokenKey,
     { expiresIn: '1d' },
