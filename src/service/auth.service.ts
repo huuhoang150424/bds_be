@@ -4,7 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '@models';
 import { generaAccessToken, generaRefreshToken } from '@helper/genera-token';
-import { NotFoundError, UnauthorizedError, transporter, CacheRepository } from '@helper';
+import { NotFoundError, UnauthorizedError, transporter, CacheRepository, TokenError,BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import dotenv from 'dotenv';
 
@@ -119,7 +119,10 @@ class AuthService {
       throw new NotFoundError('Người dùng không tồn tại', 404);
     }
     const verificationToken = uuidv4();
-
+		const existingToken = await CacheRepository.get(`verify:${email}`);
+    if (existingToken) {
+      throw new BadRequestError('Email đã có một yêu cầu xác thực đang chờ xử lý.');
+    }
     await CacheRepository.set(`verify:${email}`, verificationToken, 900);
 		const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}&email=${email}`;
 
@@ -142,14 +145,14 @@ class AuthService {
     const storedToken = await CacheRepository.get(`verify:${email}`);
 
     if (!storedToken || storedToken !== token) {
-      throw new Error('Token không hợp lệ hoặc đã hết hạn');
+      throw new TokenError('Token không hợp lệ hoặc đã hết hạn',400);
     }
 
     await CacheRepository.delete(`verify:${email}`);
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      throw new Error('Người dùng không tồn tại');
+      throw new NotFoundError('Người dùng không tồn tại',404);
     }
 
     user.emailVerified = true;

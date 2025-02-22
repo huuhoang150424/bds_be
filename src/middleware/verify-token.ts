@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import { TokenError } from '@helper';
+import { TokenError,ForbiddenError } from '@helper';
 dotenv.config({ path: '.env.local' });
 
 
@@ -25,7 +25,7 @@ const verifyAdmin=(req: Request, res: Response, next: NextFunction)=>{
 		if ((req as any).user  &&  (req as any).user.role==="Admin") {
 			next();
 		} else {
-			throw new TokenError('Bạn không có quyền', 403);
+			throw new ForbiddenError('Bạn không có quyền');
 		}
 	})
 }
@@ -35,7 +35,7 @@ const verifyUser=(req: Request, res: Response, next: NextFunction)=>{
 		if ((req as any).user  &&  (req as any).user.role==="User") {
 			next();
 		} else {
-			throw new TokenError('Bạn không có quyền ', 403);
+			throw new ForbiddenError('Bạn không có quyền ');
 		}
 	})
 }
@@ -45,7 +45,7 @@ const verifyAgent=(req: Request, res: Response, next: NextFunction)=>{
 		if ((req as any).user  &&  (req as any).user.role==="Agent") {
 			next();
 		} else {
-			throw new TokenError('Bạn không có quyền ', 403);
+			throw new ForbiddenError('Bạn không có quyền ');
 		}
 	})
 }
