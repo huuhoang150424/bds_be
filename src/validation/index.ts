@@ -1,4 +1,4 @@
-import {validatorLogin,validatorRegister} from "./auth.validator";
+import {validatorLogin,validatorRegister} from "./auth.validation";
 
 
 export {

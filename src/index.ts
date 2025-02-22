@@ -2,10 +2,13 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import body_parser from 'body-parser';
 import morgan from 'morgan';
-import { connectDatabase } from './models/connect';
-import { errorMiddleware,apiLimiter } from './middleware';
-import route from './router';
+import { connectDatabase } from '@models/connect';
+import { errorMiddleware,apiLimiter } from '@middleware';
+import route from '@router';
 import cookieParser from 'cookie-parser'
+import { swaggerDoc } from 'api-doc/swagger';
+import swaggerUi from "swagger-ui-express";
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -28,7 +31,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 
-
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 app.use(apiLimiter);
 route(app);
 

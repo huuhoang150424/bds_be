@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { ValidationError, NotFoundError, UnauthorizedError, TokenError } from '../helper';
+import { ValidationError, NotFoundError, UnauthorizedError, TokenError, BadRequestError, ForbiddenError } from '@helper';
 
 const errorMiddleware = (
   err: any,
@@ -13,13 +13,13 @@ const errorMiddleware = (
   if (err instanceof NotFoundError) {
     message = err.message;
     status = err.status || 404;
-  } else if (err instanceof UnauthorizedError) {
+  } else if (err instanceof UnauthorizedError || err instanceof TokenError) {
     message = err.message;
     status = err.status || 401;
-  } else if (err instanceof TokenError) {
+  } else if (err instanceof ForbiddenError) {
     message = err.message;
-    status = err.status || 401;
-  } else if (err instanceof ValidationError) {
+    status = err.status || 403;
+  } else if (err instanceof ValidationError || err instanceof BadRequestError) {
     message = err.message;
     status = err.status || 400;
   } else {

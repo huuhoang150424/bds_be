@@ -35,6 +35,7 @@ export default class User extends Model {
   @Column(DataType.STRING)
   password!: string;
 
+	@Default("https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg")
   @Column(DataType.STRING)
   avatar!: string;
 
@@ -44,8 +45,9 @@ export default class User extends Model {
   balance!: number;
 
   @AllowNull(false)
+	@Default(Roles.User)
   @Column({ type: DataType.ENUM(...Object.values(Roles)) })
-  Roles!: number;
+  roles!: string;
 
   @Column({ type: DataType.INTEGER, defaultValue: 0 })
   score!: number;
