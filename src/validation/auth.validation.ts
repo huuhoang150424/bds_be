@@ -30,12 +30,12 @@ const validatorLogin = [
 ];
 
 const validatorRegister = [
-  check('fullName')
+  check('fullname')
     .trim()
     .notEmpty()
-    .withMessage('Username is required')
+    .withMessage('fullname is required')
     .isLength({ min: 6, max: 15 })
-    .withMessage('Username must be between 6 and 15 characters'),
+    .withMessage('fullname must be between 6 and 15 characters'),
 
   check('email')
     .trim()

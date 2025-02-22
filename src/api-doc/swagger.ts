@@ -1,4 +1,4 @@
-import swaggerJSDoc from "swagger-jsdoc"
+import swaggerJSDoc from "swagger-jsdoc";
 import path from "path";
 
 

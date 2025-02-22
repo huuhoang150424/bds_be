@@ -5,6 +5,11 @@ import jwt from 'jsonwebtoken';
 import { User } from '@models';
 import { generaAccessToken, generaRefreshToken } from '@helper/genera-token';
 import { NotFoundError, UnauthorizedError, transporter, CacheRepository } from '@helper';
+import { v4 as uuidv4 } from 'uuid';
+import dotenv from 'dotenv';
+
+dotenv.config({ path: '.env.local' });
+
 
 class AuthService {
   static async login(email: string, password: string) {
@@ -105,6 +110,52 @@ class AuthService {
     await user.save();
 
     return { message: 'Đổi mật khẩu thành công' };
+  }
+
+	
+  static async verifyAccount( email: string) {
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundError('Người dùng không tồn tại', 404);
+    }
+    const verificationToken = uuidv4();
+
+    await CacheRepository.set(`verify:${email}`, verificationToken, 900);
+		const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}&email=${email}`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Xác nhận tài khoản',
+      html: `
+        <h2>Xác nhận tài khoản của bạn</h2>
+        <p>Nhấn vào liên kết bên dưới để xác thực email:</p>
+        <a href="${verificationLink}">Xác nhận email</a>
+        <p>Liên kết này sẽ hết hạn sau 15 phút.</p>
+      `,
+    });
+
+    return { message: 'Email xác thực đã được gửi' };
+  }
+
+	static async verifyEmail(token: string, email: string) {
+    const storedToken = await CacheRepository.get(`verify:${email}`);
+
+    if (!storedToken || storedToken !== token) {
+      throw new Error('Token không hợp lệ hoặc đã hết hạn');
+    }
+
+    await CacheRepository.delete(`verify:${email}`);
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new Error('Người dùng không tồn tại');
+    }
+
+    user.emailVerified = true;
+    await user.save();
+
+    return { message: 'Email đã được xác thực thành công' };
   }
 }
 

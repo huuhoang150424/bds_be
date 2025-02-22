@@ -9,7 +9,6 @@ const generaAccessToken = async (user:any) => {
   if (!tokenKey) {
     throw new TokenError('lỗi ',404);
   }
-	console.log(user)
   return jwt.sign(
     {
       userId: user.userId,

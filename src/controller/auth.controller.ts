@@ -1,12 +1,7 @@
 'use-strict';
 
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
-import bcrypt from 'bcrypt';
 import { Request, Response, NextFunction } from 'express';
-import { User } from '@models';
-import { generaAccessToken, generaRefreshToken } from '@helper/genera-token';
-import { NotFoundError, UnauthorizedError, TokenError, transporter, CacheRepository } from '@helper';
 import {AuthService} from "@service";
 
 dotenv.config({ path: '.env.local' });
@@ -106,6 +101,28 @@ class AuthController {
       next(error);
     }
   }
+
+	//[verify account]
+  static async verifyAccount(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { email } = req.body;
+      const response = await AuthService.verifyAccount(email);
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+	//[verify email]
+  static async verifyEmail(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { token, email } = req.query;
+      const response = await AuthService.verifyEmail(token as string, email as string);
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
 
 export default AuthController;

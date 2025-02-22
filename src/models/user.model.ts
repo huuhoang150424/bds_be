@@ -44,6 +44,7 @@ export default class User extends Model {
   balance!: number;
 
   @AllowNull(false)
+	@Default(Roles.User)
   @Column({ type: DataType.ENUM(...Object.values(Roles)) })
   Roles!: number;
 
