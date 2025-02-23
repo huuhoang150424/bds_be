@@ -32,9 +32,10 @@ class UserController {
   //[getUserById]
   static async getUserById(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
+			const user=(req as any).user;
       const userId = req.params.userId;
-      const user = await UserService.getUserById(userId);
-      return res.status(200).json(ApiResponse.success(user,"Thành công"));
+      const findUser = await UserService.getUserById(userId,user);
+      return res.status(200).json(ApiResponse.success(findUser,"Thành công"));
     } catch (error) {
       next(error);
     }
@@ -43,6 +44,7 @@ class UserController {
   //[updateUser]
   static async updateUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
+			const user=(req as any).user;
       const userId = req.params.userId;
 			const data=req.body;
 			const avatar=req.file?.path;
@@ -50,7 +52,7 @@ class UserController {
 			if (avatar) {
 				data.avatar=avatar;
 			}
-			const updatedUser=await UserService.updateUser(userId,data);
+			const updatedUser=await UserService.updateUser(userId,data,user);
       return res.status(200).json(ApiResponse.success(updatedUser,"Thành công"));
     } catch (error) {
       next(error);

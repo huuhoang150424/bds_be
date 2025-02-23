@@ -14,20 +14,26 @@ class UserService {
 		return {rows,count};
 	}
 
-	static async getUserById (userId:string) {
-		const user=await User.findByPk(userId);
-		if (!user) {
+	static async getUserById (userId:string,user:any) {
+		if (user.userId!==userId) {
+			throw new UnauthorizedError("Bạn không có quyền",403);
+		}
+		const findUser=await User.findByPk(userId);
+		if (!findUser) {
 			throw new NotFoundError("Không tìm thấy người dùng",404);
 		}
-		return user;
+		return findUser;
 	}
 
-	static async updateUser (userId:string,data:any) {
-		const user=await User.findByPk(userId);
-		if (!user) {
+	static async updateUser (userId:string,data:any,user:any) {
+		if (user.userId!==userId) {
+			throw new UnauthorizedError("Bạn không có quyền",403);
+		}
+		const findUser=await User.findByPk(userId);
+		if (!findUser) {
 			throw new NotFoundError("Không tìm thấy người dùng",404);
 		}
-		await user.update(data,{where: {userId:userId}});
+		await findUser.update(data,{where: {userId:userId}});
 		const updatedUser = await User.findOne({ where: { userId: userId } });
 		return updatedUser;
 	}
