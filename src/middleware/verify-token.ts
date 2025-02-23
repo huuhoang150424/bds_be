@@ -20,7 +20,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
     } catch (err) {
 			throw new TokenError("Token không hợp lệ hoặc đã hết hạn", 401);
     }
-    const sessionExists = await CacheRepository.get(`session:${decoded.sessionId}`);
+    const sessionExists = await CacheRepository.get(`user_session:${decoded.userId}`);
     if (!sessionExists) {
       return res.status(401).json(ApiResponse.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn", 401));
     }

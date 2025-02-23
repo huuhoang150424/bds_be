@@ -38,11 +38,11 @@ class AuthService {
     }
 		await CacheRepository.delete(loginAttemptKey);
 
-		let sessionId = await CacheRepository.get(`user_session:${user.id}`);
+		let sessionId = await CacheRepository.get(`user_session:${user.userId}`);
   
 		if (!sessionId) {
 			sessionId = crypto.randomUUID();
-			await CacheRepository.set(`user_session:${user.id}`, sessionId, 86400); 
+			await CacheRepository.set(`user_session:${user.userId}`, sessionId, 86400); 
 		}
     const access_token = await generaAccessToken(user,sessionId);
     const refresh_token = await generaRefreshToken(user);
