@@ -18,18 +18,20 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
     try {
       decoded = jwt.verify(token, process.env.ACCESS_TOKEN_KEY!) as any;
     } catch (err) {
-			throw new TokenError("Token không hợp lệ hoặc đã hết hạn", 401);
+      throw new TokenError("Token không hợp lệ hoặc đã hết hạn", 401);
     }
-    const sessionExists = await CacheRepository.get(`user_session:${decoded.userId}`);
-    if (!sessionExists) {
-      return res.status(401).json(ApiResponse.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn", 401));
-    }
+		const rawSession = await CacheRepository.get(`session:${decoded.sessionId}`);
+		const sessionExists = rawSession?.replace(/^"|"$/g, ''); 
+		if (!sessionExists || sessionExists !== decoded.userId) {
+			return res.status(401).json(ApiResponse.error("Phiên đăng nhập không hợp lệ hoặc đã hết hạn", 401));
+		}
     (req as any).user = decoded;
     next();
   } catch (err) {
-    next(err); 
+    next(err);
   }
 };
+
 
 
 
@@ -51,7 +53,9 @@ const verifyAdmin = async (req: Request, res: Response, next: NextFunction) => {
 const verifyUser = async (req: Request, res: Response, next: NextFunction) => {
   try {
     await verifyToken(req, res, () => {}); 
+
     const user = (req as any).user;
+		console.log(user)
     if (user.role === "User" || user.role === "Agent" || user.role === "Admin") {
       next();
     } else {

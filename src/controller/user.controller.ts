@@ -46,6 +46,7 @@ class UserController {
       const userId = req.params.userId;
 			const data=req.body;
 			const avatar=req.file?.path;
+			console.log(avatar)
 			if (avatar) {
 				data.avatar=avatar;
 			}
