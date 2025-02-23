@@ -1,18 +1,284 @@
 paths:
-  /auth:
+  /auth/login:
     post:
-      summary: login
+      summary: Đăng nhập
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: johndoe@example.com
+                password:
+                  type: string
+                  example: "12345678"
       responses:
         '200':
           description: Đăng nhập thành công
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1Ni..."
+                  refresh_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1Ni..."
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Thông tin không hợp lệ
+        '401':
+          description: Sai email hoặc mật khẩu
+        '404':
+          description: Người dùng không tồn tại
         '500':
-          description: Server error
+          description: Lỗi server
+
+  /auth/register:
+    post:
+      summary: Đăng ký tài khoản
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullname:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  example: johndoe@example.com
+                password:
+                  type: string
+                  example: "12345678"
+                confirmPassword:
+                  type: string
+                  example: "12345678"
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        '400':
+          description: Thông tin không hợp lệ
+        '403':
+          description: Email đã được đăng ký hoặc xác nhận mật khẩu không khớp
+        '500':
+          description: Lỗi server
+
+  /auth/refresh-token:
+    post:
+      summary: Cấp lại access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh_token:
+                  type: string
+                  example: "eyJhbGciOiJIUzI1Ni..."
+      responses:
+        '200':
+          description: Cấp lại access token thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Thành công"
+                  access_token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1Ni..."
+        '403':
+          description: Không cấp lại được token
+        '500':
+          description: Lỗi server
+  /auth/forgot-password:
+    post:
+      summary: Quên mật khẩu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: johndoe@example.com
+      responses:
+        '200':
+          description: Gửi mã xác thực thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Thành công"
+                  otpExpires:
+                    type: string
+                    format: date-time
+                    example: "2025-02-22T14:00:00Z"
+        '404':
+          description: Người dùng không tồn tại
+        '500':
+          description: Lỗi server
+  /auth/verify-code:
+    post:
+      summary: Xác thực mã OTP
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: johndoe@example.com
+                otpCode:
+                  type: string
+                  example: "1234"
+      responses:
+        '200':
+          description: Xác thực thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Xác thực thành công"
+        '400':
+          description: Mã OTP không hợp lệ hoặc đã hết hạn
+        '500':
+          description: Lỗi server
+  /auth/change-password:
+    patch:
+      summary: Đổi mật khẩu
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                oldPassword:
+                  type: string
+                  example: "oldpassword123"
+                newPassword:
+                  type: string
+                  example: "newpassword456"
+                confirmPassword:
+                  type: string
+                  example: "newpassword456"
+      responses:
+        '200':
+          description: Đổi mật khẩu thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Đổi mật khẩu thành công"
+        '400':
+          description: Thông tin không hợp lệ
+        '403':
+          description: Mật khẩu cũ không chính xác hoặc xác nhận mật khẩu không đúng
+        '404':
+          description: Người dùng không tồn tại
+        '500':
+          description: Lỗi server
+  /auth/verify-account:
+    post:
+      summary: Gửi email xác thực tài khoản
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: johndoe@example.com
+      responses:
+        '200':
+          description: Gửi email xác thực thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Email xác thực đã được gửi"
+        '400':
+          description: Email đã có một yêu cầu xác thực đang chờ xử lý
+        '404':
+          description: Người dùng không tồn tại
+        '500':
+          description: Lỗi server
+
+  /auth/verify-email:
+    get:
+      summary: Xác thực email
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+          example: "d6f7e9a8-3b2d-4c5e-b9f0-123456789abc"
+        - in: query
+          name: email
+          required: true
+          schema:
+            type: string
+          example: johndoe@example.com
+      responses:
+        '200':
+          description: Email đã được xác thực thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Email đã được xác thực thành công"
+        '400':
+          description: Token không hợp lệ hoặc đã hết hạn
+        '404':
+          description: Người dùng không tồn tại
+        '500':
+          description: Lỗi server
+
+
 components:
   schemas:
     User:
@@ -21,7 +287,7 @@ components:
         user_id:
           type: integer
           example: 1
-        name:
+        fullname:
           type: string
           example: John Doe
         email:
@@ -30,3 +296,9 @@ components:
         isAdmin:
           type: boolean
           example: false
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

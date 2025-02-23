@@ -8,6 +8,7 @@ export const connectDatabase = async () => {
 		// await sequelize.sync({ force: true })
 		// await seedUsers();
 		// console.log(" migrate successfully");
+
 	} catch (error) {
 		console.error("Unable to connect to the database:", error);
 	}
