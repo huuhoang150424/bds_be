@@ -9,7 +9,7 @@ class AuthController {
     try {
       const { email, password } = req.body;
       const {accessToken, refreshToken,user } = await AuthService.login(email, password);
-
+			
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: false,

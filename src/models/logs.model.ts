@@ -10,17 +10,13 @@ import {
   BelongsTo,
 } from 'sequelize-typescript';
 import User from './user.model';
+import BaseModel from './base.model';
 
 @Table({
   tableName: 'logs',
   timestamps: true,
 })
-export default class Log extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  logId!: string;
-
+export default class Log extends BaseModel<string> {
   @AllowNull(false)
   @ForeignKey(() => User)
   @Column(DataType.UUID)

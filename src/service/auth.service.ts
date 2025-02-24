@@ -24,7 +24,7 @@ class AuthService {
 
 		const user = await User.findOne({
 			where: { email },
-			attributes: ["userId", "fullname", "email", "phone", "avatar", "balance", "score"],
+			attributes: ["id", "fullname", "email", "phone", "avatar", "balance", "score", "password","roles"],
 		});
 		
     if (!user) {
@@ -39,6 +39,8 @@ class AuthService {
 			}
       throw new UnauthorizedError('Mật khẩu không chính xác');
     }
+
+		delete (user as any).password;
 		await CacheRepository.delete(loginAttemptKey);
 
     const accessToken = await generaAccessToken(user);
@@ -54,10 +56,7 @@ class AuthService {
     if (password !== confirmPassword) {
       throw new UnauthorizedError('Xác nhận mật khẩu không khớp');
     }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({ fullname, email, password: hashedPassword });
-
+    const user = await User.create({ fullname, email, password });
     return user;
   }
 
@@ -108,7 +107,7 @@ class AuthService {
   }
 
   static async changePassword(userId: number, oldPassword: string, newPassword: string, confirmPassword: string) {
-    const user = await User.findOne({ where: { userId } });
+    const user = await User.findOne({ where: { id:userId } });
     if (!user) {
       throw new NotFoundError('Người dùng không tồn tại');
     }
@@ -121,9 +120,7 @@ class AuthService {
     if (!isMatch) {
       throw new UnauthorizedError('Mật khẩu cũ không chính xác');
     }
-
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-    user.password = hashedPassword;
+    user.password = newPassword;
     await user.save();
 
     return { message: 'Đổi mật khẩu thành công' };

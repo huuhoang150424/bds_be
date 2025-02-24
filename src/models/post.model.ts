@@ -17,16 +17,12 @@ import Rating from './rating.model';
 import Wishlist from './wish-list.model';
 import Report from './reports.model';
 import TagPost from './tag-post.model';
+import BaseModel from './base.model';
 
 import { ListingType, PropertyType, Directions, PriceUnit, StatusPost } from './enums';
 
 @Table({ tableName: 'posts', timestamps: true })
-export default class Post extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  postId!: string;
-
+export default class Post extends BaseModel<string> {
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   userId!: string;

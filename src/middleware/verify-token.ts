@@ -26,59 +26,28 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
   }
 };
 
-
-
-
-const verifyAdmin = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await verifyToken(req, res, () => {});
-
-    if ((req as any).user && (req as any).user.role === "Admin") {
-      next();
-    } else {
+const verifyRole = (roles: string[]) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      await verifyToken(req, res, () => {});
+      const user = (req as any).user;
+      if (!user) {
+        return next(new ForbiddenError("Bạn chưa đăng nhập"));
+      }
+      if (roles.includes(user.role) || user.role === "Admin") {
+        return next();
+      }
       next(new ForbiddenError("Bạn không có quyền"));
+    } catch (err) {
+      next(err);
     }
-  } catch (err) {
-    next(err); 
-  }
+  };
 };
 
-
-const verifyUser = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await verifyToken(req, res, () => {}); 
-
-    const user = (req as any).user;
-    if (user.role === "User" || user.role === "Agent" || user.role === "Admin") {
-      next();
-    } else {
-      next(new ForbiddenError("Bạn không có quyền"));
-    }
-  } catch (err) {
-    next(err);
-  }
-};
-
-
-const verifyAgent = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    await verifyToken(req, res, () => {}); 
-    const user = (req as any).user;
-    if (user.role === "Agent" || user.role === "Admin") {
-      next();
-    } else {
-      next(new ForbiddenError("Bạn không có quyền"));
-    }
-  } catch (err) {
-    next(err);
-  }
-};
 
 
 
 export {
 	verifyToken,
-	verifyAdmin,
-	verifyUser,
-	verifyAgent
+	verifyRole
 }

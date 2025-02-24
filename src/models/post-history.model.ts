@@ -12,14 +12,10 @@ import {
 import User from './user.model';
 import Post from './post.model';
 import { PriceUnit, ListingType, PropertyType, Directions, StatusPost } from './enums';
+import BaseModel from './base.model';
 
 @Table({ tableName: 'post_history', timestamps: false })
-export default class PostHistory extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  historyId!: string;
-
+export default class PostHistory extends BaseModel<string> {
   @ForeignKey(() => Post)
   @AllowNull(false)
   @Column(DataType.UUID)

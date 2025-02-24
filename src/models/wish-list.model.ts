@@ -10,14 +10,10 @@ import {
 } from 'sequelize-typescript';
 import User from './user.model';
 import Post from './post.model';
+import BaseModel from './base.model';
 
 @Table({ tableName: 'wishlists', timestamps: true })
-export default class Wishlist extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  wishlistId!: string;
-
+export default class Wishlist extends BaseModel<string> {
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   userId!: string;

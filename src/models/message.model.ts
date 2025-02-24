@@ -10,18 +10,13 @@ import {
   BelongsTo,
 } from 'sequelize-typescript';
 import User from './user.model';
-import Post from './post.model';
+import BaseModel from './base.model';
 
 @Table({
   tableName: 'messages',
   timestamps: true,
 })
-export default class Message extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  messageId!: string;
-
+export default class Message extends BaseModel<string> {
   @ForeignKey(() => User)
   @AllowNull(false)
   @Column(DataType.UUID)

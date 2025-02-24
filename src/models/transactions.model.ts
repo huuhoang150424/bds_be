@@ -11,14 +11,10 @@ import {
 } from 'sequelize-typescript';
 import User from './user.model';
 import { ProcessingStatus ,PaymentMethod} from './enums';
+import BaseModel from './base.model';
 
 @Table({ tableName: 'transactions', timestamps: true })
-export default class Transaction extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  transactionId!: string;
-
+export default class Transaction extends BaseModel<string> {
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   userId!: string;

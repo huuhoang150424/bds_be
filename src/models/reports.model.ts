@@ -12,15 +12,11 @@ import {
 import User from './user.model';
 import Post from './post.model';
 import { ReportReason ,ProcessingStatus} from './enums';
+import BaseModel from './base.model';
 
 
 @Table({ tableName: 'reports', timestamps: true })
-export default class Report extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  reportId!: string;
-
+export default class Report extends BaseModel<string> {
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   userId!: string;

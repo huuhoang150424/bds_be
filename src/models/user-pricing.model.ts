@@ -10,13 +10,10 @@ import {
 } from 'sequelize-typescript';
 import User from './user.model';
 import Pricing from './pricings.model';
+import BaseModel from './base.model';
 
 @Table({ tableName: 'user_pricings', timestamps: true })
-export default class UserPricing extends Model {
-  @PrimaryKey
-  @Column(DataType.INTEGER)
-  user_pricing_id!: number;
-
+export default class UserPricing extends BaseModel<string> {
   @ForeignKey(() => User)
   @AllowNull(false)
   @Column(DataType.UUID)

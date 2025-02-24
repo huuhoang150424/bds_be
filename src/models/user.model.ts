@@ -1,4 +1,4 @@
-import { Table, Column, Model, DataType, PrimaryKey, Default, AllowNull, HasMany } from 'sequelize-typescript';
+import { Table, Column, Model, DataType, PrimaryKey, Default, AllowNull, HasMany,BeforeCreate } from 'sequelize-typescript';
 import Post from './post.model';
 import Transaction from './transactions.model';
 import Comment from './comment.model';
@@ -8,14 +8,11 @@ import Report from './reports.model';
 import Notification from './notification.model';
 import News from './new.model';
 import { Roles } from './enums';
+import BaseModel from './base.model';
+import bcrypt from 'bcrypt';
 
 @Table({ tableName: 'users', timestamps: true })
-export default class User extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  userId!: string;
-
+export default class User extends BaseModel<string> {
   @AllowNull(false)
   @Column(DataType.STRING)
   fullname!: string;
@@ -79,4 +76,10 @@ export default class User extends Model {
 
   @HasMany(() => Notification)
   notifications!: Notification[];
+
+	@BeforeCreate
+  static async hashPassword(user: User) {
+    const saltRounds = 10; 
+    user.password = await bcrypt.hash(user.password, saltRounds);
+  }
 }

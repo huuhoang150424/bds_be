@@ -9,16 +9,12 @@ import {
 	HasMany
 } from 'sequelize-typescript';
 import UserPricing from './user-pricing.model';
+import BaseModel from './base.model';
 @Table({
   tableName: 'pricings',
   timestamps: true,
 })
-export default class Pricing extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  pricingId!: string;
-
+export default class Pricing extends BaseModel<string> {
   @AllowNull(false)
   @Column(DataType.STRING)
   name!: string;

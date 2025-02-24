@@ -11,17 +11,13 @@ import {
 } from 'sequelize-typescript';
 import User from './user.model';
 import { CategoryNew } from './enums';
+import BaseModel from './base.model';
 
 @Table({
   tableName: 'news',
   timestamps: true,
 })
-export default class News extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  newsId!: string;
-
+export default class News extends BaseModel<string> {
   @ForeignKey(() => User)
   @AllowNull(false)
   @Column(DataType.UUID)

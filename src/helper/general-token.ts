@@ -9,7 +9,7 @@ const generaAccessToken = async (user: any) => {
   }
   return jwt.sign(
     {
-      userId: user.userId,
+      userId: user.id,
       role: user.roles,
     },
     tokenKey,
@@ -24,7 +24,7 @@ const generaRefreshToken = async (user: any) => {
   }
   return jwt.sign(
     {
-      userId: user.userId
+      userId: user.id
     },
     tokenKey,
     { expiresIn:"365d"},

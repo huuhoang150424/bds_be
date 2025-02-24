@@ -14,10 +14,7 @@ class UserService {
 		return {rows,count};
 	}
 
-	static async getUserById (userId:string,user:any) {
-		if (user.userId!==userId) {
-			throw new UnauthorizedError("Bạn không có quyền");
-		}
+	static async getUserById (userId:string) {
 		const findUser=await User.findByPk(userId);
 		if (!findUser) {
 			throw new NotFoundError("Không tìm thấy người dùng");

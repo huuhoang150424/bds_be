@@ -9,14 +9,10 @@ import {
   BelongsTo,
 } from 'sequelize-typescript';
 import User from './user.model';
+import BaseModel from './base.model';
 
 @Table({ tableName: 'notifications', timestamps: true })
-export default class Notification extends Model {
-  @PrimaryKey
-  @Default(DataType.UUIDV4)
-  @Column(DataType.UUID)
-  notificationId!: string;
-
+export default class Notification extends BaseModel<string> {
   @ForeignKey(() => User)
   @Column(DataType.UUID)
   userId!: string;

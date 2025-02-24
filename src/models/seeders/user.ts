@@ -4,15 +4,14 @@ import bcrypt from "bcrypt";
 import { Roles } from "@models/enums";
 
 export const seedUsers = async () => {
-  const hashedPassword = await bcrypt.hash("123456", 10);
 
   await User.findOrCreate({
     where: { email: "admin@gmail.com" },
     defaults: {
-      userId: uuidv4(),
+      id: uuidv4(),
       fullname: "Admin User",
       email: "admin@gmail.com",
-      password: hashedPassword,
+      password: "123456",
       phone: "0123456789",
       emailVerified: true,
       roles: Roles.Admin,
@@ -21,10 +20,10 @@ export const seedUsers = async () => {
 	await User.findOrCreate({
 		where: { email: `user21@gmail.com` },
 		defaults: {
-			userId: uuidv4(),
+			id: uuidv4(),
 			fullname: `User 21`,
 			email: `user21@gmail.com`,
-			password: hashedPassword,
+			password: "123456",
 			phone: `0123456734`,
 			emailVerified: false,
 			roles: Roles.Agent,
@@ -34,10 +33,10 @@ export const seedUsers = async () => {
     await User.findOrCreate({
       where: { email: `user${i}@gmail.com` },
       defaults: {
-        userId: uuidv4(),
+        id: uuidv4(),
         fullname: `User ${i}`,
         email: `user${i}@gmail.com`,
-        password: hashedPassword,
+        password: "123456",
         phone: `012345678${i}`,
         emailVerified: false,
         roles: Roles.User,
