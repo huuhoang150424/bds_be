@@ -3,7 +3,7 @@ import { ValidationError as ExpressValidationError, Result } from 'express-valid
 class ValidationError extends Error {
   public errors: ExpressValidationError[];
   public status: number;
-  constructor(errors: Result<ExpressValidationError>,status:number) {
+  constructor(errors: Result<ExpressValidationError>,status=422) {
     super(
       'Validation failed: ' +
         errors.array().map((err) => err.msg).join(', ')

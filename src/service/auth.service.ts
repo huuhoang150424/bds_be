@@ -28,7 +28,7 @@ class AuthService {
 		});
 		
     if (!user) {
-      throw new NotFoundError('Người dùng không tồn tại', 404);
+      throw new NotFoundError('Người dùng không tồn tại');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
@@ -37,22 +37,22 @@ class AuthService {
 			if (failedAttempt+1>=10) {
 				await CacheRepository.set(lockKey,'locked',300);
 			}
-      throw new UnauthorizedError('Mật khẩu không chính xác', 403);
+      throw new UnauthorizedError('Mật khẩu không chính xác');
     }
 		await CacheRepository.delete(loginAttemptKey);
 
-    const access_token = await generaAccessToken(user);
-    const refresh_token = await generaRefreshToken(user);
-    return { access_token, refresh_token, user };
+    const accessToken = await generaAccessToken(user);
+    const refreshToken = await generaRefreshToken(user);
+    return { accessToken, refreshToken, user };
   }
 
   static async register(fullname: string, email: string, password: string, confirmPassword: string) {
     const existsUser = await User.findOne({ where: { email } });
     if (existsUser) {
-      throw new UnauthorizedError('Email đã được đăng ký', 403);
+      throw new UnauthorizedError('Email đã được đăng ký');
     }
     if (password !== confirmPassword) {
-      throw new UnauthorizedError('Xác nhận mật khẩu không khớp', 403);
+      throw new UnauthorizedError('Xác nhận mật khẩu không khớp');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -63,13 +63,13 @@ class AuthService {
 
   static async refreshToken(refreshToken: string) {
     if (!refreshToken) {
-      throw new UnauthorizedError('Không cấp lại được token', 403);
+      throw new UnauthorizedError('Không cấp lại được token');
     }
 
     return new Promise((resolve, reject) => {
       jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY!, (err, decoded: any) => {
         if (err) {
-          reject(new UnauthorizedError('Không cấp lại được token', 403));
+          reject(new UnauthorizedError('Không cấp lại được token'));
         }
         const accessToken = jwt.sign({ userId: decoded.userId, role: decoded.role }, process.env.ACCESS_TOKEN_KEY!, {
           expiresIn: '1d',
@@ -82,7 +82,7 @@ class AuthService {
   static async forgotPassword(email: string) {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      throw new NotFoundError('Người dùng không tồn tại', 404);
+      throw new NotFoundError('Người dùng không tồn tại');
     }
 
     const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
@@ -101,7 +101,7 @@ class AuthService {
   static async verifyCode(email: string, otpCode: string) {
     const otpCodeStore = await CacheRepository.get(`mail-${email}`);
     if (otpCode !== otpCodeStore) {
-      throw new UnauthorizedError('Mã OTP không hợp lệ hoặc đã hết hạn', 400);
+      throw new UnauthorizedError('Mã OTP không hợp lệ hoặc đã hết hạn');
     }
     await CacheRepository.delete(`mail-${email}`);
     return { message: 'Xác thực thành công' };
@@ -110,16 +110,16 @@ class AuthService {
   static async changePassword(userId: number, oldPassword: string, newPassword: string, confirmPassword: string) {
     const user = await User.findOne({ where: { userId } });
     if (!user) {
-      throw new NotFoundError('Người dùng không tồn tại', 404);
+      throw new NotFoundError('Người dùng không tồn tại');
     }
 
     if (newPassword !== confirmPassword) {
-      throw new UnauthorizedError('Xác nhận mật khẩu không chính xác', 403);
+      throw new UnauthorizedError('Xác nhận mật khẩu không chính xác');
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
     if (!isMatch) {
-      throw new UnauthorizedError('Mật khẩu cũ không chính xác', 403);
+      throw new UnauthorizedError('Mật khẩu cũ không chính xác');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -133,7 +133,7 @@ class AuthService {
   static async verifyAccount( email: string) {
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      throw new NotFoundError('Người dùng không tồn tại', 404);
+      throw new NotFoundError('Người dùng không tồn tại');
     }
     const verificationToken = uuidv4();
 		const existingToken = await CacheRepository.get(`verify:${email}`);
@@ -162,14 +162,14 @@ class AuthService {
     const storedToken = await CacheRepository.get(`verify:${email}`);
 
     if (!storedToken || storedToken !== token) {
-      throw new TokenError('Token không hợp lệ hoặc đã hết hạn',400);
+      throw new TokenError('Token không hợp lệ hoặc đã hết hạn');
     }
 
     await CacheRepository.delete(`verify:${email}`);
 
     const user = await User.findOne({ where: { email } });
     if (!user) {
-      throw new NotFoundError('Người dùng không tồn tại',404);
+      throw new NotFoundError('Người dùng không tồn tại');
     }
 
     user.emailVerified = true;

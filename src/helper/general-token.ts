@@ -5,7 +5,7 @@ import "dotenv/config";
 const generaAccessToken = async (user: any) => {
   const tokenKey = process.env.ACCESS_TOKEN_KEY;
   if (!tokenKey) {
-    throw new TokenError('Lỗi: Không tìm thấy ACCESS_TOKEN_KEY', 404);
+    throw new TokenError('Lỗi: Không tìm thấy ACCESS_TOKEN_KEY');
   }
   return jwt.sign(
     {
@@ -20,7 +20,7 @@ const generaAccessToken = async (user: any) => {
 const generaRefreshToken = async (user: any) => {
   const tokenKey = process.env.REFRESH_TOKEN_KEY;
   if (!tokenKey) {
-    throw new TokenError('Lỗi: Không tìm thấy REFRESH_TOKEN_KEY', 404);
+    throw new TokenError('Lỗi: Không tìm thấy REFRESH_TOKEN_KEY');
   }
   return jwt.sign(
     {

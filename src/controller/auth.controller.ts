@@ -8,9 +8,9 @@ class AuthController {
   static async login(req: Request, res: Response, next: NextFunction) {
     try {
       const { email, password } = req.body;
-      const { access_token, refresh_token,user } = await AuthService.login(email, password);
+      const {accessToken, refreshToken,user } = await AuthService.login(email, password);
 
-      res.cookie('refreshToken', refresh_token, {
+      res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: false,
         sameSite: 'strict',
@@ -21,7 +21,7 @@ class AuthController {
       return res.status(200).json(
         ApiResponse.success(
           {
-            access_token,
+            accessToken,
             user
           },
           "Đăng nhập thành công"

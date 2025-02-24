@@ -16,22 +16,22 @@ class UserService {
 
 	static async getUserById (userId:string,user:any) {
 		if (user.userId!==userId) {
-			throw new UnauthorizedError("Bạn không có quyền",403);
+			throw new UnauthorizedError("Bạn không có quyền");
 		}
 		const findUser=await User.findByPk(userId);
 		if (!findUser) {
-			throw new NotFoundError("Không tìm thấy người dùng",404);
+			throw new NotFoundError("Không tìm thấy người dùng");
 		}
 		return findUser;
 	}
 
 	static async updateUser (userId:string,data:any,user:any) {
 		if (user.userId!==userId) {
-			throw new UnauthorizedError("Bạn không có quyền",403);
+			throw new UnauthorizedError("Bạn không có quyền");
 		}
 		const findUser=await User.findByPk(userId);
 		if (!findUser) {
-			throw new NotFoundError("Không tìm thấy người dùng",404);
+			throw new NotFoundError("Không tìm thấy người dùng");
 		}
 		await findUser.update(data,{where: {userId:userId}});
 		const updatedUser = await User.findOne({ where: { userId: userId } });
