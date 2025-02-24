@@ -1,12 +1,8 @@
 'use-strict';
-
-import dotenv from 'dotenv';
 import { Request, Response, NextFunction } from 'express';
-import { CacheRepository } from '@helper';
 import {AuthService} from "@service";
 import {ApiResponse} from "@helper";
-dotenv.config({ path: '.env.local' });
-
+import "dotenv/config";
 class AuthController {
   //[login]
   static async login(req: Request, res: Response, next: NextFunction) {
@@ -26,15 +22,7 @@ class AuthController {
         ApiResponse.success(
           {
             access_token,
-            user: {
-              userId: user.userId,
-              fullname: user.fullname,
-              email: user.email,
-              phone: user.phone,
-              avatar: user.avatar,
-              balance: user.balance,
-              score: user.score,
-            },
+            user
           },
           "Đăng nhập thành công"
         )

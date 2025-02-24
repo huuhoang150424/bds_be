@@ -3,12 +3,11 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '@models';
-import { generaAccessToken, generaRefreshToken } from '@helper/genera-token';
+import { generaAccessToken, generaRefreshToken } from '@helper/general-token';
 import { NotFoundError, UnauthorizedError, transporter, CacheRepository, TokenError,BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
-import dotenv from 'dotenv';
+import "dotenv/config";
 
-dotenv.config({ path: '.env.local' });
 
 
 class AuthService {
@@ -23,7 +22,11 @@ class AuthService {
 		const attempt=await CacheRepository.get(loginAttemptKey);
 		const failedAttempt = attempt ? parseInt(attempt) : 0;
 
-    const user = await User.findOne({ where: { email } });
+		const user = await User.findOne({
+			where: { email },
+			attributes: ["userId", "fullname", "email", "phone", "avatar", "balance", "score"],
+		});
+		
     if (!user) {
       throw new NotFoundError('Người dùng không tồn tại', 404);
     }

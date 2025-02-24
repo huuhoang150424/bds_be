@@ -8,7 +8,7 @@ import route from '@router';
 import cookieParser from 'cookie-parser'
 import { swaggerDoc } from 'api-doc/swagger';
 import swaggerUi from "swagger-ui-express";
-
+import "dotenv/config";
 
 const app = express();
 const PORT = process.env.PORT || 3000;

@@ -1,10 +1,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import "dotenv/config";
 import { TokenError,ForbiddenError } from '@helper';
 import { CacheRepository } from '@helper';
-dotenv.config({ path: '.env.local' });
 import {ApiResponse} from '@helper'
 
 const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
@@ -50,7 +49,6 @@ const verifyUser = async (req: Request, res: Response, next: NextFunction) => {
     await verifyToken(req, res, () => {}); 
 
     const user = (req as any).user;
-		console.log(user)
     if (user.role === "User" || user.role === "Agent" || user.role === "Admin") {
       next();
     } else {

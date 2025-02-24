@@ -1,5 +1,5 @@
 import { Sequelize } from 'sequelize-typescript';
-import dotenv from 'dotenv';
+import "dotenv/config";
 import path from 'path';
 import {
 	User,
@@ -20,7 +20,6 @@ import {
 	Log,
 	Comment} from '@models/index';
 
-dotenv.config({ path: '.env.local' });
 
 console.log(path.resolve(__dirname));
 

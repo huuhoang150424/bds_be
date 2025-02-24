@@ -18,7 +18,18 @@ export const seedUsers = async () => {
       roles: Roles.Admin,
     },
   });
-
+	await User.findOrCreate({
+		where: { email: `user21@gmail.com` },
+		defaults: {
+			userId: uuidv4(),
+			fullname: `User 21`,
+			email: `user21@gmail.com`,
+			password: hashedPassword,
+			phone: `0123456734`,
+			emailVerified: false,
+			roles: Roles.Agent,
+		},
+	});
   for (let i = 1; i <= 20; i++) {
     await User.findOrCreate({
       where: { email: `user${i}@gmail.com` },
