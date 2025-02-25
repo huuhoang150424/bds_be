@@ -21,11 +21,7 @@ export default class News extends BaseModel<string> {
   @ForeignKey(() => User)
   @AllowNull(false)
   @Column(DataType.UUID)
-  userId!: string; 
-
-  @AllowNull(false)
-  @Column(DataType.STRING)
-  createdBy!: string;
+  userId!: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)
@@ -33,15 +29,20 @@ export default class News extends BaseModel<string> {
 
   @AllowNull(false)
   @Column(DataType.TEXT)
-  content!: string; 
+  content!: string;
+
+  @AllowNull(false)
+  @Default(0)  
+  @Column(DataType.INTEGER)
+  view!: number;
 
   @AllowNull(true)
   @Column(DataType.STRING)
-  imageUrl!: string; 
+  imageUrl!: string;
 
   @AllowNull(false)
-  @Column({type: DataType.ENUM(...Object.values(CategoryNew))})
-  category!: CategoryNew; 
+  @Column({ type: DataType.ENUM(...Object.values(CategoryNew)) })
+  category!: CategoryNew;
 
   @AllowNull(true)
   @Column(DataType.INTEGER)
