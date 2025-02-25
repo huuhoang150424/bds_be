@@ -6,7 +6,9 @@ import uploadCloud from "@config/cloudinary.config";
 
 
 
-Router.post("/createPost",verifyRole(["Agent"]),uploadCloud.array("images"), PostController.create as any);
+Router.post("/createPost",
+	verifyRole(["Agent"]),
+	uploadCloud.array("images"), PostController.create as any);
 Router.get("/:postId/getPost",verifyRole(["Agent"]), PostController.getPost as any);
 
 export default Router;

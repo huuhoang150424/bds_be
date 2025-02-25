@@ -1,17 +1,14 @@
 import {
   Table,
   Column,
-  Model,
   DataType,
-  PrimaryKey,
-  Default,
   ForeignKey,
   BelongsTo,
   AllowNull,
 } from 'sequelize-typescript';
 import User from './user.model';
 import Post from './post.model';
-import { PriceUnit, ListingType, PropertyType, Directions, StatusPost } from './enums';
+import { PriceUnit, ListingTypes, PropertyType, Directions, StatusPost } from './enums';
 import BaseModel from './base.model';
 
 @Table({ tableName: 'post_history', timestamps: false })
@@ -71,11 +68,9 @@ export default class PostHistory extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isFurniture!: boolean;
 
-  @Column({ type: DataType.ENUM(...Object.values(ListingType)) })
-  listingType!: string;
-
-  @Column({ type: DataType.ENUM(...Object.values(PropertyType)) })
-  propertyType!: string;
+	@AllowNull(false)
+  @Column(DataType.STRING)
+  slug!: string;
 
   @Column({ type: DataType.ENUM(...Object.values(Directions)) })
   direction!: string;

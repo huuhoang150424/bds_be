@@ -13,7 +13,7 @@ const route=(app:Express)=>{
 	app.use("/comment",commentRouter)
 	app.use("/rating",ratingRouter)
 	app.use("/pricing",pricingRouter)
-
+	app.use("/new",pricingRouter)
 }
 
 export default route;

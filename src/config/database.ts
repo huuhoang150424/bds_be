@@ -18,7 +18,9 @@ import {
 	Wishlist,
 	UserPricing,
 	Log,
-	Comment} from '@models/index';
+	Comment,	
+	PropertyType,
+	ListingType } from '@models/index';
 
 
 console.log(path.resolve(__dirname));
@@ -48,7 +50,9 @@ export const sequelize = new Sequelize({
 		Wishlist,
 		UserPricing,
 		Log,
-		Comment
+		Comment,
+		PropertyType,
+		ListingType
   ],
   logging: false,
 });

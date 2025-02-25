@@ -57,6 +57,7 @@
 		"reflect-metadata": "^0.2.2",
 		"sequelize": "^6.37.5",
 		"sequelize-typescript": "^2.1.6",
+		"slugify": "^1.6.6",
 		"swagger-jsdoc": "^6.2.8",
 		"swagger-ui-express": "^5.0.1",
 		"tsconfig-paths": "^4.2.0"

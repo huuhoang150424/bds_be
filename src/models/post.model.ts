@@ -1,15 +1,16 @@
 import {
   Table,
   Column,
-  Model,
   DataType,
-  PrimaryKey,
   Default,
   AllowNull,
   ForeignKey,
   BelongsTo,
   HasMany,
+	BeforeCreate,
+	BeforeUpdate
 } from 'sequelize-typescript';
+import slugify from 'slugify';
 import User from './user.model';
 import Image from './image.model';
 import Comment from './comment.model';
@@ -18,8 +19,9 @@ import Wishlist from './wish-list.model';
 import Report from './reports.model';
 import TagPost from './tag-post.model';
 import BaseModel from './base.model';
+import PropertyType from './property-types.model';
 
-import { ListingType, PropertyType, Directions, PriceUnit, StatusPost } from './enums';
+import { ListingTypes, Directions, PriceUnit, StatusPost } from './enums';
 
 @Table({ tableName: 'posts', timestamps: true })
 export default class Post extends BaseModel<string> {
@@ -54,14 +56,12 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.INTEGER)
   bathroom!: number;
 
+	@Default(0)
+	@Column(DataType.INTEGER)
+  priority!: number;
+
   @Column(DataType.BOOLEAN)
   isFurniture!: boolean;
-
-  @Column(DataType.ENUM(...Object.values(ListingType)))
-  listingType!: 'Bán' | 'Cho thuê';
-
-  @Column(DataType.ENUM(...Object.values(PropertyType)))
-  propertyType!: string;
 
   @Column(DataType.ENUM(...Object.values(Directions)))
   direction!: string;
@@ -77,6 +77,10 @@ export default class Post extends BaseModel<string> {
 
   @Column(DataType.ENUM(...Object.values(StatusPost)))
   status!: 'Còn trống' | 'Đang đám phán' | 'Đã bàn giao';
+
+	@AllowNull(false)
+  @Column(DataType.STRING)
+  slug!: string;
 
   @HasMany(() => Image)
   images!: Image[];
@@ -95,5 +99,16 @@ export default class Post extends BaseModel<string> {
 
   @HasMany(() => TagPost)
   tagPosts!: TagPost[];
+
+	@HasMany(() => PropertyType)
+  propertyType!: PropertyType[];
+
+	@BeforeCreate
+  @BeforeUpdate
+  static generateSlug(instance: Post) {
+    if (instance.title) {
+      instance.slug = slugify(instance.title, { lower: true, strict: true });
+    }
+  }
 }
 //done

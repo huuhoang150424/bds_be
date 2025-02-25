@@ -15,6 +15,8 @@ import Wishlist from './wish-list.model';
 import UserPricing from './user-pricing.model';
 import Log from './logs.model';
 import Comment from './comment.model';
+import ListingType from './listing-types.model';
+import PropertyType from './property-types.model';
 
 export {
 	User,
@@ -33,5 +35,7 @@ export {
 	Wishlist,
 	UserPricing,
 	Log,
-	Comment
+	Comment,
+	PropertyType,
+	ListingType
 };

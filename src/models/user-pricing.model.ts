@@ -1,12 +1,11 @@
 import {
   Table,
   Column,
-  Model,
   DataType,
-  PrimaryKey,
   ForeignKey,
   BelongsTo,
   AllowNull,
+  Default,
 } from 'sequelize-typescript';
 import User from './user.model';
 import Pricing from './pricings.model';
@@ -17,7 +16,7 @@ export default class UserPricing extends BaseModel<string> {
   @ForeignKey(() => User)
   @AllowNull(false)
   @Column(DataType.UUID)
-  user_id!: string;
+  userId!: string;
 
   @BelongsTo(() => User)
   user!: User;
@@ -25,17 +24,21 @@ export default class UserPricing extends BaseModel<string> {
   @ForeignKey(() => Pricing)
   @AllowNull(false)
   @Column(DataType.UUID)
-  pricing_id!: string;
+  pricingId!: string;
 
   @BelongsTo(() => Pricing)
   pricing!: Pricing;
 
+  @Default(0) 
+  @Column(DataType.INTEGER)
+  remainingPosts!: number;
+
   @AllowNull(false)
+  @Default(DataType.NOW) 
   @Column(DataType.DATE)
-  start_date!: Date;
+  startDate!: Date;
 
   @AllowNull(false)
   @Column(DataType.DATE)
-  end_date!: Date;
+  endDate!: Date;
 }
-//done

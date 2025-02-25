@@ -1,4 +1,4 @@
-export enum ListingType {
+export enum ListingTypes {
   Sale = "Bán",
   Rent = "Cho thuê",
 }

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 const Router = express.Router();
-import { verifyAdmin ,verifyUser,verifyAgent} from "@middleware";
+import { verifyRole} from "@middleware";
 
 
 export default Router;

@@ -1,4 +1,4 @@
-import { Table, Column, Model, DataType, PrimaryKey, Default, AllowNull, HasMany,BeforeCreate } from 'sequelize-typescript';
+import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany,BeforeCreate } from 'sequelize-typescript';
 import Post from './post.model';
 import Transaction from './transactions.model';
 import Comment from './comment.model';
@@ -78,6 +78,7 @@ export default class User extends BaseModel<string> {
   notifications!: Notification[];
 
 	@BeforeCreate
+	@BeforeUpdate
   static async hashPassword(user: User) {
     const saltRounds = 10; 
     user.password = await bcrypt.hash(user.password, saltRounds);
