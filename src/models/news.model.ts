@@ -8,10 +8,13 @@ import {
   AllowNull,
   ForeignKey,
   BelongsTo,
+  BeforeCreate,
+  BeforeUpdate
 } from 'sequelize-typescript';
 import User from './user.model';
 import { CategoryNew } from './enums';
 import BaseModel from './base.model';
+import slugify from 'slugify';
 
 @Table({
   tableName: 'news',
@@ -32,9 +35,14 @@ export default class News extends BaseModel<string> {
   content!: string;
 
   @AllowNull(false)
-  @Default(0)  
+  @Default(0)
   @Column(DataType.INTEGER)
   view!: number;
+
+  @AllowNull(false)
+  @Default('')
+  @Column(DataType.STRING)
+  slug!: string;
 
   @AllowNull(true)
   @Column(DataType.STRING)
@@ -50,4 +58,12 @@ export default class News extends BaseModel<string> {
 
   @BelongsTo(() => User, { foreignKey: 'userId', as: 'author' })
   author!: User;
+
+  @BeforeCreate
+  @BeforeUpdate
+  static generateSlug(instance: News) {
+    if (instance.title && !instance.slug) {
+      instance.slug = slugify(instance.title, { lower: true, strict: true });
+    }
+  }
 }

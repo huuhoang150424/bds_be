@@ -6,9 +6,6 @@ import { Op } from "sequelize";
 
 class NewsService {
   static async createNew(userId: number, title: string, content: string, image: string, category: string, readingtime: number ) {
-    if (!title || !content) {
-      throw new UnauthorizedError("Tiêu đề và nội dung không được để trống");
-    }
     const news = await News.create({ 
       userId,
       title, 
@@ -17,7 +14,6 @@ class NewsService {
       category, 
       readingTime: readingtime 
     });
-
     return news;
   }
 
@@ -38,9 +34,18 @@ class NewsService {
     await CacheRepository.set(cacheKey, JSON.stringify(newsList), 300);
     return newsList;
   }
+  static async getNew(slug: string){
+    const findNews = await News.findOne({
+      where:  {slug: slug}
+    })
+    if(!findNews){
+      throw new NotFoundError('không tìm thấy bài đăng!');
+    }
+    return findNews;
+  }
 
-  static async deleteNews(newsId: number) {
-    const news = await News.findByPk(newsId);
+  static async deleteNews(id: string) {
+    const news = await News.findByPk(id);
     if (!news) {
       throw new NotFoundError("Tin tức không tồn tại");
     }

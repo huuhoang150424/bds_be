@@ -6,7 +6,7 @@ import Rating from './rating.model';
 import Wishlist from './wish-list.model';
 import Report from './reports.model';
 import Notification from './notification.model';
-import News from './new.model';
+import News from './news.model';
 import { Roles } from './enums';
 import BaseModel from './base.model';
 import bcrypt from 'bcrypt';

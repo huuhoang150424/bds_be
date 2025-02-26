@@ -2,7 +2,7 @@ import User from './user.model';
 import Post from './post.model';
 import Image from './image.model';
 import Message from './message.model';
-import News from './new.model';
+import News from './news.model';
 import Notification from './notification.model';
 import PostHistory from './post-history.model';
 import Pricing from './pricings.model';

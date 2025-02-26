@@ -3,6 +3,7 @@ import { CategoryNew } from './../models/enums/new';
 import { Request, Response, NextFunction } from "express";
 import { NewsService } from "@service";
 import { ApiResponse, BadRequestError } from "@helper";
+import { error } from 'console';
 
 class NewsController {
   //[createNew]
@@ -34,16 +35,22 @@ class NewsController {
       next(error);
     }
   }
+  // getNew
 
+  static async getNews(req: Request, res: Response, next: NextFunction){
+    try {
+      const slug = req.params.slug;
+      const findNews = await NewsService.getNew(slug);
+      return res.status(200).json(ApiResponse.success(findNews, "Thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
 
   //[deleteNews]
   static async deleteNews(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) {
-        return res.status(400).json(ApiResponse.error("ID không hợp lệ"));
-      }
-
+      const id = req.params.newsId;
       await NewsService.deleteNews(id);
       return res.status(200).json(ApiResponse.success(null, "Xóa tin tức thành công"));
     } catch (error) {
