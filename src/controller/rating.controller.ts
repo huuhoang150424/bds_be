@@ -2,8 +2,9 @@
 
 class RatingController {
 
-	
 
+
+	
 
 }
 
