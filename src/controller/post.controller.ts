@@ -3,6 +3,7 @@
 import {ApiResponse} from "@helper";
 import {PostService} from "@service";
 import { Request, Response, NextFunction } from 'express';
+import { ParsedQs } from 'qs';
 
 
 
@@ -21,26 +22,29 @@ class PostController {
 			next(error);
 		}
 	}
-	
-  static async getAll(req: Request, res: Response, next: NextFunction) {
+	//[getAllPost]
+  static async getAllPost(req: Request, res: Response, next: NextFunction) {
     try {
-      const {  } = req.body;
-
-
-      return res.status(200).json(
-        ApiResponse.success(
-          {
-
-          },
-          "thành công"
-        )
-      );
-			
+			const page = parseInt(req.query.page as string) || 1;
+			const limit = parseInt(req.query.limit as string) || 10;  
+			const posts=await PostService.getPosts(page,limit);
+      return res.status(200).json( ApiResponse.success(posts, "thành công" ));
     } catch (error) {
       next(error);
     }
   }
 	
+	//[getAllPost]
+  static async getAllPostForClient(req: Request, res: Response, next: NextFunction) {
+    try {
+			const page=parseInt(req.query.page as string) || 1;
+			const limit=parseInt(req.query.page as string) || 1;
+			//const posts=await PostService.getPosts(page,limit);
+      return res.status(200).json(ApiResponse.success(null, "thành công" ) );
+    } catch (error) {
+      next(error);
+    }
+  }
 	//[getPost]
 	static async getPost(req: Request, res: Response, next: NextFunction) {
     try {
@@ -54,48 +58,59 @@ class PostController {
       next(error);
     }
   }
-	static async update(req: Request, res: Response, next: NextFunction) {
-    try {
-      const {  } = req.body;
 
-
-      return res.status(200).json(
-        ApiResponse.success(
-          {
-
-						//test1
-						//test2
-          },
-          "thành công"
-        )
-      );
-			
-    } catch (error) {
-      next(error);
-    }
-  }
-	static async delete(req: Request, res: Response, next: NextFunction) {
-    try {
-      const {  } = req.body;
-
-
-      return res.status(200).json(
-        ApiResponse.success(
-          {
-
-          },
-          "thành công"
-        )
-      );
-			
-    } catch (error) {
-      next(error);
-    }
-  }
 	//[verify post]
-	static async verifyPost(req: Request, res: Response, next: NextFunction) {
+	static async approvePost(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json( ApiResponse.success( {},"thành công") );
+			const {postId}=req.params;
+			const post=await PostService.approvePost(postId);
+      return res.status(200).json( ApiResponse.success( post,"Duyệt bài thành công") );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+	//[search post]
+	static async searchPost(req: Request, res: Response, next: NextFunction) {
+		try {
+			const { keyword, addresses, page = 1, limit = 10 } = req.query;
+			let addressList: string[] = [];
+			if (typeof addresses === 'string') {
+				addressList = [addresses]; 
+			} else if (Array.isArray(addresses)) {
+				addressList = addresses.map((addr) => String(addr)); 
+			}
+			const result = await PostService.searchPosts(
+				keyword as string,
+				addressList,
+				Number(page),
+				Number(limit)
+			);
+			return res.status(200).json(ApiResponse.success(result, 'Thành công'));
+		} catch (error) {
+			next(error);
+		}
+	}
+	
+	//[filter post]
+	static async filterPost(req: Request, res: Response, next: NextFunction) {
+		try {
+
+			return res.status(200).json( ApiResponse.success( {},"thành công") );
+		} catch (error) {
+			next(error);
+		}
+	}
+	static async updatePost(req: Request, res: Response, next: NextFunction) {
+    try {
+      return res.status(200).json(ApiResponse.success( {}, "thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
+	static async deletePost(req: Request, res: Response, next: NextFunction) {
+    try {
+			return res.status(200).json( ApiResponse.success( {}, "thành công"));
     } catch (error) {
       next(error);
     }

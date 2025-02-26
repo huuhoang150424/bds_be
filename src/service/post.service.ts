@@ -1,24 +1,26 @@
 import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType } from '@models';
 import { NotFoundError, UnauthorizedError, TokenError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
+import { CacheRepository } from '@helper';
+import { Op } from 'sequelize';
 
 class PostService {
-  static async createPost(data: any, images: string[],userId:string) {
+  static async createPost(data: any, images: string[], userId: string) {
     const listingType = await ListingType.findOne({
       where: { id: data.listingType },
     });
     if (!listingType) {
       throw new BadRequestError('Loại tin đăng không hợp lệ');
     }
-		const existsPost=await Post.findOne({
-			where: {title: data.title}
-		})
-		if (existsPost) {
-			throw new BadRequestError('Bài đăng đã tồn tại')
-		}
-		const priceUnit = listingType.listingType === 'Bán' ? 'VND' : 'VND/tháng';
+    const existsPost = await Post.findOne({
+      where: { title: data.title },
+    });
+    if (existsPost) {
+      throw new BadRequestError('Bài đăng đã tồn tại');
+    }
+    const priceUnit = listingType.listingType === 'Bán' ? 'VND' : 'VND/tháng';
     const newPost = await Post.create({
-			userId: userId,
+      userId: userId,
       id: uuidv4(),
       title: data.title,
       address: data.address,
@@ -32,95 +34,179 @@ class PostService {
       expiredDate: data.expiredDate,
       expiredBoost: data.expiredBoost,
       status: data.status,
-			priceUnit: priceUnit,
+      priceUnit: priceUnit,
       price: data.price,
     });
-		const propertyType = await PropertyType.findOne({
-      where: { name: data.propertyType},
+    const propertyType = await PropertyType.findOne({
+      where: { name: data.propertyType },
     });
     if (!propertyType) {
       await PropertyType.findOrCreate({
-				where: {name: data.propertyType},
-				defaults: {
-					id: uuidv4(),
-					name: data.propertyType,
-					postId: newPost.id,
-					listingTypeId: listingType.id
-				}
-			})
+        where: { name: data.propertyType },
+        defaults: {
+          id: uuidv4(),
+          name: data.propertyType,
+          postId: newPost.id,
+          listingTypeId: listingType.id,
+        },
+      });
     }
-		await Promise.all(
-			images.map(async (image)=>{
-				await Image.create({
-					id: uuidv4(),
-					imageUrl: image,
-					postId: newPost.id
-				})
-			})
-		);
-		await Promise.all(
-			data.tags.map(async (tag:string)=>{
-				const newTag=await Tag.create({
-					id: uuidv4(),
-					tagName: tag
-				})
-				await TagPost.create({
-					tagId:newTag.id,
-					postId: newPost.id
-				})
-			})
-		);
+    await Promise.all(
+      images.map(async (image) => {
+        await Image.create({
+          id: uuidv4(),
+          imageUrl: image,
+          postId: newPost.id,
+        });
+      }),
+    );
+    await Promise.all(
+      data.tags.map(async (tag: string) => {
+        const newTag = await Tag.create({
+          id: uuidv4(),
+          tagName: tag,
+        });
+        await TagPost.create({
+          tagId: newTag.id,
+          postId: newPost.id,
+        });
+      }),
+    );
     return newPost;
   }
 
-	static async getPost(slug:string) {
-		const post =await Post.findOne({
-			where: {slug},
-			include: [
-				{
-					model: User,
-					attributes: ['id','username','email','phone','avatar']
-				},
-				{
-					model: Image,
-					attributes: ['imageUrl']
-				}
-			]
-		})
-		if (!post) {
-			throw new NotFoundError('Không tìm thấy bài đăng');
+  static async getPost(slug: string) {
+		const cachePost=await CacheRepository.get(`post:${slug}`);
+		if (cachePost) return cachePost;
+    const post = await Post.findOne({
+      where: { slug },
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
+        },
+        {
+          model: Image,
+          attributes: [],
+        },
+        {
+          model: TagPost,
+          attributes: ['id'],
+          include: [
+            {
+              model: Tag,
+              attributes: ['tagName'],
+            },
+          ],
+        },
+      ],
+    });
+    if (!post) {
+      throw new NotFoundError('Không tìm thấy bài đăng');
+    }
+		await CacheRepository.set(`post:${slug}`,post,300);
+    return post;
+  }
+
+  static async deletePost(postId: string) {
+    const post = await Post.findOne({
+      where: { id: postId },
+    });
+    if (!post) {
+      throw new NotFoundError('Không tìm thấy bài đăng');
+    }
+    await post.destroy();
+    return;
+  }
+
+  static async approvePost(postId: string) {
+    const post = await Post.findOne({
+      where: { id: postId },
+    });
+    if (!post) {
+      throw new NotFoundError('Không tìm thấy bài đăng');
+    }
+		if (post.verified) {
+			throw new BadRequestError('Bài đăng đã được duyệt');
 		}
-		return post;
-	}
+    post.verified = true;
+    await post.save();
+    return post;
+  }
 
-	static async deletePost(postId:string) {
-		const post=await Post.findOne({
-			where:{id:postId}
-		})
-		if (!post) {
-			throw new NotFoundError('Không tìm thấy bài đăng');
+  static async getPosts(page: number, limit: number) {
+    const offset = (page - 1) * limit;
+    const { count, rows } = await Post.findAndCountAll({
+      limit: limit,
+      offset: offset,
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
+        },
+        {
+          model: Image,
+          attributes: [],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      data: rows,
+    };
+  }
+
+	static async searchPosts(keyword: string, addresses: string[], page: number = 1, limit: number = 10) {
+		if (addresses.length > 5) {
+			addresses = addresses.slice(0, 5);
 		}
-		await post.destroy();
-		return;
+		const offset = (page - 1) * limit;
+		const { count, rows } = await Post.findAndCountAll({
+			where: {
+				[Op.and]: [
+					keyword
+						? { title: { [Op.iLike]: `%${keyword}%` } } 
+						: {}, 
+					addresses.length > 0
+						? { address: { [Op.in]: addresses } } 
+						: {},
+				],
+			},
+			limit,
+			offset,
+			order: [['createdAt', 'DESC']],
+		});
+		return {
+			total: count,
+			posts: rows,
+			page,
+			totalPages: Math.ceil(count / limit),
+		};
 	}
-
-	static async approvePost(postId:string) {
-		const post=await Post.findOne({
-			where:{id:postId}
-		})
-		if (!post) {
-			throw new NotFoundError('Không tìm thấy bài đăng');
-		}
-		post.verified=true;
-		await post.save();
-		return post;
-	}
-
-	static async getPosts() {
+	
 
 
-	}
-
+  static async getPostsForClient(page: number, limit: number) {
+    const offset = (page - 1) * limit;
+    const posts = await Post.findAll({
+      limit: limit,
+      offset: offset,
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
+        },
+        {
+          model: Image,
+          attributes: [],
+        },
+      ],
+    });
+    return posts;
+  }
 }
 
 export default PostService;
