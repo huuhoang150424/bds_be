@@ -9,10 +9,6 @@ import { Request, Response, NextFunction } from 'express';
 class PostController {
   static async create(req: Request, res: Response, next: NextFunction) {
     try {
-      const {
-				address ,title,square_meters,description ,floor,
-				bedroom,bathroom,isFurniture,listingType,propertyType,
-				direction,verified,expiredDate,expiredBoost,status} = req.body;
 			const imageFiles = req.files as Express.Multer.File[];
 			console.log(imageFiles);
 

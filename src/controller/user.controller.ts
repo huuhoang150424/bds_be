@@ -32,9 +32,8 @@ class UserController {
   //[getUserById]
   static async getUserById(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
-			const user=(req as any).user;
       const userId = req.params.userId;
-      const findUser = await UserService.getUserById(userId,user);
+      const findUser = await UserService.getUserById(userId);
       return res.status(200).json(ApiResponse.success(findUser,"Thành công"));
     } catch (error) {
       next(error);

@@ -1,9 +1,7 @@
 import {
   Table,
   Column,
-  Model,
   DataType,
-  PrimaryKey,
   Default,
   AllowNull,
   ForeignKey,

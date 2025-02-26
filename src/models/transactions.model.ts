@@ -1,13 +1,9 @@
 import {
   Table,
   Column,
-  Model,
   DataType,
-  PrimaryKey,
-  Default,
   ForeignKey,
   BelongsTo,
-	AllowNull
 } from 'sequelize-typescript';
 import User from './user.model';
 import { ProcessingStatus ,PaymentMethod} from './enums';
