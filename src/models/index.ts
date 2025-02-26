@@ -17,6 +17,7 @@ import Log from './logs.model';
 import Comment from './comment.model';
 import ListingType from './listing-types.model';
 import PropertyType from './property-types.model';
+import NewsHistory from "./news-history.model";
 
 export {
 	User,
@@ -37,5 +38,6 @@ export {
 	Log,
 	Comment,
 	PropertyType,
-	ListingType
+	ListingType,
+	NewsHistory
 };

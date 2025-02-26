@@ -12,6 +12,8 @@ Router.post("/createNew",uploadCloud.single("image"),validatorCreateNews, verify
 Router.get("/getAllNew", NewController.getAllNews as any);
 Router.get("/:slug/getNews",verifyRole(["User"]), NewController.getNews as any);
 Router.delete("/:newsId/delete", verifyRole(["User"]), NewController.deleteNews as any);
+Router.put("/:newsId/update", uploadCloud.single("image"), validatorUpdateNews, verifyRole(["User"]), NewController.updateNews as any);
+
 
 
 export default Router;
