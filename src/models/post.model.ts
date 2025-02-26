@@ -35,6 +35,9 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.STRING)
   title!: string;
 
+	@Column({ type: DataType.ENUM(...Object.values(PriceUnit)) })
+  priceUnit!: string;
+
   @Column(DataType.STRING)
   address!: string;
 
@@ -66,6 +69,7 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.ENUM(...Object.values(Directions)))
   direction!: string;
 
+	@Default(false)
   @Column(DataType.BOOLEAN)
   verified!: boolean;
 
@@ -79,6 +83,7 @@ export default class Post extends BaseModel<string> {
   status!: 'Còn trống' | 'Đang đám phán' | 'Đã bàn giao';
 
 	@AllowNull(false)
+	@Default('')
   @Column(DataType.STRING)
   slug!: string;
 
@@ -106,7 +111,7 @@ export default class Post extends BaseModel<string> {
 	@BeforeCreate
   @BeforeUpdate
   static generateSlug(instance: Post) {
-    if (instance.title) {
+    if (instance.title ) {
       instance.slug = slugify(instance.title, { lower: true, strict: true });
     }
   }

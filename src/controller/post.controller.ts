@@ -7,28 +7,21 @@ import { Request, Response, NextFunction } from 'express';
 
 
 class PostController {
-  static async create(req: Request, res: Response, next: NextFunction) {
-    try {
+	//[create post]
+	static async create(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId=(req as any).userId;
 			const imageFiles = req.files as Express.Multer.File[];
-			console.log(imageFiles);
-
-
-			await PostService.createPost()
-
-			
-      return res.status(200).json(
-        ApiResponse.success(
-          {
-
-          },
-          "thành công"
-        )
-      );
-			
-    } catch (error) {
-      next(error);
-    }
-  }
+			const imageUrls = imageFiles.map((file) => file.path);
+			const newPost = await PostService.createPost(req.body, imageUrls,userId);
+			return res.status(201).json(
+				ApiResponse.success(newPost, "Tạo bài đăng thành công!")
+			);
+		} catch (error) {
+			next(error);
+		}
+	}
+	
   static async getAll(req: Request, res: Response, next: NextFunction) {
     try {
       const {  } = req.body;
@@ -47,18 +40,14 @@ class PostController {
       next(error);
     }
   }
+	
+	//[getPost]
 	static async getPost(req: Request, res: Response, next: NextFunction) {
     try {
-      const {  } = req.body;
-
-
+			const {slug}=req.params;
+			const post=await PostService.getPost(slug);
       return res.status(200).json(
-        ApiResponse.success(
-          {
-
-          },
-          "thành công"
-        )
+        ApiResponse.success(post, "thành công")
       );
 			
     } catch (error) {
@@ -101,7 +90,14 @@ class PostController {
       next(error);
     }
   }
-
+	//[verify post]
+	static async verifyPost(req: Request, res: Response, next: NextFunction) {
+    try {
+      return res.status(200).json( ApiResponse.success( {},"thành công") );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

@@ -1,7 +1,7 @@
 export enum PricingLevel {
-  VIP_1 = "VIP 1",
-  VIP_2 = "VIP 2",
-  VIP_3 = "VIP 3",
+  VIP_1 = "VIP_1",
+  VIP_2 = "VIP_2",
+  VIP_3 = "VIP_3",
 }
 export enum PaymentMethod {
   Cash = 'cash',

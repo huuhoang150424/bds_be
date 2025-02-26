@@ -8,18 +8,18 @@ import {
 } from 'sequelize-typescript';
 import UserPricing from './user-pricing.model';
 import BaseModel from './base.model';
-
+import { PricingLevel } from './enums';
 @Table({
   tableName: 'pricings',
   timestamps: true,
 })
 export default class Pricing extends BaseModel<string> {
   @AllowNull(false)
-  @Column(DataType.STRING)
+  @Column({ type: DataType.ENUM(...Object.values(PricingLevel)) })
   name!: string;
 
   @AllowNull(true)
-  @Column(DataType.TEXT)
+  @Column(DataType.STRING)
   description!: string;
 
   @AllowNull(false)
