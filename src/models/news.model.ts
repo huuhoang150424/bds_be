@@ -35,6 +35,10 @@ export default class News extends BaseModel<string> {
   content!: string;
 
   @AllowNull(false)
+  @Column(DataType.TEXT)
+  origin_post!: string;
+
+  @AllowNull(false)
   @Default(0)
   @Column(DataType.INTEGER)
   view!: number;

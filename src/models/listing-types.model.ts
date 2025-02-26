@@ -12,7 +12,7 @@ import {  ListingTypes } from './enums';
 @Table({ tableName: 'listing_types', timestamps: true })
 export default class ListingType extends BaseModel<string> {
 	@Column(DataType.ENUM(...Object.values(ListingTypes)))
-	ListingType !: string;
+	listingType !: string;
 
 	@HasMany(() => PropertyType)
 	propertyType!: PropertyType[];

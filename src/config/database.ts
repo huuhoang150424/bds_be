@@ -23,7 +23,6 @@ import {
 	ListingType } from '@models/index';
 
 
-console.log(path.resolve(__dirname));
 
 export const sequelize = new Sequelize({
   database: process.env.DB_NAME!,
@@ -32,7 +31,11 @@ export const sequelize = new Sequelize({
   password: process.env.DB_PASSWORD,
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT),
+<<<<<<< HEAD
   dialectOptions: {
+=======
+	dialectOptions: {
+>>>>>>> a99074d1008d3290d8ef0b6d4f61ed2591b7ea7c
     charset: 'utf8mb4',
   },
   define: {

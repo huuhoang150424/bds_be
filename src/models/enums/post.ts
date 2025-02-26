@@ -1,6 +1,7 @@
 export enum ListingTypes {
   Sale = "Bán",
   Rent = "Cho thuê",
+	Project = "Dự án",
 }
 
 export enum PropertyType {
