@@ -47,6 +47,7 @@ class NewsController {
       next(error);
     }
   }
+  
   // [UpdateNews]
   static async updateNews(req: Request, res: Response, next: NextFunction) {
     try {
@@ -70,6 +71,7 @@ class NewsController {
       next(error);
     }
   }
+
 
 
   //[deleteNews]

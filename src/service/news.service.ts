@@ -1,11 +1,13 @@
+import { Roles } from './../models/enums/role';
+import { HistoryNews } from './../models/enums/history';
 "use strict";
-import { News, NewsHistory } from "@models";
-import { NotFoundError, UnauthorizedError, CacheRepository } from "@helper";
+import { News, NewsHistory, User } from "@models";
+import { NotFoundError, UnauthorizedError, CacheRepository , BadRequestError} from "@helper";
 import { Sequelize } from 'sequelize-typescript';
 import { Op } from "sequelize";
 
 class NewsService {
-  static async createNew(userId: number, title: string, content: string, origin: string, image: string, category: string, readingtime: number) {
+  static async createNew(userId: number, title: string, content: string, image: string, origin: string, category: string, readingtime: number) {
     const news = await News.create({
       userId,
       title,
@@ -47,7 +49,7 @@ class NewsService {
     return findNews;
   }
 
-  //UpdateNews
+  // [UpdateNews]
   static async updateNews(newsId: string, userId: string, updatedData: Partial<News>) {
     const news = await News.findByPk(newsId);
     if (!news) {
@@ -56,14 +58,21 @@ class NewsService {
     if (news.userId !== userId) {
       throw new UnauthorizedError("Bạn không có quyền cập nhật tin này");
     }
+    if (Object.keys(updatedData).length === 0) {
+      throw new BadRequestError("Không có dữ liệu nào để cập nhật");
+    }
     await NewsHistory.create({
       newsId: news.id,
+      userId: userId,
+      createdBy: Roles.User, 
       title: news.title,
       content: news.content,
       origin_post: news.origin_post,
       imageUrl: news.imageUrl,
       category: news.category,
       readingTime: news.readingTime,
+      action: HistoryNews.Update,
+      action_at: new Date(),
     });
     await news.update(updatedData);
     return news;
