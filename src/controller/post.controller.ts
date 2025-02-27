@@ -11,7 +11,7 @@ class PostController {
 	//[create post]
 	static async create(req: Request, res: Response, next: NextFunction) {
 		try {
-			const userId=(req as any).userId;
+			const userId=(req as any).user.userId;
 			const imageFiles = req.files as Express.Multer.File[];
 			const imageUrls = imageFiles.map((file) => file.path);
 			const newPost = await PostService.createPost(req.body, imageUrls,userId);

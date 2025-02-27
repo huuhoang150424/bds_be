@@ -5,6 +5,7 @@ import postRouter from "./post";
 import commentRouter from "./comment";
 import ratingRouter from "./rating";
 import pricingRouter from "./pricing";
+import transactionRouter from "./transaction";
 
 const route=(app:Express)=>{
   app.use("/auth",authRouter)
@@ -14,6 +15,8 @@ const route=(app:Express)=>{
 	app.use("/rating",ratingRouter)
 	app.use("/pricing",pricingRouter)
 	app.use("/new",pricingRouter)
+	app.use("/transaction",transactionRouter)
+
 }
 
 export default route;

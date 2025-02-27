@@ -7,6 +7,7 @@ import BadRequestError from "./error/bad-request-error";
 import ForbiddenError from "./error/forbidden-error";
 import CacheRepository from "./cache.repository";
 import ApiResponse from "./response";
+import {verifyPayOSSignature} from "./verify-payos";
 
 export {
 	BadRequestError,
@@ -17,5 +18,6 @@ export {
   TokenError,
 	transporter,
 	CacheRepository,
-	ApiResponse
+	ApiResponse,
+	verifyPayOSSignature
 }
