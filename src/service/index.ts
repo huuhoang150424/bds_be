@@ -2,10 +2,12 @@ import AuthService from "./auth.service";
 import UserService from "./user.service";
 import PostService from "./post.service";
 import NewsService from "./news.service";
+import CommentService from "./comment.service";
 
 export {
 	AuthService,
 	UserService,
 	PostService,
-	NewsService
+	NewsService,
+	CommentService
 }
