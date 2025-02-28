@@ -9,6 +9,8 @@ import cookieParser from 'cookie-parser'
 import { swaggerDoc } from 'api-doc/swagger';
 import swaggerUi from "swagger-ui-express";
 import "dotenv/config";
+import {checkAndUpdatePostsOnStartup} from '@helper';
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,6 +44,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 
-app.listen(PORT, () => {
+app.listen(PORT,async  () => {
   console.log(`Server is running at http://localhost:${PORT}`);
+  await checkAndUpdatePostsOnStartup();
 });

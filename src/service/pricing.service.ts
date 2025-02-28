@@ -20,6 +20,8 @@ class PricingService {
       const startDate = new Date();
       const endDate = new Date();
       endDate.setDate(startDate.getDate() + pricing.expiredDay);
+
+
       const userPricing = await UserPricing.findOne({ where: { userId }, transaction });
       if (userPricing) {
         userPricing.pricingId = pricingId;
@@ -41,8 +43,9 @@ class PricingService {
           { transaction }
         );
       }
-      await NotificationService.createNotification(userId, `Bạn đã mua gói ${pricing.name} thành công!`);
+
       await transaction.commit();
+      await NotificationService.createNotification(userId, `Bạn đã mua gói ${pricing.name} thành công!`);
       return { message: 'Mua gói thành công!', pricing };
     } catch (error) {
       await transaction.rollback();
