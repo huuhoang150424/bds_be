@@ -20,14 +20,17 @@ class CommentController {
   static async getCommentsByPost(req: Request, res: Response, next: NextFunction) {
     try {
       const { postId } = req.params;
-      const comments = await CommentService.getCommentsByPost(postId);
-      return res.status(200).json(ApiResponse.success(comments, 'Danh sách bình luận'));
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const cursor = req.query.cursor as string | undefined;
+      const comments = await CommentService.getCommentsByPost(postId, page, limit, cursor);
+      return res.status(200).json(ApiResponse.success(comments, "Danh sách bình luận"));
     } catch (error) {
       next(error);
     }
   }
-
   // [updateComment]
+
   static async updateComment(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user?.userId;
