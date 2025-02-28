@@ -22,7 +22,7 @@ export default class UserPricing extends BaseModel<string> {
   user!: User;
 
   @ForeignKey(() => Pricing)
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.UUID)
   pricingId!: string;
 
