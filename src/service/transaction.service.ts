@@ -2,8 +2,7 @@ import { Transaction, User } from '@models';
 import { NotFoundError } from '@helper';
 import { payOS } from '@config/payos';
 import { sequelize } from '@config/database';
-import axios from 'axios';
-import crc32 from 'crc/crc32';
+import NotificationService from '@service/notification.service';
 
 class TransactionService {
   static async createTransaction(userId: string, amount: number, description: string) {
@@ -57,6 +56,7 @@ class TransactionService {
         await user.save({ transaction: t });
       }
       await t.commit();
+			await NotificationService.createNotification(user.id,`Bạn đã nạp ${transaction.amount} thành công `)
       return transaction;
     } catch (error) {
       await t.rollback();

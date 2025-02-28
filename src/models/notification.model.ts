@@ -4,6 +4,7 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+	Default,
 } from 'sequelize-typescript';
 import User from './user.model';
 import BaseModel from './base.model';
@@ -20,6 +21,7 @@ export default class Notification extends BaseModel<string> {
   @Column(DataType.STRING)
   message!: string;
 
+	@Default(false)
   @Column(DataType.BOOLEAN)
   isRead!: boolean;
 }

@@ -1,4 +1,4 @@
-import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType } from '@models';
+import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType,UserPricing,Pricing  } from '@models';
 import { NotFoundError, UnauthorizedError, TokenError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
@@ -6,6 +6,36 @@ import { Op } from 'sequelize';
 
 class PostService {
   static async createPost(data: any, images: string[], userId: string) {
+		//check pricing
+		let userPricing = await UserPricing.findOne({
+			where: { userId },
+			include: [{ model: Pricing }],
+			order: [['endDate', 'DESC']],
+		});
+		if (!userPricing) {
+			userPricing = await UserPricing.create({
+				userId,
+				pricingId: null,
+				remainingPosts: 15,
+				displayDays: 10, 
+				startDate: new Date(),
+				endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)), 
+				boostDays: 0,
+				hasReport: false,
+				discountPercent: 0,
+			});
+		}
+		const pricing = userPricing.pricing;
+		//check count post 
+		if (!pricing || pricing.name === 'VIP_1' || pricing.name === 'VIP_2') {
+			if (userPricing.remainingPosts <= 0) {
+				throw new BadRequestError(
+					`Bạn đã đạt giới hạn ${userPricing.remainingPosts} bài đăng trong tháng. Hãy nâng cấp gói thành viên!`
+				);
+			}
+		}
+		const displayDays = pricing ? pricing.displayDay : 10;
+		const boostDays = pricing ? pricing.boostDays : 0;
     const listingType = await ListingType.findOne({
       where: { id: data.listingType },
     });
@@ -31,11 +61,11 @@ class PostService {
       bathroom: data.bathroom,
       isFurniture: data.isFurniture,
       direction: data.direction,
-      expiredDate: data.expiredDate,
-      expiredBoost: data.expiredBoost,
       status: data.status,
       priceUnit: priceUnit,
       price: data.price,
+			expiredDate: new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000),
+			expiredBoost: new Date(Date.now() + boostDays * 24 * 60 * 60 * 1000)
     });
     const propertyType = await PropertyType.findOne({
       where: { name: data.propertyType },
@@ -72,6 +102,10 @@ class PostService {
         });
       }),
     );
+		if (!pricing || pricing.name === 'VIP_1' || pricing.name === 'VIP_2') {
+			userPricing.remainingPosts -= 1;
+			await userPricing.save();
+		}
     return newPost;
   }
 

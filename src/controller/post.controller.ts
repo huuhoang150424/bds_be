@@ -3,7 +3,7 @@
 import {ApiResponse} from "@helper";
 import {PostService} from "@service";
 import { Request, Response, NextFunction } from 'express';
-import { ParsedQs } from 'qs';
+
 
 
 

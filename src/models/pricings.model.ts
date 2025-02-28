@@ -30,6 +30,7 @@ export default class Pricing extends BaseModel<string> {
   @Column(DataType.DOUBLE)
   discountPercent!: number;
 
+	@Default(10)
   @AllowNull(false)
   @Column(DataType.INTEGER)
   displayDay!: number;
