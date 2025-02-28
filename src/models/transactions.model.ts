@@ -4,9 +4,10 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+	AllowNull,
 } from 'sequelize-typescript';
 import User from './user.model';
-import { ProcessingStatus ,PaymentMethod} from './enums';
+import { Status ,PaymentMethod} from './enums';
 import BaseModel from './base.model';
 
 @Table({ tableName: 'transactions', timestamps: true })
@@ -24,10 +25,14 @@ export default class Transaction extends BaseModel<string> {
   @Column(DataType.STRING)
   description!: string;
 
-  @Column({type: DataType.ENUM(...Object.values(ProcessingStatus))})
-  paymentMethod!: string;
+	@AllowNull(true)
+	@Column(DataType.INTEGER)
+  orderCode!: number;
 
   @Column({type: DataType.ENUM(...Object.values(PaymentMethod))})
+  paymentMethod!: string;
+
+  @Column({type: DataType.ENUM(...Object.values(Status))})
   status!: string;
 }
 //done

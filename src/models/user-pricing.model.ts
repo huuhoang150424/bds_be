@@ -29,9 +29,14 @@ export default class UserPricing extends BaseModel<string> {
   @BelongsTo(() => Pricing)
   pricing!: Pricing;
 
-  @Default(0) 
+  @Default(15) 
   @Column(DataType.INTEGER)
   remainingPosts!: number;
+
+	@Default(10)
+  @AllowNull(false)
+  @Column(DataType.INTEGER)
+  displayDay!: number;
 
   @AllowNull(false)
   @Default(DataType.NOW) 
