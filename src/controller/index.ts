@@ -4,7 +4,7 @@ import PostController from "./post.controller";
 import CommentController from "./comment.controller";
 import NewController from "./new.controller";
 import RatingController from "./rating.controller";
-import ReportController from "./report.controller";
+import ReportsController from "./report.controller";
 import PricingController from "./pricing.controller";
 
 
@@ -15,6 +15,6 @@ export {
 	CommentController,
 	NewController,
 	RatingController,
-	ReportController,
+	ReportsController,
 	PricingController
 }

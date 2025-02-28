@@ -6,6 +6,7 @@ import commentRouter from "./comment";
 import ratingRouter from "./rating";
 import pricingRouter from "./pricing";
 import newRouter from "./new";
+import reportRouter from "./reports";
 
 const route=(app:Express)=>{
   app.use("/auth",authRouter)
@@ -15,6 +16,7 @@ const route=(app:Express)=>{
 	app.use("/rating",ratingRouter)
 	app.use("/pricing",pricingRouter)
 	app.use("/new",newRouter)
+	app.use("/reports",reportRouter)
 
 }
 

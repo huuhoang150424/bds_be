@@ -1,10 +1,10 @@
-// comment.controller.ts
+
 import { Request, Response, NextFunction } from 'express';
 import { CommentService } from "@service";
 import { ApiResponse } from "@helper";
 
 class CommentController {
-  // Tạo bình luận
+  // [createComment]
   static async createComment(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user?.userId;
@@ -16,7 +16,7 @@ class CommentController {
     }
   }
 
-  // 
+  // [getCommentsByPost]
   static async getCommentsByPost(req: Request, res: Response, next: NextFunction) {
     try {
       const { postId } = req.params;
