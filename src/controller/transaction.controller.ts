@@ -1,3 +1,6 @@
+'use-strict';
+
+
 import {ApiResponse} from "@helper";
 import { Request, Response, NextFunction } from 'express';
 import {TransactionService} from '@service';

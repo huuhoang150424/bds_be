@@ -77,10 +77,12 @@ export default class User extends BaseModel<string> {
   @HasMany(() => Notification)
   notifications!: Notification[];
 
-	@BeforeCreate
-	@BeforeUpdate
+  @BeforeCreate
+  @BeforeUpdate
   static async hashPassword(user: User) {
-    const saltRounds = 10; 
-    user.password = await bcrypt.hash(user.password, saltRounds);
+    if (user.changed("password")) { 
+      const saltRounds = 10;
+      user.password = await bcrypt.hash(user.password, saltRounds);
+    }
   }
 }

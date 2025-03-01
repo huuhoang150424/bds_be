@@ -13,7 +13,7 @@ const generaAccessToken = async (user: any) => {
       role: user.roles,
     },
     tokenKey,
-    { expiresIn: "1h" }
+    { expiresIn: "1d" }
   );
 };
 

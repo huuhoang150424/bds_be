@@ -7,7 +7,7 @@ import { validateRequest } from './validate-request';
 export const validateCreatePost = [
   check('title').notEmpty().withMessage('Title cannot be empty'),
   check('address').notEmpty().withMessage('Address cannot be empty'),
-  check('square_meters')
+  check('squareMeters')
     .isNumeric()
     .withMessage('Square meters must be a number')
     .custom((value) => value > 0)

@@ -8,25 +8,25 @@ import {
 } from 'sequelize-typescript';
 import User from './user.model';
 import Post from './post.model';
-import { PriceUnit, ListingTypes, PropertyType, Directions, StatusPost } from './enums';
+import { PriceUnit, ListingTypes, ActionType, Directions, StatusPost } from '@models/enums';
 import BaseModel from './base.model';
 
 @Table({ tableName: 'post_history', timestamps: false })
 export default class PostHistory extends BaseModel<string> {
   @ForeignKey(() => Post)
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.UUID)
   postId!: string;
 
-  @BelongsTo(() => Post)
+  @BelongsTo(() => Post, { onDelete: 'SET NULL' })
   post!: Post;
 
   @ForeignKey(() => User)
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.UUID)
   userId!: string; 
 
-  @BelongsTo(() => User)
+  @BelongsTo(() => User, { onDelete: 'SET NULL' })
   user!: User;
 
   @Column({ type: DataType.ENUM(...Object.values(PriceUnit)) })
@@ -46,7 +46,7 @@ export default class PostHistory extends BaseModel<string> {
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
-  square_meters!: number;
+  squareMeters!: number;
 
   @AllowNull(true)
   @Column(DataType.TEXT)
@@ -83,12 +83,20 @@ export default class PostHistory extends BaseModel<string> {
   @Column(DataType.DATE)
   expiredDate!: Date;
 
-  @AllowNull(true)
-  @Column(DataType.DATE)
-  expiredBoost!: Date;
-
   @Column({ type: DataType.ENUM(...Object.values(StatusPost)) })
   status!: string;
+
+  @AllowNull(false)
+  @Column({ type: DataType.ENUM(...Object.values(ActionType)) })
+  action!: string; 
+
+  @ForeignKey(() => User)
+  @AllowNull(true) 
+  @Column(DataType.UUID)
+  changeBy!: string | null;
+  
+  @BelongsTo(() => User, { foreignKey: 'changeBy', onDelete: 'SET NULL' })
+  changedUser!: User;
 
   @AllowNull(false)
   @Column(DataType.DATE)

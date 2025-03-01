@@ -5,7 +5,7 @@ import {ApiResponse} from "@helper";
 import {PricingService} from "@service";
 
 class PricingController {
-
+	//[create pricing]
 	static async buyPricing(req: Request, res: Response, next: NextFunction){
 		try {
 			const userId=(req as any).user.userId;
@@ -18,7 +18,19 @@ class PricingController {
 			next(error);
 		}
 	}
-
+	//[update Pricing]
+	static async updatePricing(req: Request, res: Response, next: NextFunction){
+		try {
+			const userId=(req as any).user.userId;
+			const {pricingId}=req.body;
+			const newPricing = await PricingService.updatePricing(userId,pricingId);
+			return res.status(200).json(
+				ApiResponse.success(newPricing, "Nâng cấp gói Vip thành công!")
+			);
+		} catch (error) {
+			next(error);
+		}
+	}
 }
 
 
