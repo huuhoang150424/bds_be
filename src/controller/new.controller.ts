@@ -77,13 +77,14 @@ class NewsController {
   //[deleteNews]
   static async deleteNews(req: Request, res: Response, next: NextFunction) {
     try {
-      const id = req.params.newsId;
-      await NewsService.deleteNews(id);
-      return res.status(200).json(ApiResponse.success(null, "Xóa tin tức thành công"));
+        const id = req.params.newsId;
+        const userId = (req as any).user?.userId; 
+        return res.status(200).json(ApiResponse.success(null, "Xóa tin tức thành công"));
     } catch (error) {
-      next(error);
+        next(error);
     }
-  }
+}
+
 }
 
 export default NewsController;

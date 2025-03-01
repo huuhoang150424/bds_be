@@ -1,60 +1,73 @@
 import {
   Table,
   Column,
-  Model,
   DataType,
   ForeignKey,
   BelongsTo,
-  CreatedAt
+  AllowNull,
 } from "sequelize-typescript";
 import News from "./news.model";
 import User from "./user.model";
-import { CategoryNew, Roles, HistoryNews } from "./enums";
+import { CategoryNew, Roles, ActionType } from "./enums";
+import BaseModel from "./base.model";
 
-@Table({
-  tableName: "news_history",
-  timestamps: false, 
-})
-export default class NewsHistory extends Model {
+@Table({ tableName: "news_history", timestamps: false })
+export default class NewsHistory extends BaseModel<string> {
   @ForeignKey(() => News)
+  @AllowNull(true)
   @Column(DataType.UUID)
   newsId!: string;
 
+  @BelongsTo(() => News, { onDelete: "SET NULL" })
+  news!: News;
+
   @ForeignKey(() => User)
+  @AllowNull(true)
   @Column(DataType.UUID)
   userId!: string;
+
+  @BelongsTo(() => User, { onDelete: "SET NULL" })
+  user!: User;
 
   @Column({ type: DataType.ENUM(...Object.values(Roles)) })
   createdBy!: Roles;
 
+  @AllowNull(false)
   @Column(DataType.STRING)
   title!: string;
 
+  @AllowNull(false)
   @Column(DataType.TEXT)
   content!: string;
 
+  @AllowNull(true)
   @Column(DataType.TEXT)
-  origin_post!: string;
+  originPost!: string;
 
+  @AllowNull(true)
   @Column(DataType.STRING)
   imageUrl!: string;
 
   @Column({ type: DataType.ENUM(...Object.values(CategoryNew)) })
   category!: CategoryNew;
 
+  @AllowNull(true)
   @Column(DataType.INTEGER)
   readingTime!: number;
 
-  @Column({ type: DataType.ENUM(...Object.values(HistoryNews)) })
-  action!: HistoryNews;
+  @AllowNull(false)
+  @Column({ type: DataType.ENUM(...Object.values(ActionType)) })
+  action!: string;
 
-  @CreatedAt
+  @AllowNull(false)
   @Column(DataType.DATE)
-  createdAt!: Date;
+  changedAt!: Date;
 
-  @BelongsTo(() => News, { foreignKey: "newsId", as: "news" })
-  news!: News;
+  @ForeignKey(() => User)
+  @AllowNull(true)
+  @Column(DataType.UUID)
+  changeBy!: string | null;
 
-  @BelongsTo(() => User, { foreignKey: "userId", as: "user" })
-  user!: User;
+  @BelongsTo(() => User, { foreignKey: "changeBy", onDelete: "SET NULL" })
+  changedUser!: User;
 }
