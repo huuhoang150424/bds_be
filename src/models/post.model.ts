@@ -45,7 +45,7 @@ export default class Post extends BaseModel<string> {
   price!: number;
 
   @Column(DataType.INTEGER)
-  square_meters!: number;
+  squareMeters!: number;
 
   @Column(DataType.TEXT)
   description!: string;

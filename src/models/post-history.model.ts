@@ -8,7 +8,7 @@ import {
 } from 'sequelize-typescript';
 import User from './user.model';
 import Post from './post.model';
-import { PriceUnit, ListingTypes, PropertyType, Directions, StatusPost } from './enums';
+import { PriceUnit, ListingTypes, ActionType, Directions, StatusPost } from '@models/enums';
 import BaseModel from './base.model';
 
 @Table({ tableName: 'post_history', timestamps: false })
@@ -46,7 +46,7 @@ export default class PostHistory extends BaseModel<string> {
 
   @AllowNull(false)
   @Column(DataType.INTEGER)
-  square_meters!: number;
+  squareMeters!: number;
 
   @AllowNull(true)
   @Column(DataType.TEXT)
@@ -85,6 +85,14 @@ export default class PostHistory extends BaseModel<string> {
 
   @Column({ type: DataType.ENUM(...Object.values(StatusPost)) })
   status!: string;
+
+  @AllowNull(false)
+  @Column({ type: DataType.ENUM(...Object.values(ActionType)) })
+  action!: string; 
+
+  @AllowNull(false)
+  @Column(DataType.DATE)
+  actionAt!: Date;
 
   @AllowNull(false)
   @Column(DataType.DATE)

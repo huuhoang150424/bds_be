@@ -38,3 +38,10 @@ export enum StatusPost {
   Negotiating = "Đang đàm phán",
   Transferred = "Đã bàn giao",
 }
+
+
+export enum ActionType {
+  CREATE = "CREATE",
+  UPDATE = "UPDATE",
+  DELETE = "DELETE",
+}

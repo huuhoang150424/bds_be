@@ -103,7 +103,13 @@ class PostController {
 	}
 	static async updatePost(req: Request, res: Response, next: NextFunction) {
     try {
-      return res.status(200).json(ApiResponse.success( {}, "thành công"));
+			const userId=(req as any).user.userId;
+			const postId=req.params.postId;
+			const updateData = req.body;
+			const imageFiles = req.files as Express.Multer.File[];
+			const imageUrls = imageFiles.map((file) => file.path);
+			const newPost=await PostService.updatePost(postId, userId,updateData,imageUrls);
+      return res.status(200).json(ApiResponse.success( newPost, "cập nhật bài đăng thành công"));
     } catch (error) {
       next(error);
     }
