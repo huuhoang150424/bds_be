@@ -73,11 +73,9 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   verified!: boolean;
 
+  @AllowNull(true)
   @Column(DataType.DATE)
   expiredDate!: Date;
-
-  @Column(DataType.DATE)
-  expiredBoost!: Date;
 
   @Column(DataType.ENUM(...Object.values(StatusPost)))
   status!: 'Còn trống' | 'Đang đám phán' | 'Đã bàn giao';

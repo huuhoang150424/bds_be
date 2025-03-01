@@ -3,7 +3,7 @@ import cron from 'node-cron';
 
 
 
-const resetMonthlyPost=async ()=>{
+const resetMonthlyPostFree=async ()=>{
   try {
     await UserPricing.update(
       {remainingPosts: 15},
@@ -14,12 +14,13 @@ const resetMonthlyPost=async ()=>{
   }
 }
 
-cron.schedule('0 0 1 * *', resetMonthlyPost);
+
+cron.schedule('0 0 1 * *', resetMonthlyPostFree);
 
 export const checkAndUpdatePostsOnStartup = async () => {
   const now = new Date();
   if (now.getDate() === 1) {
     console.log('🔄 Server restart vào ngày đầu tháng, reset số bài đăng...');
-    await resetMonthlyPost();
+    await resetMonthlyPostFree();
   }
 };

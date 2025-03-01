@@ -7,14 +7,14 @@ import {validateCreatePost} from "@validation";
 
 
 
-Router.post("/createPost",uploadCloud.array("images"),validateCreatePost,verifyRole(["Agent","User"]), PostController.create as any);
-Router.get("/:slug/getPost",verifyRole(["Agent"]), PostController.getPost as any);
+Router.post("/createPost",uploadCloud.array("images"),validateCreatePost,verifyRole(["Agent"]), PostController.create as any);
+Router.get("/:slug/getPost", PostController.getPost as any);
 Router.get("/getAllPosts",verifyRole(["Admin"]), PostController.getAllPost as any);
 Router.put("/:postId/updatePost",verifyRole(["Agent"]), PostController.updatePost as any);
 Router.delete("/:postId/deletePost",verifyRole(["Agent"]), PostController.deletePost as any);
 Router.get("/getPostClient", PostController.getAllPostForClient as any);
 Router.patch("/:postId/approvePost", verifyRole(["Admin"]),PostController.approvePost as any);
-Router.get("/searchPost", verifyRole(["User"]),PostController.searchPost as any);
+Router.get("/searchPost",PostController.searchPost as any);
 
 
 

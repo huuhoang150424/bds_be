@@ -27,7 +27,7 @@ class PostService {
 		}
 		const pricing = userPricing.pricing;
 		//check count post 
-		if (!pricing || pricing.name === 'VIP_1' || pricing.name === 'VIP_2') {
+		if (!pricing || pricing.name === 'VIP_1') {
 			if (userPricing.remainingPosts <= 0) {
 				throw new BadRequestError(
 					`Bạn đã đạt giới hạn ${userPricing.remainingPosts} bài đăng trong tháng. Hãy nâng cấp gói thành viên!`
@@ -35,7 +35,6 @@ class PostService {
 			}
 		}
 		const displayDays = pricing ? pricing.displayDay : 10;
-		const boostDays = pricing ? pricing.boostDays : 0;
     const listingType = await ListingType.findOne({
       where: { id: data.listingType },
     });
@@ -49,6 +48,7 @@ class PostService {
       throw new BadRequestError('Bài đăng đã tồn tại');
     }
     const priceUnit = listingType.listingType === 'Bán' ? 'VND' : 'VND/tháng';
+    const expiredDate = displayDays === -1 ? null : new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000);
     const newPost = await Post.create({
       userId: userId,
       id: uuidv4(),
@@ -64,8 +64,7 @@ class PostService {
       status: data.status,
       priceUnit: priceUnit,
       price: data.price,
-			expiredDate: new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000),
-			expiredBoost: new Date(Date.now() + boostDays * 24 * 60 * 60 * 1000)
+			expiredDate: expiredDate
     });
     const propertyType = await PropertyType.findOne({
       where: { name: data.propertyType },
@@ -102,7 +101,7 @@ class PostService {
         });
       }),
     );
-		if (!pricing || pricing.name === 'VIP_1' || pricing.name === 'VIP_2') {
+		if (!pricing || pricing.name === 'VIP_1') {
 			userPricing.remainingPosts -= 1;
 			await userPricing.save();
 		}
@@ -170,6 +169,7 @@ class PostService {
 
   static async getPosts(page: number, limit: number) {
     const offset = (page - 1) * limit;
+    const now = new Date();
     const { count, rows } = await Post.findAndCountAll({
       limit: limit,
       offset: offset,
@@ -184,6 +184,12 @@ class PostService {
         },
       ],
       order: [['createdAt', 'DESC']],
+      where: {
+        [Op.or]: [
+          { expiredDate: null }, 
+          { expiredDate: { [Op.gt]: now } }, 
+        ],
+      }
     });
     return {
       totalItems: count,

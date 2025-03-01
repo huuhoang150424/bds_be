@@ -43,6 +43,10 @@ export default class UserPricing extends BaseModel<string> {
   @Column(DataType.DATE)
   startDate!: Date;
 
+  @Default(0) 
+  @Column(DataType.INTEGER)
+  boostDays!: number;
+
   @AllowNull(false)
   @Column(DataType.DATE)
   endDate!: Date;

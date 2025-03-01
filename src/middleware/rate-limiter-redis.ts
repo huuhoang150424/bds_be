@@ -7,7 +7,7 @@ export const apiLimiter = rateLimit({
     sendCommand: (...args: string[]) => redisClient.sendCommand(args),
   }),
   windowMs: 1 * 60 * 1000, // 1 phút
-  max: 20, // max 20 requests mỗi IP 1 phút
+  max: 100, // max 20 requests mỗi IP 1 phút
   message: '⚠️ Bạn đã gửi quá nhiều request!',
   headers: true,
 });

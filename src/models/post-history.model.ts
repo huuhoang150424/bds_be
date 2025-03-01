@@ -83,10 +83,6 @@ export default class PostHistory extends BaseModel<string> {
   @Column(DataType.DATE)
   expiredDate!: Date;
 
-  @AllowNull(true)
-  @Column(DataType.DATE)
-  expiredBoost!: Date;
-
   @Column({ type: DataType.ENUM(...Object.values(StatusPost)) })
   status!: string;
 
