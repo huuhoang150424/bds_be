@@ -45,3 +45,8 @@ export enum ActionType {
   UPDATE = "UPDATE",
   DELETE = "DELETE",
 }
+
+export enum StatusPostDraft {
+  DRAFT = "DRAFT",
+  PENDING_REVIEW = "PENDING_REVIEW"
+}

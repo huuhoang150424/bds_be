@@ -10,108 +10,116 @@ import { sequelize } from '@config/database';
 
 class PostService {
   static async createPost(data: any, images: string[], userId: string) {
-    //check pricing
-    let userPricing = await UserPricing.findOne({
-      where: { userId },
-      include: [{ model: Pricing }],
-      order: [['endDate', 'DESC']],
-    });
-    if (!userPricing) {
-      userPricing = await UserPricing.create({
-        userId,
-        pricingId: null,
-        remainingPosts: 15,
-        displayDays: 10,
-        startDate: new Date(),
-        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
-        boostDays: 0,
-        hasReport: false,
-        discountPercent: 0,
+    const transaction=await sequelize.transaction();
+    try {
+      //check pricing
+      let userPricing = await UserPricing.findOne({
+        where: { userId },
+        include: [{ model: Pricing }],
+        order: [['endDate', 'DESC']],
       });
-    }
-    const pricing = userPricing.pricing;
-    //check count post
-    if (!pricing || pricing.name === 'VIP_1') {
-      if (userPricing.remainingPosts <= 0) {
-        throw new BadRequestError(
-          `Bạn đã đạt giới hạn ${userPricing.remainingPosts} bài đăng trong tháng. Hãy nâng cấp gói thành viên!`,
-        );
-      }
-    }
-    const displayDays = pricing ? pricing.displayDay : 10;
-    const listingType = await ListingType.findOne({
-      where: { id: data.listingType },
-    });
-    if (!listingType) {
-      throw new BadRequestError('Loại tin đăng không hợp lệ');
-    }
-    const existsPost = await Post.findOne({
-      where: { title: data.title },
-    });
-    if (existsPost) {
-      throw new BadRequestError('Bài đăng đã tồn tại');
-    }
-    const priceUnit = listingType.listingType === 'Bán' ? 'VND' : 'VND/tháng';
-    const expiredDate = displayDays === -1 ? null : new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000);
-    const newPost = await Post.create({
-      userId: userId,
-      id: uuidv4(),
-      title: data.title,
-      address: data.address,
-      squareMeters: data.squareMeters,
-      description: data.description,
-      floor: data.floor,
-      bedroom: data.bedroom,
-      bathroom: data.bathroom,
-      isFurniture: data.isFurniture,
-      direction: data.direction,
-      status: data.status,
-      priceUnit: priceUnit,
-      price: data.price,
-      expiredDate: expiredDate,
-    });
-    const propertyType = await PropertyType.findOne({
-      where: { name: data.propertyType },
-    });
-    if (!propertyType) {
-      await PropertyType.findOrCreate({
-        where: { name: data.propertyType },
-        defaults: {
-          id: uuidv4(),
-          name: data.propertyType,
-          postId: newPost.id,
-          listingTypeId: listingType.id,
-        },
-      });
-    }
-    await Promise.all(
-      images.map(async (image) => {
-        await Image.create({
-          id: uuidv4(),
-          imageUrl: image,
-          postId: newPost.id,
+      if (!userPricing) {
+        userPricing = await UserPricing.create({
+          userId,
+          pricingId: null,
+          remainingPosts: 15,
+          displayDays: 10,
+          startDate: new Date(),
+          endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+          boostDays: 0,
+          hasReport: false,
+          discountPercent: 0,
         });
-      }),
-    );
-    if (Array.isArray(data.tags) && data.tags.length > 0) {
+      }
+      const pricing = userPricing.pricing;
+      //check count post
+      if (!pricing || pricing.name === 'VIP_1') {
+        if (userPricing.remainingPosts <= 0) {
+          throw new BadRequestError(
+            `Bạn đã đạt giới hạn ${userPricing.remainingPosts} bài đăng trong tháng. Hãy nâng cấp gói thành viên!`,
+          );
+        }
+      }
+      const displayDays = pricing ? pricing.displayDay : 10;
+      const listingType = await ListingType.findOne({
+        where: { id: data.listingType },
+      });
+      if (!listingType) {
+        throw new BadRequestError('Loại tin đăng không hợp lệ');
+      }
+      const existsPost = await Post.findOne({
+        where: { title: data.title },
+      });
+      if (existsPost) {
+        throw new BadRequestError('Bài đăng đã tồn tại');
+      }
+      const priceUnit = listingType.listingType === 'Bán' ? 'VND' : 'VND/tháng';
+      const expiredDate = displayDays === -1 ? null : new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000);
+      const newPost = await Post.create({
+        userId: userId,
+        id: uuidv4(),
+        title: data.title,
+        address: data.address,
+        squareMeters: data.squareMeters,
+        description: data.description,
+        floor: data.floor,
+        bedroom: data.bedroom,
+        bathroom: data.bathroom,
+        isFurniture: data.isFurniture,
+        direction: data.direction,
+        status: data.status,
+        priceUnit: priceUnit,
+        price: data.price,
+        expiredDate: expiredDate,
+      });
+      const propertyType = await PropertyType.findOne({
+        where: { name: data.propertyType },
+      });
+      if (!propertyType) {
+        await PropertyType.findOrCreate({
+          where: { name: data.propertyType },
+          defaults: {
+            id: uuidv4(),
+            name: data.propertyType,
+            postId: newPost.id,
+            listingTypeId: listingType.id,
+          },
+        });
+      }
       await Promise.all(
-        data.tags.map(async (tagName: string) => {
-          const [tag] = await Tag.findOrCreate({
-            where: { tagName },
-            defaults: { id: uuidv4(), tagName },
-          });
-          await TagPost.create({
-            tagId: tag.id,
+        images.map(async (image) => {
+          await Image.create({
+            id: uuidv4(),
+            imageUrl: image,
             postId: newPost.id,
           });
         }),
       );
+      if (Array.isArray(data.tags) && data.tags.length > 0) {
+        await Promise.all(
+          data.tags.map(async (tagName: string) => {
+            const [tag] = await Tag.findOrCreate({
+              where: { tagName },
+              defaults: { id: uuidv4(), tagName },
+            });
+            await TagPost.create({
+              tagId: tag.id,
+              postId: newPost.id,
+            });
+          }),
+        );
+      }
+      if (!pricing || pricing.name === 'VIP_1') {
+        userPricing.remainingPosts -= 1;
+        await userPricing.save();
+      }
+      await this.savePostHistory(newPost.id, userId, ActionType.CREATE, transaction);
+      await transaction.commit();
+      return newPost;
+    } catch (err) {
+      transaction.rollback();
+      throw err;
     }
-    if (!pricing || pricing.name === 'VIP_1') {
-      userPricing.remainingPosts -= 1;
-      await userPricing.save();
-    }
-    return newPost;
   }
 
   static async getPostById(postId: string) {
@@ -302,8 +310,8 @@ class PostService {
         priority: findPost.priority,
         status: findPost.status,
         changedAt: new Date(),
+        changeBy:userId,
         action: actionType,
-        actionAt: new Date(),
       },
       { transaction },
     );

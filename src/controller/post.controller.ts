@@ -101,6 +101,7 @@ class PostController {
 			next(error);
 		}
 	}
+	//[update Post]
 	static async updatePost(req: Request, res: Response, next: NextFunction) {
     try {
 			const userId=(req as any).user.userId;
@@ -114,6 +115,7 @@ class PostController {
       next(error);
     }
   }
+	//[delete Post]
 	static async deletePost(req: Request, res: Response, next: NextFunction) {
     try {
 			const userId=(req as any).user.userId;

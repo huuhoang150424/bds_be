@@ -22,11 +22,11 @@ export default class PostHistory extends BaseModel<string> {
   post!: Post;
 
   @ForeignKey(() => User)
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.UUID)
   userId!: string; 
 
-  @BelongsTo(() => User)
+  @BelongsTo(() => User, { onDelete: 'SET NULL' })
   user!: User;
 
   @Column({ type: DataType.ENUM(...Object.values(PriceUnit)) })
@@ -90,9 +90,13 @@ export default class PostHistory extends BaseModel<string> {
   @Column({ type: DataType.ENUM(...Object.values(ActionType)) })
   action!: string; 
 
-  @AllowNull(false)
-  @Column(DataType.DATE)
-  actionAt!: Date;
+  @ForeignKey(() => User)
+  @AllowNull(true) 
+  @Column(DataType.UUID)
+  changeBy!: string | null;
+  
+  @BelongsTo(() => User, { foreignKey: 'changeBy', onDelete: 'SET NULL' })
+  changedUser!: User;
 
   @AllowNull(false)
   @Column(DataType.DATE)
