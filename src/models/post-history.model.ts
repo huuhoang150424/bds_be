@@ -14,11 +14,11 @@ import BaseModel from './base.model';
 @Table({ tableName: 'post_history', timestamps: false })
 export default class PostHistory extends BaseModel<string> {
   @ForeignKey(() => Post)
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.UUID)
   postId!: string;
 
-  @BelongsTo(() => Post)
+  @BelongsTo(() => Post, { onDelete: 'SET NULL' })
   post!: Post;
 
   @ForeignKey(() => User)

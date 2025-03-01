@@ -4,6 +4,7 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+  AllowNull,
 } from 'sequelize-typescript';
 import ListingType from './listing-types.model';
 import Post from './post.model';
@@ -18,11 +19,12 @@ export default class PropertyType extends BaseModel<string> {
   @BelongsTo(() => ListingType)
   listingType!: ListingType;
 
+  @AllowNull(true)
 	@ForeignKey(() => Post)
   @Column({ type: DataType.UUID, allowNull: false })
   postId!: string;
 
-  @BelongsTo(() => Post)
+  @BelongsTo(() => Post,{ onDelete: 'SET NULL' })
   post!: Post;
 
   @Column({ type: DataType.STRING, allowNull: false })

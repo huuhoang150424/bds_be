@@ -157,15 +157,17 @@ class PostService {
     return post;
   }
 
-  static async deletePost(postId: string) {
-    const post = await Post.findOne({
-      where: { id: postId },
-    });
-    if (!post) {
-      throw new NotFoundError('Không tìm thấy bài đăng');
+  static async deletePost(postId: string,userId:string) {
+    const transaction=await sequelize.transaction();
+    try {
+      const post=await this.getPostById(postId);
+      await this.savePostHistory(postId,userId,ActionType.DELETE,transaction);
+      await post.destroy({transaction});
+      transaction.commit();
+    } catch (err) {
+      transaction.rollback();
+      throw err;
     }
-    await post.destroy();
-    return;
   }
 
   static async approvePost(postId: string) {
