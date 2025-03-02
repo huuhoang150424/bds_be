@@ -61,6 +61,17 @@ class PostDraftController {
       next(error);
     }
   }
+  //[update post draft]
+  static async publicPostDraft(req: Request, res: Response, next: NextFunction) {
+    try {
+      const postDraftId = req.params.postDraftId;
+      const newPost=await PostDraftService.publishPostDraft(postDraftId);
+      return res.status(201).json(ApiResponse.success(newPost, 'Xuất bản nháp thành công!'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
 
 

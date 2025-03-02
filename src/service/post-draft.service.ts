@@ -1,7 +1,8 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { PostDraft,User, Tag, TagPost, Image, ListingType, PropertyType } from '@models';
+import { PostDraft,User, Tag, TagPost, Image, ListingType, PropertyType, Post, UserPricing, Pricing } from '@models';
 import { NotFoundError,BadRequestError } from '@helper';
+import { StatusPost, StatusPostDraft } from '@models/enums';
 
 class PostDraftService {
   static async createPostDraft(userId: string, data: any, imageUrls: string[]) {
@@ -207,7 +208,83 @@ class PostDraftService {
     return findPostDraft;
   }
 
-  static async publishPostDraft() {}
+  static async publishPostDraft(postDraftId:string) {
+    const postDraft = await PostDraft.findByPk(postDraftId, {
+      include: [Image, TagPost, PropertyType]
+    });
+    if (postDraft?.status===StatusPostDraft.PUBLISHED) {
+      throw new BadRequestError('Bạn đã xuất bài viết nháp này rồi');
+    }
+    let userPricing = await UserPricing.findOne({
+      where: { userId:postDraft?.userId },
+      include: [{ model: Pricing }],
+      order: [['endDate', 'DESC']],
+    });
+    if (!userPricing) {
+      userPricing = await UserPricing.create({
+        userId:postDraft?.userId,
+        pricingId: null,
+        remainingPosts: 15,
+        displayDays: 10,
+        startDate: new Date(),
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        boostDays: 0,
+        hasReport: false,
+        discountPercent: 0,
+      });
+    }
+    const pricing = userPricing.pricing;
+    if (!pricing || pricing.name === 'VIP_1') {
+      if (userPricing.remainingPosts <= 0) {
+        throw new BadRequestError(
+          `Bạn đã đạt giới hạn ${userPricing.remainingPosts} bài đăng trong tháng. Hãy nâng cấp gói thành viên!`,
+        );
+      }
+    }
+    const displayDays = pricing ? pricing.displayDay : 10;
+    const expiredDate = displayDays === -1 ? null : new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000);
+    const newPost=await Post.create({
+      userId: postDraft?.userId,
+      id: uuidv4(),
+      title: postDraft?.title,
+      address: postDraft?.address,
+      squareMeters: postDraft?.squareMeters,
+      description: postDraft?.description,
+      floor: postDraft?.floor,
+      bedroom: postDraft?.bedroom,
+      bathroom: postDraft?.bathroom,
+      isFurniture: postDraft?.isFurniture,
+      direction: postDraft?.direction,
+      status: StatusPost.Available,
+      priceUnit: postDraft?.priceUnit,
+      price: postDraft?.price,
+      expiredDate: expiredDate,
+    })
+    if (postDraft?.images) {
+      await Promise.all(
+        postDraft.images.map(async (image) => {
+          await image.update({ postId: newPost.id, postDraftId: null });
+        })
+      );
+    }
+    
+    if (postDraft?.tagPosts) {
+      await Promise.all(
+        postDraft.tagPosts.map(async (tag) => {
+          await tag.update({ postId: newPost.id }); 
+        })
+      );
+    }
+    if (postDraft?.propertyType && Array.isArray(postDraft.propertyType)) {
+      await Promise.all(
+        postDraft.propertyType.map(async (type) => {
+          await type.update({ postId: newPost.id });
+        })
+      );
+    }
+    await postDraft?.update({ status: StatusPostDraft.PUBLISHED });
+    return newPost;
+  }
 }
 
 

@@ -48,5 +48,5 @@ export enum ActionType {
 
 export enum StatusPostDraft {
   DRAFT = "DRAFT",
-  PENDING_REVIEW = "PENDING_REVIEW"
+  PUBLISHED = "PUBLISHED"
 }

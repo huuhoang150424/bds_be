@@ -13,7 +13,7 @@ import {
 import slugify from 'slugify';
 
 import {User,PropertyType,Image,TagPost} from '@models';
-import { Directions, StatusPostDraft } from '@models/enums';
+import { Directions, PriceUnit, StatusPostDraft } from '@models/enums';
 import BaseModel from './base.model';
 
 @Table({ tableName: 'post_drafts', timestamps: true })
@@ -29,6 +29,9 @@ export default class PostDraft extends BaseModel<number> {
   @AllowNull(false)
   @Column(DataType.STRING)
   title!: string;
+
+  @Column({ type: DataType.ENUM(...Object.values(PriceUnit)) })
+  priceUnit!: string;
 
   @AllowNull(false)
   @Default('')

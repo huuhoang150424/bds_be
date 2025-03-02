@@ -22,5 +22,6 @@ Router.get("/:postDraftId/getPostDraft",verifyRole(["Agent","User"]), PostDraftC
 Router.get("/getAllPostDraft",verifyRole(["Agent","User"]), PostDraftController.getAllPostDraft as any);
 Router.delete("/:postDraftId/deletePostDraft",verifyRole(["Agent","User"]), PostDraftController.deletePostDraft as any);
 Router.put("/:postDraftId/updatePostDraft",uploadCloud.array("images"),verifyRole(["Agent","User"]), PostDraftController.updatePostDraft as any);
+Router.post("/:postDraftId/publicPostDraft",uploadCloud.array("images"),verifyRole(["Agent","User"]), PostDraftController.publicPostDraft as any);
 
 export default Router;
