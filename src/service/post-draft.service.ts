@@ -65,13 +65,25 @@ class PostDraftService {
     return newPostDraft;
   }
 
+  static async getPostDraft(postDraftId:string) {
+    const postDraft=await PostDraft.findOne({
+      where: {id: postDraftId}
+    });
+    if (!postDraft) {
+      throw new NotFoundError('Không tìm thấy bản nháp');
+    }
+    return postDraft;
+  }
+
+  static async getAllPostDraft() {}
+
   static async updatePostDraft() {
 
     
   }
-  static async getPostDraft() {}
-  static async getAllPostDraft() {}
+
   static async deletePostDraft() {}
+  
   static async publishPostDraft() {}
 }
 

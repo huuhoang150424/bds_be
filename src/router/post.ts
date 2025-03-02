@@ -18,6 +18,6 @@ Router.get("/searchPost",PostController.searchPost as any);
 
 //post draft
 Router.post("/createPostDraft",uploadCloud.array("images"),verifyRole(["Agent","User"]), PostDraftController.create as any);
-
+Router.get("/:postDraftId/getPostDraft",verifyRole(["Agent","User"]), PostDraftController.getPostDraft as any);
 
 export default Router;

@@ -20,7 +20,18 @@ class PostDraftController {
 			next(error);
 		}
 	}
-
+	//[get draft]
+	static async getPostDraft(req: Request, res: Response, next: NextFunction) {
+		try {
+			const postDraftId=req.params.postDraftId;
+			const postDraft = await PostDraftService.getPostDraft(postDraftId);
+			return res.status(200).json(
+				ApiResponse.success(postDraft, "Thành công!")
+			);
+		} catch (error) {
+			next(error);
+		}
+	}
 
 }
 
