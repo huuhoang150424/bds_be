@@ -1,6 +1,6 @@
 import { check } from 'express-validator';
 import { validateRequest } from './validate-request';
-
+import { ValidationChain } from "express-validator";
 
 
 
@@ -57,4 +57,10 @@ export const validateCreatePost = [
     .withMessage('Each tag must be a string'),
 
 	validateRequest
+];
+export const validateCreatePostDraft = [
+  ...validateCreatePost.filter((rule: any) => {
+    return rule?.fields?.[0] !== "status";
+  }),
+  validateRequest,
 ];

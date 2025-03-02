@@ -73,11 +73,6 @@ export default class PostDraft extends BaseModel<number> {
   @Column({ type: DataType.ENUM(...Object.values(Directions)) })
   direction!: string;
 
-  @AllowNull(true)
-  @Default(0)
-  @Column(DataType.INTEGER)
-  priority!: number;
-
   @Default(StatusPostDraft.DRAFT)
   @Column({ type: DataType.ENUM(...Object.values(StatusPostDraft)) })
   status!: string;
