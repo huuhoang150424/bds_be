@@ -37,10 +37,6 @@ export const validateCreatePost = [
     .optional()
     .isString()
     .withMessage('Direction must be a string'),
-  check('expiredDate')
-    .optional()
-    .isISO8601()
-    .withMessage('Expiration date must be in YYYY-MM-DD format'),
   check('status')
     .optional()
     .isString()

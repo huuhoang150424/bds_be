@@ -1,12 +1,6 @@
 import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany,BeforeCreate } from 'sequelize-typescript';
-import Post from './post.model';
-import Transaction from './transactions.model';
-import Comment from './comment.model';
-import Rating from './rating.model';
-import Wishlist from './wish-list.model';
-import Report from './reports.model';
-import Notification from './notification.model';
-import News from './new.model';
+
+import {Post,PostDraft,Transaction,Comment,Rating,Wishlist,Report,Notification,News} from '@models';
 import { Roles } from './enums';
 import BaseModel from './base.model';
 import bcrypt from 'bcrypt';
@@ -76,6 +70,9 @@ export default class User extends BaseModel<string> {
 
   @HasMany(() => Notification)
   notifications!: Notification[];
+
+  @HasMany(() => PostDraft)
+  postDrafts!: PostDraft[];
 
   @BeforeCreate
   @BeforeUpdate

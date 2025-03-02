@@ -72,20 +72,12 @@ class PostService {
         price: data.price,
         expiredDate: expiredDate,
       });
-      const propertyType = await PropertyType.findOne({
-        where: { name: data.propertyType },
-      });
-      if (!propertyType) {
-        await PropertyType.findOrCreate({
-          where: { name: data.propertyType },
-          defaults: {
-            id: uuidv4(),
-            name: data.propertyType,
-            postId: newPost.id,
-            listingTypeId: listingType.id,
-          },
-        });
-      }
+      await PropertyType.create({
+        id: uuidv4(),
+        name: data.propertyType,
+        postId: newPost.id,
+        listingTypeId: data.listingType,
+      })
       await Promise.all(
         images.map(async (image) => {
           await Image.create({

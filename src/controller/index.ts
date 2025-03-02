@@ -7,6 +7,7 @@ import RatingController from "./rating.controller";
 import ReportController from "./report.controller";
 import PricingController from "./pricing.controller";
 import TransactionController from "./transaction.controller";
+import PostDraftController from "./post-draft.controller";
 
 export {
 	AuthController,
@@ -17,5 +18,6 @@ export {
 	RatingController,
 	ReportController,
 	PricingController,
-	TransactionController
+	TransactionController,
+	PostDraftController
 }

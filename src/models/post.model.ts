@@ -11,16 +11,8 @@ import {
 	BeforeUpdate
 } from 'sequelize-typescript';
 import slugify from 'slugify';
-import User from './user.model';
-import Image from './image.model';
-import Comment from './comment.model';
-import Rating from './rating.model';
-import Wishlist from './wish-list.model';
-import Report from './reports.model';
-import TagPost from './tag-post.model';
+import {User,Report,Comment,Rating,PropertyType,Image,TagPost,Wishlist} from '@models';
 import BaseModel from './base.model';
-import PropertyType from './property-types.model';
-
 import { ListingTypes, Directions, PriceUnit, StatusPost } from './enums';
 
 @Table({ tableName: 'posts', timestamps: true })

@@ -1,6 +1,5 @@
 import { Sequelize } from 'sequelize-typescript';
 import "dotenv/config";
-import path from 'path';
 import {
 	User,
 	Post,
@@ -20,7 +19,8 @@ import {
 	Log,
 	Comment,	
 	PropertyType,
-	ListingType } from '@models/index';
+	ListingType,
+	PostDraft } from '@models/index';
 
 
 
@@ -58,7 +58,8 @@ export const sequelize = new Sequelize({
 		Log,
 		Comment,
 		PropertyType,
-		ListingType
+		ListingType,
+		PostDraft
   ],
   logging: false,
 });
