@@ -32,7 +32,20 @@ class PostDraftController {
 			next(error);
 		}
 	}
-
+	//[get all post draft]
+	static async getAllPostDraft(req: Request, res: Response, next: NextFunction) {
+		try {
+			const userId=(req as any).user.userId;
+			const page=parseInt(req.query.page as string) || 1;
+			const limit=parseInt(req.query.limit as string) || 5;
+			const allPostDraft = await PostDraftService.getAllPostDraft(userId,page,limit);
+			return res.status(200).json(
+				ApiResponse.success(allPostDraft, "Thành công!")
+			);
+		} catch (error) {
+			next(error);
+		}
+	}
 }
 
 

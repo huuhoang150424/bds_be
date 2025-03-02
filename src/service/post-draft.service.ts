@@ -67,6 +67,32 @@ class PostDraftService {
 
   static async getPostDraft(postDraftId:string) {
     const postDraft=await PostDraft.findOne({
+      include: [
+        {
+          model: Image,
+          attributes: ['image_url']
+        },
+        {
+          model: TagPost,
+          attributes: ['id'],
+          include: [
+            {
+              model: Tag,
+              attributes: ['tagName'],
+            },
+          ],
+        },
+        {
+          model: PropertyType,
+          attributes: ['name'],
+          include: [
+            {
+              model: ListingType,
+              attributes: ['listing_type']
+            }
+          ]
+        }
+      ],
       where: {id: postDraftId}
     });
     if (!postDraft) {
@@ -75,7 +101,38 @@ class PostDraftService {
     return postDraft;
   }
 
-  static async getAllPostDraft() {}
+  static async getAllPostDraft(userId:string,page:number,limit: number) {
+    const offset=(page-1)*limit;
+    const {count,rows}=await PostDraft.findAndCountAll({
+      limit,
+      offset,
+      include: [
+        {
+          model: Image,
+          attributes: ['image_url']
+        },
+        {
+          model: TagPost,
+          attributes: ['id'],
+          include: [
+            {
+              model: Tag,
+              attributes: ['tagName'],
+            },
+          ],
+        },
+      ],
+      distinct: true,
+      order: [['createdAt', 'DESC']],
+      where: {userId}
+    })
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      data: rows,
+    };
+  }
 
   static async updatePostDraft() {
 
@@ -83,7 +140,7 @@ class PostDraftService {
   }
 
   static async deletePostDraft() {}
-  
+
   static async publishPostDraft() {}
 }
 
