@@ -49,6 +49,18 @@ class PostDraftController {
       next(error);
     }
   }
+  //[update post draft]
+  static async updatePostDraft(req: Request, res: Response, next: NextFunction) {
+    try {
+      const postDraftId = req.params.postDraftId;
+			const imageFiles = req.files as Express.Multer.File[];
+			const imageUrls = imageFiles.map((file) => file.path);
+      const newPostDraft =await PostDraftService.updatePostDraft(postDraftId,req.body,imageUrls);
+      return res.status(200).json(ApiResponse.success(newPostDraft, 'Cập nhât bản nháp thành công!'));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

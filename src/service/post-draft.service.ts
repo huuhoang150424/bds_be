@@ -101,6 +101,16 @@ class PostDraftService {
     return postDraft;
   }
 
+  static async getPostDraftById(postDraftId:string) {
+    const findPostDraft=await PostDraft.findOne({
+      where: {id:postDraftId}
+    });
+    if (!findPostDraft) {
+      throw new NotFoundError('Không tìm thấy bản nháp!');
+    } 
+    return findPostDraft;
+  }
+
   static async getAllPostDraft(userId:string,page:number,limit: number) {
     const offset=(page-1)*limit;
     const {count,rows}=await PostDraft.findAndCountAll({
@@ -135,19 +145,66 @@ class PostDraftService {
   }
 
   static async deletePostDraft(postDraftId:string) {
-    const findPostDraft=await PostDraft.findOne({
-      where: {id:postDraftId}
-    });
-    if (!findPostDraft) {
-      throw new NotFoundError('Không tìm thấy bản nháp!');
-    }
+    const findPostDraft=await this.getPostDraftById(postDraftId);
     await findPostDraft.destroy();
     return;
   } 
 
-  static async updatePostDraft() {
+  static async updatePostDraft(postDraftId:string,data:any,imageUrls:string[]) {
+    const findPostDraft=await this.getPostDraftById(postDraftId);
+    const {  propertyType, ...updateData } = data;
+    const listingType = await ListingType.findOne({
+      where: { id: data.listingType },
+    });
+    if (!listingType) {
+      throw new BadRequestError('Loại tin đăng không hợp lệ');
+    }
+    if (Array.isArray(imageUrls)) {
+      const existingImage=await Image.findAll({where: {postDraftId: postDraftId}});
+      const existingUrlImage=existingImage.map((image)=>image.imageUrl);
+      const imageToDelete=existingImage.filter((image)=>!imageUrls.includes(image.imageUrl));
+      if (imageToDelete.length>0) {
+        await Image.destroy({
+          where: {id : imageToDelete.map((img)=>img.id)}
+        })
+      }
+      const newImages=imageUrls.filter((img)=>!existingUrlImage.includes(img));
+      await Promise.all(
+        newImages.map(async (imageUrl)=> await Image.create({id: uuidv4(),imageUrl,postDraftId}))
+      )
+    }
+    const tags = data.tags ? (Array.isArray(data.tags) ? data.tags : [data.tags]) : [];
 
+    if (tags.length > 0) {
+      await TagPost.destroy({ where: { postDraftId } });
     
+      await Promise.all(
+        tags.map(async (tagName:string) => {
+          const [tag] = await Tag.findOrCreate({
+            where: { tagName },
+            defaults: { id: uuidv4(), tagName },
+          });
+          await TagPost.create({ tagId: tag.id, postDraftId });
+        })
+      );
+    }
+    
+    if (propertyType) {
+      const [property, created] = await PropertyType.findOrCreate({
+        where: { name: propertyType },
+        defaults: {
+          id: uuidv4(),
+          name: propertyType,
+          postDraftId,
+          listingTypeId: listingType.id,
+        },
+      });
+      if (!created) {
+        await property.update({ postDraftId });
+      }
+    }
+    await findPostDraft.update(updateData);
+    return findPostDraft;
   }
 
   static async publishPostDraft() {}

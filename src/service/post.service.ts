@@ -238,7 +238,7 @@ class PostService {
         }
         const newImages = imageUrls.filter((url) => !existingUrls.includes(url));
         await Promise.all(
-          newImages.map((imageUrl) => Image.create({ id: uuidv4(), imageUrl, postId }, { transaction })),
+          newImages.map(async(imageUrl) => await Image.create({ id: uuidv4(), imageUrl, postId }, { transaction })),
         );
       }
       if (Array.isArray(tags)) {
