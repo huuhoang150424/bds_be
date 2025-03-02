@@ -5,11 +5,14 @@ import morgan from 'morgan';
 import { connectDatabase } from '@models/connect';
 import { errorMiddleware,apiLimiter } from '@middleware';
 import route from '@router';
-import cookieParser from 'cookie-parser'
+import cookieParser from 'cookie-parser';
+import http from "http";
+import { Server } from "socket.io";
 import { swaggerDoc } from 'api-doc/swagger';
 import swaggerUi from "swagger-ui-express";
 import "dotenv/config";
 import {checkAndUpdatePostsOnStartup} from '@helper';
+import {setupNotificationSocket} from '@socket';
 
 
 const app = express();
@@ -43,8 +46,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   errorMiddleware(err, req, res, next);
 });
 
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } });
+setupNotificationSocket(io);
 
-app.listen(PORT,async  () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+server.listen(PORT, async () => {
+  console.log(`🚀 Server is running at http://localhost:${PORT}`);
   await checkAndUpdatePostsOnStartup();
 });
