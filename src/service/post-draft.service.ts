@@ -134,12 +134,21 @@ class PostDraftService {
     };
   }
 
+  static async deletePostDraft(postDraftId:string) {
+    const findPostDraft=await PostDraft.findOne({
+      where: {id:postDraftId}
+    });
+    if (!findPostDraft) {
+      throw new NotFoundError('Không tìm thấy bản nháp!');
+    }
+    await findPostDraft.destroy();
+    return;
+  } 
+
   static async updatePostDraft() {
 
     
   }
-
-  static async deletePostDraft() {}
 
   static async publishPostDraft() {}
 }

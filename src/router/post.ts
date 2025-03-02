@@ -20,6 +20,6 @@ Router.get("/searchPost",PostController.searchPost as any);
 Router.post("/createPostDraft",uploadCloud.array("images"),verifyRole(["Agent","User"]), PostDraftController.create as any);
 Router.get("/:postDraftId/getPostDraft",verifyRole(["Agent","User"]), PostDraftController.getPostDraft as any);
 Router.get("/getAllPostDraft",verifyRole(["Agent","User"]), PostDraftController.getAllPostDraft as any);
-
+Router.delete("/:postDraftId/deletePostDraft",verifyRole(["Agent","User"]), PostDraftController.deletePostDraft as any);
 
 export default Router;
