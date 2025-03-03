@@ -1,6 +1,6 @@
 import { check } from 'express-validator';
 import { validateRequest } from './validate-request';
-
+import { ValidationChain } from "express-validator";
 
 
 
@@ -37,10 +37,6 @@ export const validateCreatePost = [
     .optional()
     .isString()
     .withMessage('Direction must be a string'),
-  check('expiredDate')
-    .optional()
-    .isISO8601()
-    .withMessage('Expiration date must be in YYYY-MM-DD format'),
   check('status')
     .optional()
     .isString()
@@ -61,4 +57,10 @@ export const validateCreatePost = [
     .withMessage('Each tag must be a string'),
 
 	validateRequest
+];
+export const validateCreatePostDraft = [
+  ...validateCreatePost.filter((rule: any) => {
+    return rule?.fields?.[0] !== "status";
+  }),
+  validateRequest,
 ];

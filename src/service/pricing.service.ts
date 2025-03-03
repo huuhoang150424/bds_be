@@ -26,10 +26,11 @@ class PricingService {
           endDate: { [Op.gt]: new Date() }
         },
         order: [['endDate', 'DESC']],
-      })
-      if (findUserPricing) {
+      });
+      if (findUserPricing?.pricing) {
         throw new BadRequestError("Bạn đã có một gói VIP đang hoạt động!");
       }
+      await findUserPricing?.destroy();
       await UserPricing.create(
         {
           userId,

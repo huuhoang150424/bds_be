@@ -5,16 +5,21 @@ import morgan from 'morgan';
 import { connectDatabase } from '@models/connect';
 import { errorMiddleware,apiLimiter } from '@middleware';
 import route from '@router';
-import cookieParser from 'cookie-parser'
+import cookieParser from 'cookie-parser';
+import http from "http";
+import { Server } from "socket.io";
 import { swaggerDoc } from 'api-doc/swagger';
 import swaggerUi from "swagger-ui-express";
 import "dotenv/config";
 import {checkAndUpdatePostsOnStartup} from '@helper';
+import {setupNotificationSocket} from '@socket';
 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+const server = http.createServer(app);
+export const io = new Server(server, { cors: { origin: "*" } });
+setupNotificationSocket(io);
 app.use(express.json());
 app.use(body_parser.json({ limit: '50mb' }));
 app.use(morgan('combined'));
@@ -44,7 +49,8 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 });
 
 
-app.listen(PORT,async  () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
+
+server.listen(PORT, async () => {
+  console.log(`🚀 Server is running at http://localhost:${PORT}`);
   await checkAndUpdatePostsOnStartup();
 });

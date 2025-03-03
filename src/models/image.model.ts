@@ -6,7 +6,7 @@ import {
   BelongsTo,
   AllowNull,
 } from 'sequelize-typescript';
-import Post from './post.model';
+import {Post,PostDraft} from '@models';
 import BaseModel from './base.model';
 
 @Table({ tableName: 'images', timestamps: true })
@@ -18,6 +18,14 @@ export default class Image extends BaseModel<string> {
 
   @BelongsTo(() => Post,{ onDelete: 'SET NULL' })
   post!: Post;
+
+  @AllowNull(true)
+  @ForeignKey(() => PostDraft)
+  @Column(DataType.UUID)
+  postDraftId!: string;
+
+  @BelongsTo(() => PostDraft,{ onDelete: 'SET NULL' })
+  postDraft!: PostDraft;
 
   @Column(DataType.STRING)
   imageUrl!: string;

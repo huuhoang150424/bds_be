@@ -17,6 +17,12 @@
 			"@models": [
 				"models/index"
 			],
+			"@socket/*": [
+				"socket/*"
+			],
+			"@socket": [
+				"socket/index"
+			],
 			"@controller/*": [
 				"controller/*"
 			],

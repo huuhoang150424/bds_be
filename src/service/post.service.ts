@@ -31,6 +31,16 @@ class PostService {
           discountPercent: 0,
         });
       }
+      let priority=0;
+      if (userPricing && userPricing.pricing) {
+        if (userPricing.pricing.name==="VIP_1") {
+          priority=1;
+        } else if (userPricing.pricing.name==="VIP_2") {
+          priority=2;
+        }else if (userPricing.pricing.name==="VIP_3") {
+          priority=3;
+        } 
+      }
       const pricing = userPricing.pricing;
       //check count post
       if (!pricing || pricing.name === 'VIP_1') {
@@ -71,21 +81,14 @@ class PostService {
         priceUnit: priceUnit,
         price: data.price,
         expiredDate: expiredDate,
+        priority
       });
-      const propertyType = await PropertyType.findOne({
-        where: { name: data.propertyType },
-      });
-      if (!propertyType) {
-        await PropertyType.findOrCreate({
-          where: { name: data.propertyType },
-          defaults: {
-            id: uuidv4(),
-            name: data.propertyType,
-            postId: newPost.id,
-            listingTypeId: listingType.id,
-          },
-        });
-      }
+      await PropertyType.create({
+        id: uuidv4(),
+        name: data.propertyType,
+        postId: newPost.id,
+        listingTypeId: data.listingType,
+      })
       await Promise.all(
         images.map(async (image) => {
           await Image.create({
@@ -246,7 +249,7 @@ class PostService {
         }
         const newImages = imageUrls.filter((url) => !existingUrls.includes(url));
         await Promise.all(
-          newImages.map((imageUrl) => Image.create({ id: uuidv4(), imageUrl, postId }, { transaction })),
+          newImages.map(async(imageUrl) => await Image.create({ id: uuidv4(), imageUrl, postId }, { transaction })),
         );
       }
       if (Array.isArray(tags)) {
