@@ -1,14 +1,14 @@
-import { Roles } from './../models/enums/role';
-import { ActionType } from './../models/enums';
+
+import { ActionType, Roles } from "@models/enums";
 "use strict";
 import { News, NewsHistory, User } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
-import { Op, Transaction } from "sequelize";  // Import Transaction
+import { Op, Transaction } from "sequelize";
 
 class NewsService {
   static async createNew(userId: number, title: string, content: string, image: string, origin: string, category: string, readingtime: number) {
-    return await sequelize.transaction(async (transaction: Transaction) => {  // Sửa lỗi Sequelize.transaction
+    return await sequelize.transaction(async (transaction: Transaction) => {
       const news = await News.create({
         userId,
         title,
@@ -19,21 +19,7 @@ class NewsService {
         readingTime: readingtime
       }, { transaction });
 
-      await NewsHistory.create({
-        newsId: news.id,
-        userId,
-        createdBy: Roles.User,
-        title,
-        content,
-        originPost: origin,
-        imageUrl: image,
-        category,
-        readingTime: readingtime,
-        action: ActionType.CREATE,
-        changedAt: new Date(),
-        changeBy: userId
-      }, { transaction });
-
+      await this.saveNewsHistory(news.id.toString(), userId.toString(), ActionType.CREATE, transaction);
       return news;
     });
   }
@@ -48,7 +34,7 @@ class NewsService {
     const whereCondition = lastId ? { id: { [Op.lt]: lastId } } : {};
     const newsList = await News.findAll({
       where: whereCondition,
-      order: sequelize.random(), // Dùng sequelize.random() thay vì Sequelize.literal("RAND()")
+      order: sequelize.random(),
       limit,
     });
     await CacheRepository.set(cacheKey, JSON.stringify(newsList), 300);
@@ -75,22 +61,7 @@ class NewsService {
       if (Object.keys(updatedData).length === 0) {
         throw new BadRequestError("Không có dữ liệu nào để cập nhật");
       }
-
-      await NewsHistory.create({
-        newsId: news.id,
-        userId,
-        createdBy: Roles.User,
-        title: news.title,
-        content: news.content,
-        originPost: news.origin_post,
-        imageUrl: news.imageUrl,
-        category: news.category,
-        readingTime: news.readingTime,
-        action: ActionType.UPDATE,
-        changedAt: new Date(),
-        changeBy: userId
-      }, { transaction });
-
+      await this.saveNewsHistory(newsId, userId, ActionType.UPDATE, transaction);
       await news.update(updatedData, { transaction });
       return news;
     });
@@ -102,9 +73,22 @@ class NewsService {
       if (!news) {
         throw new NotFoundError("Tin tức không tồn tại");
       }
+      await this.saveNewsHistory(id, userId, ActionType.DELETE, transaction);
+      console.log("✅ Đã gọi saveNewsHistory thành công");
 
-      await NewsHistory.create({
-        newsId: news.id,
+      await news.destroy({ transaction });
+      return { message: "Tin tức đã bị xóa" };
+    });
+  }
+
+  static async saveNewsHistory(newsId: string, userId: string, action: ActionType, transaction: Transaction) {
+    const news = await News.findByPk(newsId, { transaction });
+    if (!news) {
+      throw new NotFoundError("Tin tức không tồn tại");
+    }
+    await NewsHistory.create(
+      {
+        newsId,
         userId,
         createdBy: Roles.User,
         title: news.title,
@@ -113,15 +97,14 @@ class NewsService {
         imageUrl: news.imageUrl,
         category: news.category,
         readingTime: news.readingTime,
-        action: ActionType.DELETE,
+        action,
         changedAt: new Date(),
-        changeBy: userId
-      }, { transaction });
-
-      await news.destroy({ transaction });
-      return { message: "Tin tức đã bị xóa" };
-    });
+        changeBy: userId,
+      },
+      { transaction }
+    );
   }
+
 }
 
 export default NewsService;

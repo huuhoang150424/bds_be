@@ -1,4 +1,4 @@
-import { CategoryNew } from './../models/enums/new';
+import { CategoryNew } from '@models/enums';
 "use strict";
 import { News } from "@models";
 import { Request, Response, NextFunction } from "express";
@@ -11,12 +11,8 @@ class NewsController {
   static async createNew(req: Request, res: Response, next: NextFunction) {
     try {
       const { title, content, origin_post, category, readingtime } = req.body;
-      const image = req.file?.path;
+      const image = req.file?.path || "";
       const userId = (req as any).user?.userId;
-      console.log(userId)
-      if (!image) {
-        throw new BadRequestError("anh khong phu hop !")
-      }
       const news = await NewsService.createNew(userId, title, content, image, origin_post, category, readingtime);
       return res.status(201).json(ApiResponse.success(news, "Tạo tin tức thành công"));
     } catch (error) {
@@ -55,23 +51,12 @@ class NewsController {
       const userId = (req as any).user?.userId;
       const { title, content, origin_post, category, readingtime } = req.body;
       const image = req.file?.path;
-
-      const updatedData: Partial<News> = {
-        ...(title && { title }),
-        ...(content && { content }),
-        ...(origin_post && { origin_post }),
-        ...(category && { category }),
-        ...(readingtime && { readingTime: readingtime }),
-        ...(image && { imageUrl: image }),
-      };
-
-      const updatedNews = await NewsService.updateNews(newsId, userId, updatedData);
+      const updatedNews = await NewsService.updateNews(newsId, userId, req.body);
       return res.status(200).json(ApiResponse.success(updatedNews, "Cập nhật tin tức thành công"));
     } catch (error) {
       next(error);
     }
   }
-
 
 
   //[deleteNews]
