@@ -1,9 +1,8 @@
-import { Server, Socket } from "socket.io";
+import {  Socket } from "socket.io";
 
-let io: Server;
 
-export const setupNotificationSocket = (server: any) => {
-  io = new Server(server, { cors: { origin: "*" } });
+
+export const setupNotificationSocket = (io: any) => {
   io.on("connection", (socket: Socket) => {
     console.log(`🔔 Client connected: ${socket.id}`);
     socket.on("subscribeToNotifications", (userId) => {
@@ -15,5 +14,3 @@ export const setupNotificationSocket = (server: any) => {
     });
   });
 };
-
-export { io };

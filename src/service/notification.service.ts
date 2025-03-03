@@ -1,6 +1,6 @@
 import { Notification } from '@models';
 import { NotFoundError } from '@helper';
-import { io } from '@socket';
+import { io } from '../index';
 class NotificationService {
 	static async createNotification(userId:string,message:string){
 		const newNotification=await Notification.create({

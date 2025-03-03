@@ -17,7 +17,9 @@ import {setupNotificationSocket} from '@socket';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
+const server = http.createServer(app);
+export const io = new Server(server, { cors: { origin: "*" } });
+setupNotificationSocket(io);
 app.use(express.json());
 app.use(body_parser.json({ limit: '50mb' }));
 app.use(morgan('combined'));
@@ -46,9 +48,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
   errorMiddleware(err, req, res, next);
 });
 
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
-setupNotificationSocket(io);
+
 
 server.listen(PORT, async () => {
   console.log(`🚀 Server is running at http://localhost:${PORT}`);

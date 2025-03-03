@@ -1,6 +1,6 @@
-import {setupNotificationSocket,io} from './notification'
+import {setupNotificationSocket} from './notification'
 
 export {
   setupNotificationSocket,
-  io
+
 }
