@@ -1,10 +1,11 @@
-import { CategoryNew } from '@models/enums';
+
 "use strict";
+import { CategoryNew } from '@models/enums';
 import { News } from "@models";
 import { Request, Response, NextFunction } from "express";
 import { NewsService } from "@service";
 import { ApiResponse, BadRequestError } from "@helper";
-import { error } from 'console';
+
 
 class NewsController {
   //[createNew]
@@ -32,8 +33,8 @@ class NewsController {
       next(error);
     }
   }
-  // [getNew]
 
+  // [getNew]
   static async getNews(req: Request, res: Response, next: NextFunction) {
     try {
       const slug = req.params.slug;
@@ -43,7 +44,8 @@ class NewsController {
       next(error);
     }
   }
-  
+
+
   // [UpdateNews]
   static async updateNews(req: Request, res: Response, next: NextFunction) {
     try {
@@ -62,13 +64,13 @@ class NewsController {
   //[deleteNews]
   static async deleteNews(req: Request, res: Response, next: NextFunction) {
     try {
-        const id = req.params.newsId;
-        const userId = (req as any).user?.userId; 
-        return res.status(200).json(ApiResponse.success(null, "Xóa tin tức thành công"));
+      const id = req.params.newsId;
+      const userId = (req as any).user?.userId;
+      return res.status(200).json(ApiResponse.success(null, "Xóa tin tức thành công"));
     } catch (error) {
-        next(error);
+      next(error);
     }
-}
+  }
 
 }
 

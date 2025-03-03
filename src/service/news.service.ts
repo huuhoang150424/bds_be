@@ -42,12 +42,20 @@ class NewsService {
   }
 
   static async getNew(slug: string) {
+    const cacheKey = `news:slug:${slug}`;
+    const cachedNews = await CacheRepository.get(cacheKey);
+    if (cachedNews) {
+      console.log("✅ Lấy tin tức từ cache");
+      return JSON.parse(cachedNews);
+    }
     const findNews = await News.findOne({ where: { slug } });
     if (!findNews) {
-      throw new NotFoundError('không tìm thấy bài đăng!');
+      throw new NotFoundError('Không tìm thấy bài đăng!');
     }
+    await CacheRepository.set(cacheKey, findNews, 300);
     return findNews;
   }
+
 
   static async updateNews(newsId: string, userId: string, updatedData: Partial<News>) {
     return await sequelize.transaction(async (transaction: Transaction) => {

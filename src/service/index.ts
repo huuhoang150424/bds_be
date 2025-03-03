@@ -8,6 +8,7 @@ import TransactionService from "./transaction.service";
 import NotificationService from "./notification.service";
 import PricingService from "./pricing.service";
 import WishlistService from "./wishlist.service";
+import RatingService from "./rating.service";
 
 export {
 	AuthService,
@@ -19,5 +20,6 @@ export {
 	TransactionService,
 	NotificationService,
 	PricingService,
-	WishlistService
+	WishlistService,
+	RatingService
 }
