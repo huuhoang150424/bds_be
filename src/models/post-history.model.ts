@@ -5,6 +5,7 @@ import {
   ForeignKey,
   BelongsTo,
   AllowNull,
+  Default,
 } from 'sequelize-typescript';
 import User from './user.model';
 import Post from './post.model';
@@ -47,6 +48,10 @@ export default class PostHistory extends BaseModel<string> {
   @AllowNull(false)
   @Column(DataType.INTEGER)
   squareMeters!: number;
+
+  @Default(0)
+  @Column(DataType.INTEGER)
+  priority!: number;
 
   @AllowNull(true)
   @Column(DataType.TEXT)

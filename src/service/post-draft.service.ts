@@ -233,6 +233,16 @@ class PostDraftService {
         discountPercent: 0,
       });
     }
+    let priority=0;
+    if (userPricing && userPricing.pricing) {
+      if (userPricing.pricing.name==="VIP_1") {
+        priority=1;
+      } else if (userPricing.pricing.name==="VIP_2") {
+        priority=2;
+      }else if (userPricing.pricing.name==="VIP_3") {
+        priority=3;
+      } 
+    }
     const pricing = userPricing.pricing;
     if (!pricing || pricing.name === 'VIP_1') {
       if (userPricing.remainingPosts <= 0) {
@@ -259,6 +269,7 @@ class PostDraftService {
       priceUnit: postDraft?.priceUnit,
       price: postDraft?.price,
       expiredDate: expiredDate,
+      priority
     })
     if (postDraft?.images) {
       await Promise.all(

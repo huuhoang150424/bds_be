@@ -31,6 +31,16 @@ class PostService {
           discountPercent: 0,
         });
       }
+      let priority=0;
+      if (userPricing && userPricing.pricing) {
+        if (userPricing.pricing.name==="VIP_1") {
+          priority=1;
+        } else if (userPricing.pricing.name==="VIP_2") {
+          priority=2;
+        }else if (userPricing.pricing.name==="VIP_3") {
+          priority=3;
+        } 
+      }
       const pricing = userPricing.pricing;
       //check count post
       if (!pricing || pricing.name === 'VIP_1') {
@@ -71,6 +81,7 @@ class PostService {
         priceUnit: priceUnit,
         price: data.price,
         expiredDate: expiredDate,
+        priority
       });
       await PropertyType.create({
         id: uuidv4(),
