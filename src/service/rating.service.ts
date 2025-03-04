@@ -1,6 +1,6 @@
+"use strict";
 
 import { ActionType, Roles } from "@models/enums";
-"use strict";
 import { Rating } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';

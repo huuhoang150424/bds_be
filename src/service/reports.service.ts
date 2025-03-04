@@ -39,7 +39,7 @@ class ReportsService {
     });
   }
 
-  // [getAllReport ]
+  // [getAllReport ] phân trang
   static async getAllReports() {
     return await Report.findAll({ include: ["user", "post"] });
   }
