@@ -4,9 +4,9 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
+  HasMany
 } from 'sequelize-typescript';
-import User from './user.model';
-import Post from './post.model';
+import {User,Post,CommentLike} from "@models";
 import BaseModel from './base.model';
 
 @Table({ tableName: 'comments', timestamps: true })
@@ -27,5 +27,8 @@ export default class Comment extends BaseModel<string> {
 
   @Column(DataType.TEXT)
   content!: string;
+
+  @HasMany(() => CommentLike)
+  likes!: CommentLike[];
 }
 //done

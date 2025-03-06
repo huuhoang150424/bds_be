@@ -10,6 +10,7 @@ import PricingService from "./pricing.service";
 import WishlistService from "./wishlist.service";
 import RatingService from "./rating.service";
 import PostDraftService from "./post-draft.service";
+import CommentLikeService from "./comment-like.service";
 
 export {
 	AuthService,
@@ -23,5 +24,6 @@ export {
 	PricingService,
 	WishlistService,
 	RatingService,
-	PostDraftService
+	PostDraftService,
+	CommentLikeService
 }

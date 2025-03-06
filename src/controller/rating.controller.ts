@@ -47,7 +47,6 @@ class RatingController {
     }
   }
 
-
   // [Get Ratings by PostId]
   static async getRatingsByPostId(req: Request, res: Response, next: NextFunction) {
     try {

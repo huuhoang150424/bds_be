@@ -9,6 +9,7 @@ import PricingController from "./pricing.controller";
 import TransactionController from "./transaction.controller";
 import PostDraftController from "./post-draft.controller";
 import WishlistController from "./wishlist.controller";
+import CommentLikeController from "./comment-like.controller";
 
 export {
 	AuthController,
@@ -21,5 +22,6 @@ export {
 	PricingController,
 	TransactionController,
 	PostDraftController,
-	WishlistController
+	WishlistController,
+	CommentLikeController
 }

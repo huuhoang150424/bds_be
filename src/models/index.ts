@@ -19,6 +19,7 @@ import ListingType from './listing-types.model';
 import PropertyType from './property-types.model';
 import PostDraft from './post-draft.model';
 import NewsHistory from "./news-history.model";
+import CommentLike from "./comment-like.model";
 
 export {
 	User,
@@ -41,5 +42,6 @@ export {
 	PropertyType,
 	ListingType,
 	PostDraft,
-	NewsHistory
+	NewsHistory,
+	CommentLike
 };

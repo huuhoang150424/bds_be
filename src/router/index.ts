@@ -9,6 +9,7 @@ import newRouter from "./new";
 import reportRouter from "./reports";
 import transactionRouter from "./transaction";
 import wishlistRouter from "./wishlist";
+import commentlikeRouter from "./comment-like";
 
 const route=(app:Express)=>{
   app.use("/auth",authRouter)
@@ -22,6 +23,7 @@ const route=(app:Express)=>{
 	app.use("/new",pricingRouter)
 	app.use("/transaction",transactionRouter)
 	app.use("/wishlist",wishlistRouter)
+	app.use("/commentlike", commentlikeRouter)
 
 }
 export default route;

@@ -1,6 +1,6 @@
-import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany,BeforeCreate } from 'sequelize-typescript';
+import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany, BeforeCreate } from 'sequelize-typescript';
 
-import {Post,PostDraft,Transaction,Comment,Rating,Wishlist,Report,Notification,News} from '@models';
+import { Post, PostDraft, Transaction, Comment, Rating, Wishlist, Report, Notification, News, CommentLike } from '@models';
 import { Roles } from './enums';
 import BaseModel from './base.model';
 import bcrypt from 'bcrypt';
@@ -30,7 +30,7 @@ export default class User extends BaseModel<string> {
   @Column(DataType.STRING)
   password!: string;
 
-	@Default("https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg")
+  @Default("https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg")
   @Column(DataType.STRING)
   avatar!: string;
 
@@ -40,7 +40,7 @@ export default class User extends BaseModel<string> {
   balance!: number;
 
   @AllowNull(false)
-	@Default(Roles.User)
+  @Default(Roles.User)
   @Column({ type: DataType.ENUM(...Object.values(Roles)) })
   roles!: string;
 
@@ -74,10 +74,13 @@ export default class User extends BaseModel<string> {
   @HasMany(() => PostDraft)
   postDrafts!: PostDraft[];
 
+  @HasMany(() => CommentLike)
+  commentLikes!: CommentLike[];
+
   @BeforeCreate
   @BeforeUpdate
   static async hashPassword(user: User) {
-    if (user.changed("password")) { 
+    if (user.changed("password")) {
       const saltRounds = 10;
       user.password = await bcrypt.hash(user.password, saltRounds);
     }
