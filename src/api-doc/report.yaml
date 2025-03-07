@@ -1,0 +1,149 @@
+openapi: 3.0.0
+info:
+  title: Report API
+  description: API for managing user reports
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api/reports
+    description: Development server
+
+paths:
+  /reports/createReports:
+    post:
+      summary: Create a new report
+      description: Allows a user to create a report on a post.
+      security:
+        - BearerAuth: []
+      tags:
+        - Reports
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - postId
+                - reason
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  description: The ID of the user creating the report.
+                postId:
+                  type: string
+                  format: uuid
+                  description: The ID of the post being reported.
+                reason:
+                  type: string
+                  enum: [Spam, Inappropriate, Misinformation]
+                  description: Reason for reporting.
+                content:
+                  type: string
+                  description: Additional details about the report.
+      responses:
+        201:
+          description: Report created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Report created successfully
+                  reportId:
+                    type: string
+                    format: uuid
+        400:
+          description: Missing required fields or invalid data
+        401:
+          description: Unauthorized
+
+  /reports/{postId}/getReportByPostId:
+    get:
+      summary: Get reports by post ID
+      description: Retrieve all reports associated with a specific post.
+      security:
+        - BearerAuth: []
+      tags:
+        - Reports
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reportId:
+                      type: string
+                      format: uuid
+                    userId:
+                      type: string
+                      format: uuid
+                    reason:
+                      type: string
+                    content:
+                      type: string
+                    status:
+                      type: string
+                      enum: [Pending, Resolved]
+        400:
+          description: Invalid post ID
+        401:
+          description: Unauthorized
+
+  /reports/getAllReports:
+    get:
+      summary: Get all reports
+      description: Retrieve all reports in the system.
+      security:
+        - BearerAuth: []
+      tags:
+        - Reports
+      responses:
+        200:
+          description: All reports retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    reportId:
+                      type: string
+                      format: uuid
+                    userId:
+                      type: string
+                      format: uuid
+                    postId:
+                      type: string
+                      format: uuid
+                    reason:
+                      type: string
+                    content:
+                      type: string
+                    status:
+                      type: string
+                      enum: [Pending, Resolved]
+        401:
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

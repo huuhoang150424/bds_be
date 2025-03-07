@@ -1,46 +1,165 @@
+openapi: 3.0.0
+info:
+  title: Comment API
+  description: API cung cấp các chức năng liên quan đến bình luận như tạo, lấy danh sách, cập nhật và xóa bình luận.
+  version: 1.0.0
+
 paths:
-  # /auth:
-  #   post:
-  #     summary: login
-  #     responses:
-  #       '200':
-  #         description: Đăng nhập thành công
-  #         content:
-  #           application/json:
-  #             schema:
-  #               type: array
-  #               items:
-  #                 $ref: '#/components/schemas/Comment'
-  #       '500':
-  #         description: Server error
-  /comment:
-    get:
-      summary: login
+  /comments:
+    post:
+      summary: Tạo bình luận mới
+      description: Người dùng có thể tạo bình luận trên một bài viết.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - postId
+                - content
+              properties:
+                postId:
+                  type: string
+                  example: "12345"
+                content:
+                  type: string
+                  example: "Bài viết rất hay!"
       responses:
-        '200':
-          description: Đăng nhập thành công
+        "201":
+          description: Bình luận đã được tạo thành công.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "400":
+          description: Yêu cầu không hợp lệ (thiếu dữ liệu, nội dung rỗng, v.v.).
+        "401":
+          description: Người dùng chưa đăng nhập.
+        "500":
+          description: Lỗi server.
+
+  /comments/{postId}:
+    get:
+      summary: Lấy danh sách bình luận của bài viết
+      description: Trả về danh sách bình luận của một bài viết cụ thể.
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: cursor
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Danh sách bình luận trả về thành công.
           content:
             application/json:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/Comment'
-        '500':
-          description: Server error
+                  $ref: "#/components/schemas/Comment"
+        "400":
+          description: Yêu cầu không hợp lệ.
+        "500":
+          description: Lỗi server.
+
+  /comments/{commentId}:
+    put:
+      summary: Cập nhật bình luận
+      description: Người dùng có thể cập nhật nội dung bình luận của mình.
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: "Bài viết rất hữu ích!"
+      responses:
+        "200":
+          description: Bình luận đã được cập nhật thành công.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "403":
+          description: Người dùng không có quyền cập nhật bình luận này.
+        "404":
+          description: Không tìm thấy bình luận.
+        "500":
+          description: Lỗi server.
+
+    delete:
+      summary: Xóa bình luận
+      description: Người dùng có thể xóa bình luận của mình.
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Bình luận đã bị xóa thành công.
+        "403":
+          description: Người dùng không có quyền xóa bình luận này.
+        "404":
+          description: Không tìm thấy bình luận.
+        "500":
+          description: Lỗi server.
+
 components:
   schemas:
     Comment:
       type: object
       properties:
-        user_id:
-          type: integer
-          example: 1
-        name:
+        commentId:
           type: string
-          example: John Doe
-        email:
+          example: "98765"
+        postId:
           type: string
-          example: johndoe@example.com
-        isAdmin:
-          type: boolean
-          example: false
+          example: "12345"
+        userId:
+          type: string
+          example: "67890"
+        content:
+          type: string
+          example: "Bài viết rất hay!"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-07T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-07T12:30:00Z"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
