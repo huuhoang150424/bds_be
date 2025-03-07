@@ -1,36 +1,32 @@
 'use-strict';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import { Comment, CommentLike } from '@models';
-import { generaAccessToken, generaRefreshToken } from '@helper/general-token';
-import { NotFoundError, UnauthorizedError, transporter, ForbiddenError, TokenError, BadRequestError, CacheRepository } from '@helper';
-import { v4 as uuidv4 } from 'uuid';
-import { Op } from "sequelize";
-
-
+import { NotFoundError, UnauthorizedError, transporter, ForbiddenError, BadRequestError, CacheRepository } from '@helper';
+import { LikeStatus } from "@models/enums";
 
 class CommentLikeService {
-  // [Like Comment]
-  static async likeComment(userId: string, commentId: string) {
+  // [Like or Dislike Comment]
+  static async toggleLikeStatus(userId: string, commentId: string, status: LikeStatus) {
     const comment = await Comment.findByPk(commentId);
     if (!comment) throw new NotFoundError('Không tìm thấy bình luận');
-    const existingLike = await CommentLike.findOne({ where: { userId, commentId } });
-    if (existingLike) throw new ForbiddenError('Bạn đã thích bình luận này');
-    return await CommentLike.create({ userId, commentId });
+    const existingReaction = await CommentLike.findOne({ where: { userId, commentId } });
+    if (existingReaction) {
+      if (existingReaction.status === status) {
+        await existingReaction.destroy();
+        return { message: `Đã xóa trạng thái ${status.toLowerCase()} khỏi bình luận` };
+      } else {
+        existingReaction.status = status;
+        await existingReaction.save();
+        return existingReaction;
+      }
+    } else {
+      return await CommentLike.create({ userId, commentId, status });
+    }
   }
-
-  // [Unlike Comment]
-  static async unlikeComment(userId: string, commentId: string) {
-    const like = await CommentLike.findOne({ where: { userId, commentId } });
-    if (!like) throw new NotFoundError('Bạn chưa thích bình luận này');
-    await like.destroy();
-    return { message: 'Bỏ thích bình luận thành công' };
-  }
-
-  // [Get Likes Count]
-  static async getCommentLikesCount(commentId: string) {
-    const count = await CommentLike.count({ where: { commentId } });
-    return { commentId, likesCount: count };
+  // [Get Like & Dislike Count]
+  static async getCommentReactionCount(commentId: string) {
+    const likesCount = await CommentLike.count({ where: { commentId, status: LikeStatus.LIKE } });
+    const dislikesCount = await CommentLike.count({ where: { commentId, status: LikeStatus.DISLIKE } });
+    return { commentId, likesCount, dislikesCount };
   }
 
 }
