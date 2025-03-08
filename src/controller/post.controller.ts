@@ -38,8 +38,8 @@ class PostController {
   static async getAllPostForClient(req: Request, res: Response, next: NextFunction) {
     try {
 			const page=parseInt(req.query.page as string) || 1;
-			const limit=parseInt(req.query.page as string) || 1;
-			const posts=await PostService.getPosts(page,limit);
+			const limit=parseInt(req.query.limit as string) || 10;
+			const posts=await PostService.getPostsForClient(page,limit);
       return res.status(200).json(ApiResponse.success(posts, "thành công" ) );
     } catch (error) {
       next(error);

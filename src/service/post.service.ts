@@ -212,7 +212,7 @@ class PostService {
           attributes: [],
         },
       ],
-			distinct: true,
+      distinct: true,
       order: [['createdAt', 'DESC']],
       where: {
         // [Op.or]: [{ expiredDate: null }, { expiredDate: { [Op.gt]: now } }],
@@ -346,20 +346,26 @@ class PostService {
     };
   }
 
-	private static bufferPool: any[] = []; 
-  static async getPostsByPriority(priority: number, limit: number) {
-    const cacheKey = `posts_priority_${priority}`;
+  private static bufferPool: any[] = [];
+
+  static async getVerifiedPosts() {
+    const cacheKey = `verified_posts`;
     const cachedData = await CacheRepository.get(cacheKey);
-
     if (cachedData) {
-      return JSON.parse(cachedData);
+      if (Array.isArray(cachedData)) {
+        return cachedData;
+      } else {
+        await CacheRepository.delete(cacheKey);
+      }
     }
-    const posts = await Post.findAll({ where: { priority }, limit });
-    await CacheRepository.set(cacheKey, JSON.stringify(posts), 600);
-
+    const posts = await Post.findAll({
+      where: { verified: true },
+      raw: true,
+    });
+    await CacheRepository.set(cacheKey, posts, 600);
     return posts;
   }
-	
+
   static shuffleArray(array: any[]) {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -367,42 +373,38 @@ class PostService {
     }
   }
 
-  static async getRandomPosts() {
-    const [priority3, priority2, priority1] = await Promise.all([
-      this.getPostsByPriority(3, 20),
-      this.getPostsByPriority(2, 10),
-      this.getPostsByPriority(1, 5),
-    ]);
-    const finalPosts = [
-      ...priority3.slice(0, 10),
-      ...priority2.slice(0, 5),
-      ...priority1.slice(0, 3),
-    ];
+  static async getRandomPosts(totalPosts = 20) {
+    const allPosts = await this.getVerifiedPosts();
+    if (!Array.isArray(allPosts)) {
+      throw new BadRequestError('getVerifiedPosts() did not return an array');
+    }
+    const priorityGroups :Record<number, any[]>= { 3: [], 2: [], 1: [], 0: [] };
+    allPosts.forEach((post) => {
+      priorityGroups[post.priority].push(post);
+    });
+
+    const finalPosts: any[] = [];
+    const priorityLevels = [3, 2, 1, 0];
+    for (const level of priorityLevels) {
+      const needed = totalPosts - finalPosts.length;
+      if (needed <= 0) break;
+      finalPosts.push(...priorityGroups[level].slice(0, needed));
+    }
 
     this.shuffleArray(finalPosts);
     return finalPosts;
   }
 
   static async getPostsForClient(page: number, limit: number) {
-    if (this.bufferPool.length > 0) {
-      return this.paginateData(this.bufferPool, page, limit);
+    if (this.bufferPool.length === 0) {
+      this.bufferPool = await this.getRandomPosts(35);
     }
-    const [priority3, priority2, priority1] = await Promise.all([
-      this.getPostsByPriority(3, 20),
-      this.getPostsByPriority(2, 10),
-      this.getPostsByPriority(1, 5),
-    ]);
-    const allPosts = [...priority3, ...priority2, ...priority1];
-    this.shuffleArray(allPosts);
-    this.bufferPool = allPosts;
-    setTimeout(() => (this.bufferPool = []), 60000);
-
-    return this.paginateData(allPosts, page, limit);
+    return this.paginateData(this.bufferPool, page, limit);
   }
 
   static paginateData(data: any[], page: number, limit: number) {
     const totalPosts = data.length;
-    const totalPages = Math.ceil(totalPosts / limit);
+    const totalPages = Math.ceil(totalPosts / limit) || 1;
     const offset = (page - 1) * limit;
     const paginatedPosts = data.slice(offset, offset + limit);
     return {
