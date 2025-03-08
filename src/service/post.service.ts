@@ -10,7 +10,7 @@ import { sequelize } from '@config/database';
 
 class PostService {
   static async createPost(data: any, images: string[], userId: string) {
-    const transaction=await sequelize.transaction();
+    const transaction = await sequelize.transaction();
     try {
       //check pricing
       let userPricing = await UserPricing.findOne({
@@ -31,15 +31,15 @@ class PostService {
           discountPercent: 0,
         });
       }
-      let priority=0;
+      let priority = 0;
       if (userPricing && userPricing.pricing) {
-        if (userPricing.pricing.name==="VIP_1") {
-          priority=1;
-        } else if (userPricing.pricing.name==="VIP_2") {
-          priority=2;
-        }else if (userPricing.pricing.name==="VIP_3") {
-          priority=3;
-        } 
+        if (userPricing.pricing.name === 'VIP_1') {
+          priority = 1;
+        } else if (userPricing.pricing.name === 'VIP_2') {
+          priority = 2;
+        } else if (userPricing.pricing.name === 'VIP_3') {
+          priority = 3;
+        }
       }
       const pricing = userPricing.pricing;
       //check count post
@@ -81,14 +81,14 @@ class PostService {
         priceUnit: priceUnit,
         price: data.price,
         expiredDate: expiredDate,
-        priority
+        priority,
       });
       await PropertyType.create({
         id: uuidv4(),
         name: data.propertyType,
         postId: newPost.id,
         listingTypeId: data.listingType,
-      })
+      });
       await Promise.all(
         images.map(async (image) => {
           await Image.create({
@@ -168,12 +168,12 @@ class PostService {
     return post;
   }
 
-  static async deletePost(postId: string,userId:string) {
-    const transaction=await sequelize.transaction();
+  static async deletePost(postId: string, userId: string) {
+    const transaction = await sequelize.transaction();
     try {
-      const post=await this.getPostById(postId);
-      await this.savePostHistory(postId,userId,ActionType.DELETE,transaction);
-      await post.destroy({transaction});
+      const post = await this.getPostById(postId);
+      await this.savePostHistory(postId, userId, ActionType.DELETE, transaction);
+      await post.destroy({ transaction });
       transaction.commit();
     } catch (err) {
       transaction.rollback();
@@ -212,9 +212,10 @@ class PostService {
           attributes: [],
         },
       ],
+			distinct: true,
       order: [['createdAt', 'DESC']],
       where: {
-        [Op.or]: [{ expiredDate: null }, { expiredDate: { [Op.gt]: now } }],
+        // [Op.or]: [{ expiredDate: null }, { expiredDate: { [Op.gt]: now } }],
       },
     });
     return {
@@ -249,7 +250,7 @@ class PostService {
         }
         const newImages = imageUrls.filter((url) => !existingUrls.includes(url));
         await Promise.all(
-          newImages.map(async(imageUrl) => await Image.create({ id: uuidv4(), imageUrl, postId }, { transaction })),
+          newImages.map(async (imageUrl) => await Image.create({ id: uuidv4(), imageUrl, postId }, { transaction })),
         );
       }
       if (Array.isArray(tags)) {
@@ -313,7 +314,7 @@ class PostService {
         priority: findPost.priority,
         status: findPost.status,
         changedAt: new Date(),
-        changeBy:userId,
+        changeBy: userId,
         action: actionType,
       },
       { transaction },
@@ -345,23 +346,71 @@ class PostService {
     };
   }
 
-  static async getPostsForClient(page: number, limit: number) {
-    const offset = (page - 1) * limit;
-    const posts = await Post.findAll({
-      limit: limit,
-      offset: offset,
-      include: [
-        {
-          model: User,
-          attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
-        },
-        {
-          model: Image,
-          attributes: [],
-        },
-      ],
-    });
+	private static bufferPool: any[] = []; 
+  static async getPostsByPriority(priority: number, limit: number) {
+    const cacheKey = `posts_priority_${priority}`;
+    const cachedData = await CacheRepository.get(cacheKey);
+
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
+    const posts = await Post.findAll({ where: { priority }, limit });
+    await CacheRepository.set(cacheKey, JSON.stringify(posts), 600);
+
     return posts;
+  }
+	
+  static shuffleArray(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  static async getRandomPosts() {
+    const [priority3, priority2, priority1] = await Promise.all([
+      this.getPostsByPriority(3, 20),
+      this.getPostsByPriority(2, 10),
+      this.getPostsByPriority(1, 5),
+    ]);
+    const finalPosts = [
+      ...priority3.slice(0, 10),
+      ...priority2.slice(0, 5),
+      ...priority1.slice(0, 3),
+    ];
+
+    this.shuffleArray(finalPosts);
+    return finalPosts;
+  }
+
+  static async getPostsForClient(page: number, limit: number) {
+    if (this.bufferPool.length > 0) {
+      return this.paginateData(this.bufferPool, page, limit);
+    }
+    const [priority3, priority2, priority1] = await Promise.all([
+      this.getPostsByPriority(3, 20),
+      this.getPostsByPriority(2, 10),
+      this.getPostsByPriority(1, 5),
+    ]);
+    const allPosts = [...priority3, ...priority2, ...priority1];
+    this.shuffleArray(allPosts);
+    this.bufferPool = allPosts;
+    setTimeout(() => (this.bufferPool = []), 60000);
+
+    return this.paginateData(allPosts, page, limit);
+  }
+
+  static paginateData(data: any[], page: number, limit: number) {
+    const totalPosts = data.length;
+    const totalPages = Math.ceil(totalPosts / limit);
+    const offset = (page - 1) * limit;
+    const paginatedPosts = data.slice(offset, offset + limit);
+    return {
+      totalPosts,
+      totalPages,
+      currentPage: page,
+      posts: paginatedPosts,
+    };
   }
 }
 

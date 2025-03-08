@@ -24,12 +24,12 @@ app.use(express.json());
 app.use(body_parser.json({ limit: '50mb' }));
 app.use(morgan('combined'));
 
-app.use(
-  cors({
-    origin: ['*'],
-    credentials: true,
-  }),
-);
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: "GET,POST,PUT,DELETE,OPTIONS",
+  allowedHeaders: "Content-Type,Authorization,token",
+  credentials: true,  
+}));
 
 app.use(cookieParser());
 

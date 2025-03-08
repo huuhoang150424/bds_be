@@ -34,13 +34,13 @@ class PostController {
     }
   }
 	
-	//[getAllPost]
+	//[getAllPost for client]
   static async getAllPostForClient(req: Request, res: Response, next: NextFunction) {
     try {
 			const page=parseInt(req.query.page as string) || 1;
 			const limit=parseInt(req.query.page as string) || 1;
-			//const posts=await PostService.getPosts(page,limit);
-      return res.status(200).json(ApiResponse.success(null, "thành công" ) );
+			const posts=await PostService.getPosts(page,limit);
+      return res.status(200).json(ApiResponse.success(posts, "thành công" ) );
     } catch (error) {
       next(error);
     }
