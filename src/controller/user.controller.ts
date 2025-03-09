@@ -1,8 +1,6 @@
 'use-strict';
 
 import { Request, Response, NextFunction } from 'express';
-import { User } from '@models';
-import { NotFoundError, UnauthorizedError, TokenError } from '@helper';
 import UserService from '@service/user.service';
 import { ApiResponse } from '@helper';
 

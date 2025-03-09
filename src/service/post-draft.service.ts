@@ -1,6 +1,6 @@
 
 import { v4 as uuidv4 } from 'uuid';
-import { PostDraft,User, Tag, TagPost, Image, ListingType, PropertyType, Post, UserPricing, Pricing } from '@models';
+import { PostDraft, Tag, TagPost, Image, ListingType, PropertyType, Post, UserPricing, Pricing } from '@models';
 import { NotFoundError,BadRequestError } from '@helper';
 import { StatusPost, StatusPostDraft } from '@models/enums';
 

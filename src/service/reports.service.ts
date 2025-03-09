@@ -1,10 +1,7 @@
-'use-strict';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+
 import { Report, Post } from '@models';
-import { generaAccessToken, generaRefreshToken } from '@helper/general-token';
 import { ProcessingStatus, ReportReason } from "@models/enums";
-import { NotFoundError, UnauthorizedError, transporter, ForbiddenError, TokenError, BadRequestError } from '@helper';
+import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 
 

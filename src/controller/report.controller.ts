@@ -1,3 +1,4 @@
+'use-strict';
 
 import { Request, Response, NextFunction } from 'express';
 import { ReportsService } from "@service";

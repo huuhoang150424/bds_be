@@ -1,5 +1,5 @@
 import { User } from '@models';
-import { NotFoundError, UnauthorizedError, TokenError } from '@helper';
+import { NotFoundError, UnauthorizedError } from '@helper';
 
 class UserService {
 

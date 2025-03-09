@@ -1,10 +1,6 @@
-'use-strict';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+
 import { Comment } from '@models';
-import { generaAccessToken, generaRefreshToken } from '@helper/general-token';
-import { NotFoundError, UnauthorizedError, transporter, ForbiddenError, TokenError, BadRequestError, CacheRepository } from '@helper';
-import { v4 as uuidv4 } from 'uuid';
+import { NotFoundError,  ForbiddenError,  CacheRepository } from '@helper';
 import { Op } from "sequelize";
 
 

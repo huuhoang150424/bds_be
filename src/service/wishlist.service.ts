@@ -4,7 +4,6 @@ import { NotFoundError, BadRequestError } from "@helper";
 import { v4 as uuidv4 } from "uuid";
 
 class WishlistService {
-  // [addToWishlist]
   static async addToWishlist(userId: string, postId: string) {
     const postExists = await Post.findByPk(postId);
     if (!postExists) {
@@ -24,7 +23,6 @@ class WishlistService {
     return wishlist.id;
   }
 
-  // [removeFromWishlist]
   static async removeFromWishlist(userId: string, postId: string) {
     const wishlistItem = await Wishlist.findOne({ where: { userId, postId } });
     if (!wishlistItem) {
@@ -34,7 +32,6 @@ class WishlistService {
     await wishlistItem.destroy();
   }
 
-  // [getUserWishlist]
   static async getUserWishlist(userId: string) {
     return await Wishlist.findAll({
       where: { userId },

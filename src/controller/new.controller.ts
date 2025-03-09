@@ -1,10 +1,9 @@
 
 "use strict";
-import { CategoryNew } from '@models/enums';
-import { News } from "@models";
+
 import { Request, Response, NextFunction } from "express";
 import { NewsService } from "@service";
-import { ApiResponse, BadRequestError } from "@helper";
+import { ApiResponse } from "@helper";
 
 
 class NewsController {

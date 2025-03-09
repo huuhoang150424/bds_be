@@ -1,7 +1,6 @@
 
 import { ActionType, Roles } from "@models/enums";
-"use strict";
-import { News, NewsHistory, User } from "@models";
+import { News, NewsHistory } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, Transaction } from "sequelize";
