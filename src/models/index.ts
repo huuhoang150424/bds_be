@@ -2,7 +2,7 @@ import User from './user.model';
 import Post from './post.model';
 import Image from './image.model';
 import Message from './message.model';
-import News from './new.model';
+import News from './news.model';
 import Notification from './notification.model';
 import PostHistory from './post-history.model';
 import Pricing from './pricings.model';
@@ -18,6 +18,8 @@ import Comment from './comment.model';
 import ListingType from './listing-types.model';
 import PropertyType from './property-types.model';
 import PostDraft from './post-draft.model';
+import NewsHistory from "./news-history.model";
+import CommentLike from "./comment-like.model";
 
 export {
 	User,
@@ -39,5 +41,7 @@ export {
 	Comment,
 	PropertyType,
 	ListingType,
-	PostDraft
+	PostDraft,
+	NewsHistory,
+	CommentLike
 };

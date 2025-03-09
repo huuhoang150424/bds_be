@@ -16,7 +16,6 @@ class CacheRepository {
 		}
 	}
 	
-
   async get(key: string) {
 		if (!redisClient.isReady) {
       console.error('❌ Redis chưa kết nối!');

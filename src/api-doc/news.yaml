@@ -1,0 +1,142 @@
+paths:
+  /news:
+    get:
+      summary: Lấy danh sách tin tức (có phân trang)
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+          required: false
+          description: Trang hiện tại (mặc định là 1)
+          example: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+          required: false
+          description: Số lượng tin tức mỗi trang (mặc định là 10)
+          example: 10
+      responses:
+        '200':
+          description: Danh sách tin tức
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 100
+                  page:
+                    type: integer
+                    example: 1
+                  limit:
+                    type: integer
+                    example: 10
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/News'
+        '500':
+          description: Lỗi server
+
+  /news/create:
+    post:
+      summary: Tạo bài viết mới
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Tin tức mới nhất"
+                content:
+                  type: string
+                  example: "Nội dung chi tiết của tin tức..."
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Tạo tin tức thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Tạo tin tức thành công"
+                  news:
+                    $ref: '#/components/schemas/News'
+        '400':
+          description: Dữ liệu không hợp lệ
+        '401':
+          description: Không được phép
+        '500':
+          description: Lỗi server
+
+  /news/{id}:
+    delete:
+      summary: Xóa bài viết tin tức
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        '200':
+          description: Xóa tin tức thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Tin tức đã bị xóa"
+        '404':
+          description: Tin tức không tồn tại
+        '500':
+          description: Lỗi server
+
+components:
+  schemas:
+    News:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: "Tin tức mới nhất"
+        content:
+          type: string
+          example: "Nội dung chi tiết của tin tức..."
+        image:
+          type: string
+          example: "https://example.com/image.jpg"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-02-25T14:00:00Z"
+        view:
+          type: integer
+          example: 100
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

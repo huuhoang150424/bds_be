@@ -1,0 +1,114 @@
+openapi: 3.0.0
+info:
+  title: Rating API
+  description: API for managing ratings on posts
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000/api/ratings
+    description: Local development server
+
+paths:
+  /createRating:
+    post:
+      summary: Create a new rating
+      description: Allows a user to create a rating for a post
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                postId:
+                  type: string
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                rating:
+                  type: integer
+                  enum: [1, 2, 3, 4, 5]
+                  example: 5
+      responses:
+        201:
+          description: Rating created successfully
+        400:
+          description: Invalid input
+        401:
+          description: Unauthorized
+
+  /{postId}/getRatingsByPostId:
+    get:
+      summary: Get ratings by post ID
+      description: Retrieve all ratings for a specific post
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        200:
+          description: Successfully retrieved ratings
+        404:
+          description: Post not found
+
+  /{ratingId}/updateRating:
+    put:
+      summary: Update a rating
+      description: Allows a user to update their rating
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ratingId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  enum: [1, 2, 3, 4, 5]
+                  example: 4
+      responses:
+        200:
+          description: Rating updated successfully
+        400:
+          description: Invalid input
+        404:
+          description: Rating not found
+        401:
+          description: Unauthorized
+
+  /{ratingId}/deleteRating:
+    delete:
+      summary: Delete a rating
+      description: Allows a user to delete their rating
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ratingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Rating deleted successfully
+        404:
+          description: Rating not found
+        401:
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

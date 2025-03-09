@@ -20,7 +20,10 @@ import {
 	Comment,	
 	PropertyType,
 	ListingType,
-	PostDraft } from '@models/index';
+	PostDraft,
+	NewsHistory,
+	CommentLike } from '@models/index';
+
 
 
 
@@ -59,7 +62,9 @@ export const sequelize = new Sequelize({
 		Comment,
 		PropertyType,
 		ListingType,
-		PostDraft
+		PostDraft,
+		NewsHistory,
+		CommentLike
   ],
   logging: false,
 });

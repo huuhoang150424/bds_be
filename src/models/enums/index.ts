@@ -4,6 +4,7 @@ import { ListingTypes, PropertyType, Directions, PriceUnit, StatusPost ,ActionTy
 import { ProcessingStatus ,ReportReason} from './report';
 import { PricingLevel,PaymentMethod } from './pricing';
 import { Status } from './transaction';
+import {CommentStatus, LikeStatus} from "./comment";
 
 export { 
 	ListingTypes,
@@ -19,5 +20,7 @@ export {
 	PaymentMethod,
 	Status,
 	ActionType,
-	StatusPostDraft
+	StatusPostDraft,
+	LikeStatus,
+	CommentStatus
 };
