@@ -1,6 +1,11 @@
+tags:
+  - name: News
+
 paths:
   /news:
     get:
+      tags:
+        - News
       summary: Lấy danh sách tin tức (có phân trang)
       parameters:
         - in: query
@@ -43,6 +48,8 @@ paths:
 
   /news/create:
     post:
+      tags:
+        - News
       summary: Tạo bài viết mới
       security:
         - BearerAuth: []
@@ -84,6 +91,8 @@ paths:
 
   /news/{id}:
     delete:
+      tags:
+        - News
       summary: Xóa bài viết tin tức
       security:
         - BearerAuth: []
@@ -116,27 +125,51 @@ components:
       type: object
       properties:
         id:
-          type: integer
-          example: 1
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        userId:
+          type: string
+          format: uuid
+          example: "789e1234-a456-42c6-9123-56789abcdef0"
         title:
           type: string
-          example: "Tin tức mới nhất"
+          example: "Breaking News: AI Takes Over!"
         content:
           type: string
-          example: "Nội dung chi tiết của tin tức..."
-        image:
+          example: "This is the full content of the news article."
+        origin_post:
           type: string
-          example: "https://example.com/image.jpg"
-        createdAt:
-          type: string
-          format: date-time
-          example: "2025-02-25T14:00:00Z"
+          example: "https://example.com/original-news"
         view:
           type: integer
           example: 100
+        slug:
+          type: string
+          example: "breaking-news-ai-takes-over"
+        imageUrl:
+          type: string
+          format: uri
+          example: "https://example.com/image.jpg"
+        category:
+          type: string
+          enum: [Technology, Politics, Sports, Entertainment]
+          example: "Technology"
+        readingTime:
+          type: integer
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-07T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-07T12:30:00Z"
 
   securitySchemes:
-    BearerAuth:
+    bearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
+

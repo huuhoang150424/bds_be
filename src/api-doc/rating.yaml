@@ -1,15 +1,11 @@
-openapi: 3.0.0
-info:
-  title: Rating API
-  description: API for managing ratings on posts
-  version: 1.0.0
-servers:
-  - url: http://localhost:5000/api/ratings
-    description: Local development server
+tags:
+  - name: Rating
 
 paths:
   /createRating:
     post:
+      tags:
+        - Rating
       summary: Create a new rating
       description: Allows a user to create a rating for a post
       security:
@@ -38,6 +34,8 @@ paths:
 
   /{postId}/getRatingsByPostId:
     get:
+      tags:
+        - Rating
       summary: Get ratings by post ID
       description: Retrieve all ratings for a specific post
       parameters:
@@ -55,6 +53,8 @@ paths:
 
   /{ratingId}/updateRating:
     put:
+      tags:
+        - Rating
       summary: Update a rating
       description: Allows a user to update their rating
       security:
@@ -88,6 +88,8 @@ paths:
 
   /{ratingId}/deleteRating:
     delete:
+      tags:
+        - Rating
       summary: Delete a rating
       description: Allows a user to delete their rating
       security:
@@ -106,7 +108,38 @@ paths:
         401:
           description: Unauthorized
 
+
+
 components:
+  schemas:
+    Rating:
+      type: object
+      properties:
+        ratingId:
+          type: string
+          format: uuid
+          example: "987e6543-b21d-43c7-a567-426655440000"
+        userId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        postId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "456e7890-e89b-12d3-a456-426614174111"
+        rating:
+          type: integer
+          enum: [1, 2, 3, 4, 5]
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-09T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-09T12:30:00Z"
   securitySchemes:
     bearerAuth:
       type: http

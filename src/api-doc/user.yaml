@@ -1,16 +1,11 @@
-openapi: 3.0.0
-info:
-  title: User Management API
-  version: 1.0.0
-  description: API để quản lý người dùng
-
-servers:
-  - url: http://localhost:5000/api/users
-    description: Local server
+tags:
+  - name: User
 
 paths:
   /user/getAllUser:
     get:
+      tags:
+        - User
       summary: Lấy danh sách tất cả người dùng
       description: Chỉ admin mới có quyền truy cập danh sách người dùng.
       security:
@@ -53,6 +48,8 @@ paths:
 
   /user/{userId}/getUser:
     get:
+      tags:
+        - User
       summary: Lấy thông tin chi tiết người dùng
       description: Chỉ User hoặc Agent có thể lấy thông tin của họ.
       security:
@@ -75,6 +72,8 @@ paths:
 
   /user/{userId}/updateUser:
     put:
+      tags:
+        - User
       summary: Cập nhật thông tin người dùng
       description: Chỉ User hoặc Agent có thể cập nhật thông tin của họ.
       security:

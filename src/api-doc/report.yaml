@@ -1,21 +1,15 @@
-openapi: 3.0.0
-info:
-  title: Report API
-  description: API for managing user reports
-  version: 1.0.0
-servers:
-  - url: http://localhost:5000/api/reports
-    description: Development server
+tags:
+  - name: Reports
 
 paths:
   /reports/createReports:
     post:
+      tags:
+        - Reports
       summary: Create a new report
       description: Allows a user to create a report on a post.
       security:
         - BearerAuth: []
-      tags:
-        - Reports
       requestBody:
         required: true
         content:
@@ -63,12 +57,13 @@ paths:
 
   /reports/{postId}/getReportByPostId:
     get:
+      tags:
+        - Reports
       summary: Get reports by post ID
       description: Retrieve all reports associated with a specific post.
       security:
         - BearerAuth: []
-      tags:
-        - Reports
+
       parameters:
         - name: postId
           in: path
@@ -106,12 +101,13 @@ paths:
 
   /reports/getAllReports:
     get:
+      tags:
+        - Reports
       summary: Get all reports
       description: Retrieve all reports in the system.
       security:
         - BearerAuth: []
-      tags:
-        - Reports
+
       responses:
         200:
           description: All reports retrieved successfully
@@ -140,10 +136,42 @@ paths:
                       enum: [Pending, Resolved]
         401:
           description: Unauthorized
-
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+  schemas:
+    Report:
+      type: object
+      properties:
+        reportId:
+          type: string
+          format: uuid
+          example: "a12e4567-e89b-12d3-a456-426614174999"
+        userId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        postId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "456e7890-e89b-12d3-a456-426614174111"
+        reason:
+          type: string
+          enum: ["SPAM", "INAPPROPRIATE", "COPYRIGHT_VIOLATION"]
+          example: "SPAM"
+        content:
+          type: string
+          example: "This post contains inappropriate content."
+        status:
+          type: string
+          enum: ["PENDING", "RESOLVED", "REJECTED"]
+          example: "PENDING"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-09T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-09T12:30:00Z"
+
+

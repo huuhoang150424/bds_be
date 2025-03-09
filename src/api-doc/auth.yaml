@@ -1,12 +1,11 @@
-openapi: 3.0.0
-info:
-  title: Authentication API
-  description: API cung cấp các chức năng xác thực người dùng như đăng nhập, đăng ký, quên mật khẩu, xác thực tài khoản.
-  version: 1.0.0
+tags:
+  - name: Auth
 
 paths:
   /auth/login:
     post:
+      tags:
+        - Auth
       summary: Đăng nhập
       description: Người dùng nhập email và mật khẩu để đăng nhập vào hệ thống.
       requestBody:
@@ -54,6 +53,8 @@ paths:
 
   /auth/logout:
     post:
+      tags:
+        - Auth
       summary: Đăng xuất
       description: Người dùng đăng xuất khỏi hệ thống, làm mất hiệu lực refresh token.
       security:
@@ -68,6 +69,8 @@ paths:
 
   /auth/forgot-password:
     post:
+      tags:
+        - Auth
       summary: Quên mật khẩu
       description: Gửi email đặt lại mật khẩu.
       requestBody:
@@ -93,6 +96,8 @@ paths:
 
   /auth/verify-code:
     post:
+      tags:
+        - Auth
       summary: Xác thực mã OTP
       description: Xác thực mã OTP khi đặt lại mật khẩu.
       requestBody:
@@ -122,6 +127,8 @@ paths:
 
   /auth/change-password:
     post:
+      tags:
+        - Auth
       summary: Thay đổi mật khẩu
       description: Đổi mật khẩu mới sau khi xác thực mã OTP.
       requestBody:
@@ -150,35 +157,6 @@ paths:
         "500":
           description: Lỗi server
 
-  /auth/verify-account:
-    post:
-      summary: Xác thực tài khoản
-      description: Người dùng xác thực tài khoản sau khi đăng ký bằng mã OTP.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - email
-                - code
-              properties:
-                email:
-                  type: string
-                  format: email
-                  example: johndoe@example.com
-                code:
-                  type: string
-                  example: "123456"
-      responses:
-        "200":
-          description: Tài khoản đã được xác thực thành công
-        "400":
-          description: Mã không hợp lệ hoặc đã hết hạn
-        "500":
-          description: Lỗi server
-
 components:
   schemas:
     User:
@@ -186,18 +164,49 @@ components:
       description: Thông tin người dùng
       properties:
         user_id:
-          type: integer
-          example: 1
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
         fullname:
           type: string
-          example: John Doe
+          example: "John Doe"
         email:
           type: string
           format: email
-          example: johndoe@example.com
-        isAdmin:
+          example: "user1@gmail.com"
+        emailVerified:
           type: boolean
           example: false
+        isLock:
+          type: boolean
+          example: false
+        phone:
+          type: string
+          example: "+84901234567"
+        avatar:
+          type: string
+          format: uri
+          example: "https://img.freepik.com/example-avatar.jpg"
+        balance:
+          type: number
+          format: double
+          example: 1000.50
+        roles:
+          type: string
+          enum: ["Admin", "User", "Agent"]
+          example: "User"
+        score:
+          type: integer
+          example: 150
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-03-09T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-03-09T12:30:00Z"
+
 
   securitySchemes:
     BearerAuth:
