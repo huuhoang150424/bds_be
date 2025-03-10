@@ -39,10 +39,9 @@ class UserController {
   //[updateUser]
   static async updateUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const user = (req as any).user;
-    const userId = req.params.userId;
+    const {userId} = req.params;
     const data = req.body;
     const avatar = req.file?.path;
-    console.log(avatar)
     if (avatar) {
       data.avatar = avatar;
     }
@@ -59,6 +58,7 @@ class UserController {
   static async unLockUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const {userId} = req.params;
     try {
+			await UserService.unlockUser(userId);
       return res.status(200).json(ApiResponse.success(null, "Mở khóa thành công"));
     } catch (error) {
       next(error);

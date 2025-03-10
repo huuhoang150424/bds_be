@@ -26,15 +26,18 @@ class UserService {
 		if (user.userId!==userId) {
 			throw new UnauthorizedError("Bạn không có quyền");
 		}
-		const findUser=await User.findByPk(userId);
-		if (!findUser) {
-			throw new NotFoundError("Không tìm thấy người dùng");
-		}
+		const findUser=await this.getUserById(userId);
 		await findUser.update(data,{where: {userId:userId}});
 		const updatedUser = await User.findOne({ where: { userId: userId } });
 		return updatedUser;
 	}
 
+	static async unlockUser (userId:string) {
+		const findUser=await this.getUserById(userId);
+		findUser.isLock=false;
+		await findUser.save();
+		return findUser;
+	}
 }
 
 
