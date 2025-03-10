@@ -30,8 +30,7 @@ class PostDraftController {
   //[get all post draft]
   static async getAllPostDraft(req: Request, res: Response, next: NextFunction) {
     const { userId } = (req as any).user;
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 5;
+		const { page, limit } = (req as any).pagination;
     try {
       const allPostDraft = await PostDraftService.getAllPostDraft(userId, page, limit);
       return res.status(200).json(ApiResponse.success(allPostDraft, 'Thành công!'));

@@ -7,8 +7,7 @@ import { ApiResponse } from '@helper';
 class UserController {
   //[getAllUser]
   static async getAllUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+		const { page, limit } = (req as any).pagination;
     try {
       const { rows, count } = await UserService.getAllUser(page, limit);
       return res.status(200).json(
