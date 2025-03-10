@@ -1,18 +1,19 @@
 
 "use strict";
-
+import { CategoryNew } from '@models/enums';
+import { News } from "@models";
 import { Request, Response, NextFunction } from "express";
 import { NewsService } from "@service";
-import { ApiResponse } from "@helper";
+import { ApiResponse, BadRequestError } from "@helper";
 
 
 class NewsController {
   //[createNew]
   static async createNew(req: Request, res: Response, next: NextFunction) {
+    const { title, content, origin_post, category, readingtime } = req.body;
+    const image = req.file?.path || "";
+    const { userId } = (req as any).user;
     try {
-      const { title, content, origin_post, category, readingtime } = req.body;
-      const image = req.file?.path || "";
-      const userId = (req as any).user?.userId;
       const news = await NewsService.createNew(userId, title, content, image, origin_post, category, readingtime);
       return res.status(201).json(ApiResponse.success(news, "Tạo tin tức thành công"));
     } catch (error) {
@@ -22,10 +23,9 @@ class NewsController {
 
   // [getAllNews] 
   static async getAllNews(req: Request, res: Response, next: NextFunction) {
+    const lastId = req.query.lastId as string | undefined;
+    const limit = parseInt(req.query.limit as string) || 10;
     try {
-      const lastId = req.query.lastId as string | undefined;
-      const limit = parseInt(req.query.limit as string) || 10;
-
       const newsList = await NewsService.getAllNews(lastId, limit);
       return res.status(200).json(ApiResponse.success(newsList, "Lấy danh sách tin tức thành công"));
     } catch (error) {
@@ -35,8 +35,8 @@ class NewsController {
 
   // [getNew]
   static async getNews(req: Request, res: Response, next: NextFunction) {
+    const { slug } = req.params;
     try {
-      const slug = req.params.slug;
       const findNews = await NewsService.getNew(slug);
       return res.status(200).json(ApiResponse.success(findNews, "Thành công"));
     } catch (error) {
@@ -47,12 +47,14 @@ class NewsController {
 
   // [UpdateNews]
   static async updateNews(req: Request, res: Response, next: NextFunction) {
+    const newsId = req.params.newsId;
+    const { userId } = (req as any).user;
     try {
-      const newsId = req.params.newsId;
-      const userId = (req as any).user?.userId;
-      const { title, content, origin_post, category, readingtime } = req.body;
       const image = req.file?.path;
-      const updatedNews = await NewsService.updateNews(newsId, userId, req.body);
+      if (!image) {
+        throw new BadRequestError("ảnh không hợp lệ");
+      }
+      const updatedNews = await NewsService.updateNews(newsId, userId, image, req.body);
       return res.status(200).json(ApiResponse.success(updatedNews, "Cập nhật tin tức thành công"));
     } catch (error) {
       next(error);
@@ -62,9 +64,10 @@ class NewsController {
 
   //[deleteNews]
   static async deleteNews(req: Request, res: Response, next: NextFunction) {
+    const { newsId } = req.params;
+    const { userId } = (req as any).user;
     try {
-      const id = req.params.newsId;
-      const userId = (req as any).user?.userId;
+      await NewsService.deleteNews(newsId, userId);
       return res.status(200).json(ApiResponse.success(null, "Xóa tin tức thành công"));
     } catch (error) {
       next(error);

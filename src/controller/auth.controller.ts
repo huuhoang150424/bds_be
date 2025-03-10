@@ -1,15 +1,15 @@
 'use-strict';
 import { Request, Response, NextFunction } from 'express';
-import {AuthService} from "@service";
-import {ApiResponse} from "@helper";
+import { AuthService } from "@service";
+import { ApiResponse } from "@helper";
 import "dotenv/config";
 class AuthController {
   //[login]
   static async login(req: Request, res: Response, next: NextFunction) {
+    const { email, password } = req.body;
     try {
-      const { email, password } = req.body;
-      const {accessToken, refreshToken,user } = await AuthService.login(email, password);
-			
+      const { accessToken, refreshToken, user } = await AuthService.login(email, password);
+
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: false,
@@ -27,7 +27,7 @@ class AuthController {
           "Đăng nhập thành công"
         )
       );
-			
+
     } catch (error) {
       next(error);
     }
@@ -35,8 +35,8 @@ class AuthController {
 
   //[register]
   static async register(req: Request, res: Response, next: NextFunction) {
+    const { fullname, email, password, confirmPassword } = req.body;
     try {
-      const { fullname, email, password, confirmPassword } = req.body;
       await AuthService.register(fullname, email, password, confirmPassword);
       return res.status(201).json(ApiResponse.success(null, "Đăng ký thành công"));
     } catch (error) {
@@ -56,9 +56,9 @@ class AuthController {
 
   //[refreshToken]
   static async refreshToken(req: Request, res: Response, next: NextFunction) {
+    const { refreshToken } = req.cookies;
     try {
-      const refresh_token = req.cookies.refreshToken;
-			const data = await AuthService.refreshToken(refresh_token);
+      const data = await AuthService.refreshToken(refreshToken);
       return res.status(200).json(ApiResponse.success(data, "Làm mới token thành công"));
     } catch (error) {
       next(error);
@@ -67,8 +67,8 @@ class AuthController {
 
   //[forgotPassword]
   static async forgotPassword(req: Request, res: Response, next: NextFunction) {
+    const { email } = req.body;
     try {
-      const { email } = req.body;
       const data = await AuthService.forgotPassword(email);
       return res.status(200).json(ApiResponse.success(data, "Gửi email đặt lại mật khẩu thành công"));
     } catch (error) {
@@ -78,8 +78,8 @@ class AuthController {
 
   //[verifyCode]
   static async verifyCode(req: Request, res: Response, next: NextFunction) {
+    const { email, otpCode } = req.body;
     try {
-      const { email, otpCode } = req.body;
       const data = await AuthService.verifyCode(email, otpCode);
       return res.status(200).json(ApiResponse.success(data, "Mã OTP hợp lệ"));
     } catch (error) {
@@ -89,30 +89,30 @@ class AuthController {
 
   //[changePassword]
   static async changePassword(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+    const { oldPassword, newPassword, confirmPassword } = req.body;
     try {
-      const user = (req as any).user;
-      const { oldPassword, newPassword, confirmPassword } = req.body;
-      const data = await AuthService.changePassword(user.userId, oldPassword, newPassword, confirmPassword);
+      const data = await AuthService.changePassword(userId, oldPassword, newPassword, confirmPassword);
       return res.status(200).json(ApiResponse.success(data, "Đổi mật khẩu thành công"));
     } catch (error) {
       next(error);
     }
   }
 
-	//[verify account]
+  //[verify account]
   static async verifyAccount(req: Request, res: Response, next: NextFunction) {
+    const { email } = req.body;
     try {
-      const { email } = req.body;
       const data = await AuthService.verifyAccount(email);
       return res.status(200).json(ApiResponse.success(data, "Tài khoản đã được xác minh"));
     } catch (error) {
       next(error);
     }
   }
-	//[verify email]
+  //[verify email]
   static async verifyEmail(req: Request, res: Response, next: NextFunction) {
+    const { token, email } = req.query;
     try {
-      const { token, email } = req.query;
       const data = await AuthService.verifyEmail(token as string, email as string);
       return res.status(200).json(ApiResponse.success(data, "Xác minh email thành công"));
     } catch (error) {

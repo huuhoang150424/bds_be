@@ -5,7 +5,7 @@ import postRouter from "./post";
 import commentRouter from "./comment";
 import ratingRouter from "./rating";
 import pricingRouter from "./pricing";
-import newRouter from "./new";
+import newRouter from "./news";
 import reportRouter from "./reports";
 import transactionRouter from "./transaction";
 import wishlistRouter from "./wishlist";

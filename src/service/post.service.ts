@@ -1,6 +1,6 @@
 
 import { ActionType } from '@models/enums/post';
-import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType,UserPricing,Pricing  } from '@models';
+import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing } from '@models';
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
@@ -378,7 +378,7 @@ class PostService {
     if (!Array.isArray(allPosts)) {
       throw new BadRequestError('getVerifiedPosts() did not return an array');
     }
-    const priorityGroups :Record<number, any[]>= { 3: [], 2: [], 1: [], 0: [] };
+    const priorityGroups: Record<number, any[]> = { 3: [], 2: [], 1: [], 0: [] };
     allPosts.forEach((post) => {
       priorityGroups[post.priority].push(post);
     });

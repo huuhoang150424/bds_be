@@ -7,10 +7,10 @@ import { ApiResponse, BadRequestError } from "@helper";
 class RatingController {
   // [Create Rating]
   static async createRating(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+    const { postId, rating } = req.body;
+    const numericRating = Number(rating);
     try {
-      const userId = (req as any).user?.userId;
-      const { postId, rating } = req.body;
-      const numericRating = Number(rating);
       const newRating = await RatingService.createRating(userId, postId, numericRating);
       return res.status(201).json(ApiResponse.success(newRating, "Rating created successfully"));
     } catch (error) {
@@ -20,13 +20,13 @@ class RatingController {
 
   // [Update Rating]
   static async updateRating(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+    const { ratingId } = req.params;
+    const { rating } = req.body;
+    if (!ratingId || !rating) {
+      throw new BadRequestError("Missing ratingId or rating");
+    }
     try {
-      const userId = (req as any).user?.userId;
-      const { ratingId } = req.params;
-      const { rating } = req.body;
-      if (!ratingId || !rating) {
-        throw new BadRequestError("Missing ratingId or rating");
-      }
       const updatedRating = await RatingService.updateRating(ratingId, userId, rating);
       return res.status(200).json(ApiResponse.success(updatedRating, "Rating updated successfully"));
     } catch (error) {
@@ -37,9 +37,9 @@ class RatingController {
 
   // [Delete Rating]
   static async deleteRating(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+    const { ratingId } = req.params;
     try {
-      const userId = (req as any).user?.userId;
-      const { ratingId } = req.params;
       await RatingService.deleteRating(userId, ratingId);
       return res.status(200).json(ApiResponse.success(null, "Rating deleted successfully"));
     } catch (error) {
@@ -49,8 +49,8 @@ class RatingController {
 
   // [Get Ratings by PostId]
   static async getRatingsByPostId(req: Request, res: Response, next: NextFunction) {
+    const { postId } = req.params;
     try {
-      const { postId } = req.params;
       const ratings = await RatingService.getRatingsByPostId(postId);
       return res.status(200).json(ApiResponse.success(ratings, "Ratings fetched successfully"));
     } catch (error) {
@@ -60,6 +60,4 @@ class RatingController {
 
 
 }
-
-
 export default RatingController;

@@ -7,11 +7,11 @@ import { ApiResponse, BadRequestError } from "@helper";
 class ReportsController {
   // [createReport]
   static async createReport(req: Request, res: Response, next: NextFunction) {
+    const { userId, postId, reason, content } = req.body;
+    if (!userId || !postId || !reason) {
+      throw new BadRequestError("Missing required fields: userId, postId, or reason.");
+    }
     try {
-      const { userId, postId, reason, content } = req.body;
-      if (!userId || !postId || !reason) {
-        throw new BadRequestError("Missing required fields: userId, postId, or reason.");
-      }
       const reportId = await ReportsService.createReport({ userId, postId, reason, content });
       return res.status(201).json(new ApiResponse(201, reportId, "Report created successfully"));
     } catch (error) {
@@ -21,11 +21,11 @@ class ReportsController {
 
   // [getReportByPostId]
   static async getReportsByPostId(req: Request, res: Response, next: NextFunction) {
+    const { postId } = req.params;
+    if (!postId) {
+      throw new BadRequestError("Post ID is required.");
+    }
     try {
-      const { postId } = req.params;
-      if (!postId) {
-        throw new BadRequestError("Post ID is required.");
-      }
       const reports = await ReportsService.getReportsByPostId(postId);
       return res.status(200).json(new ApiResponse(200, "Reports retrieved successfully", reports));
     } catch (error) {
@@ -44,5 +44,4 @@ class ReportsController {
   }
 
 }
-
 export default ReportsController;

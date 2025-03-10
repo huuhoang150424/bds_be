@@ -6,7 +6,7 @@ import { sequelize } from '@config/database';
 import { Op, Transaction } from "sequelize";
 
 class NewsService {
-  static async createNew(userId: number, title: string, content: string, image: string, origin: string, category: string, readingtime: number) {
+  static async createNew(userId: string, title: string, content: string, image: string, origin: string, category: string, readingtime: number) {
     return await sequelize.transaction(async (transaction: Transaction) => {
       const news = await News.create({
         userId,
@@ -27,8 +27,7 @@ class NewsService {
     const cacheKey = `news:loadmore:lastId:${lastId || 'none'}:limit:${limit}`;
     const cachedData = await CacheRepository.get(cacheKey);
     if (cachedData) {
-      console.log("✅ Lấy danh sách tin tức từ cache");
-      return JSON.parse(cachedData);
+      return cachedData;
     }
     const whereCondition = lastId ? { id: { [Op.lt]: lastId } } : {};
     const newsList = await News.findAll({
@@ -36,7 +35,7 @@ class NewsService {
       order: sequelize.random(),
       limit,
     });
-    await CacheRepository.set(cacheKey, JSON.stringify(newsList), 300);
+    await CacheRepository.set(cacheKey, newsList, 300);
     return newsList;
   }
 
@@ -44,8 +43,7 @@ class NewsService {
     const cacheKey = `news:slug:${slug}`;
     const cachedNews = await CacheRepository.get(cacheKey);
     if (cachedNews) {
-      console.log("✅ Lấy tin tức từ cache");
-      return JSON.parse(cachedNews);
+      return cachedNews;
     }
     const findNews = await News.findOne({ where: { slug } });
     if (!findNews) {
@@ -56,7 +54,7 @@ class NewsService {
   }
 
 
-  static async updateNews(newsId: string, userId: string, updatedData: Partial<News>) {
+  static async updateNews(newsId: string, userId: string, image: string, updatedData: Partial<News>) {
     return await sequelize.transaction(async (transaction: Transaction) => {
       const news = await News.findByPk(newsId, { transaction });
       if (!news) {
@@ -69,7 +67,7 @@ class NewsService {
         throw new BadRequestError("Không có dữ liệu nào để cập nhật");
       }
       await this.saveNewsHistory(newsId, userId, ActionType.UPDATE, transaction);
-      await news.update(updatedData, { transaction });
+      await news.update({  imageUrl: image ,...updatedData}, { transaction });
       return news;
     });
   }
@@ -81,8 +79,6 @@ class NewsService {
         throw new NotFoundError("Tin tức không tồn tại");
       }
       await this.saveNewsHistory(id, userId, ActionType.DELETE, transaction);
-      console.log("✅ Đã gọi saveNewsHistory thành công");
-
       await news.destroy({ transaction });
       return { message: "Tin tức đã bị xóa" };
     });
