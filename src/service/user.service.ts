@@ -32,9 +32,9 @@ class UserService {
 		return updatedUser;
 	}
 
-	static async unlockUser (userId:string) {
+	static async toggleLockUser (userId:string,type:string) {
 		const findUser=await this.getUserById(userId);
-		findUser.isLock=false;
+		findUser.isLock = type === 'UNLOCK' ? false : true;
 		await findUser.save();
 		return findUser;
 	}

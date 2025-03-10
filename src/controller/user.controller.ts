@@ -58,12 +58,22 @@ class UserController {
   static async unLockUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const {userId} = req.params;
     try {
-			await UserService.unlockUser(userId);
+			await UserService.toggleLockUser(userId,'UNLOCK');
       return res.status(200).json(ApiResponse.success(null, "Mở khóa thành công"));
     } catch (error) {
       next(error);
     }
   }
 
+  //[lockUser]
+  static async lockUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const {userId} = req.params;
+    try {
+			await UserService.toggleLockUser(userId,'LOCK');
+      return res.status(200).json(ApiResponse.success(null, "Mở khóa thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 export default UserController;
