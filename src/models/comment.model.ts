@@ -36,5 +36,15 @@ export default class Comment extends BaseModel<string> {
   @Default(CommentStatus.ACTIVE)
   @Column({ type: DataType.ENUM(...Object.values(CommentStatus)) })
   status!: CommentStatus;
+
+  @ForeignKey(() => Comment)
+  @Column(DataType.UUID)
+  parentId!: string | null; 
+
+  @BelongsTo(() => Comment, { onDelete: 'CASCADE' })
+  parentComment!: Comment;
+
+  @HasMany(() => Comment, { foreignKey: 'parentId', as: 'replies' })
+  replies!: Comment[];
 }
 //done

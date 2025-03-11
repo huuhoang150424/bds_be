@@ -1,8 +1,9 @@
-'use-strict';
 
+'use-strict';
+import { Comment } from '@models';
 import { Request, Response, NextFunction } from 'express';
-import { CommentService } from "@service";
-import { ApiResponse } from "@helper";
+import { CommentService, NotificationService } from "@service";
+import { ApiResponse, NotFoundError } from "@helper";
 
 class CommentController {
   // [createComment]
@@ -57,6 +58,47 @@ class CommentController {
       next(error);
     }
   }
+
+  // [Reply to Comment]
+  static async replyToComment(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+    const { commentId } = req.params;
+    const { content } = req.body;
+    try {
+      if (!content) {
+        return res.status(400).json(ApiResponse.error("Nội dung không được để trống", 400));
+      }
+      const parentComment = await Comment.findByPk(commentId);
+      if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
+      const reply = await Comment.create({
+        userId,
+        postId: parentComment.postId,
+        content,
+        parentId: commentId,
+      });
+      if (parentComment.userId !== userId) {
+        await NotificationService.createNotification(
+          parentComment.userId,
+          `Người dùng ${userId} đã phản hồi bình luận của bạn: "${content}"`
+        );
+      }
+      return res.status(201).json(ApiResponse.success(reply, "Đã phản hồi bình luận"));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // [Get Replies of a Specific Comment]
+  static async getReplies(req: Request, res: Response, next: NextFunction) {
+    const { commentId } = req.params;
+    try {
+      const replies = await CommentService.getRepliesByParentId(commentId);
+      return res.status(200).json(ApiResponse.success(replies, "Danh sách phản hồi"));
+    } catch (error) {
+      next(error);
+    }
+  }
+
 }
 
 export default CommentController;

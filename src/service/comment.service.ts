@@ -1,6 +1,6 @@
 
-import { Comment } from '@models';
-import { NotFoundError,  ForbiddenError,  CacheRepository } from '@helper';
+import { Comment, User, CommentLike } from '@models';
+import { NotFoundError, ForbiddenError, CacheRepository } from '@helper';
 import { Op } from "sequelize";
 
 
@@ -22,7 +22,7 @@ class CommentService {
     }
     let whereCondition: any = { postId };
     if (cursor) {
-      whereCondition.createdAt = { [Op.lt]: cursor }; 
+      whereCondition.createdAt = { [Op.lt]: cursor };
     }
     const comments = await Comment.findAll({
       where: whereCondition,
@@ -50,11 +50,50 @@ class CommentService {
 
   // [deleteCommit]
   static async deleteComment(commentId: string, userId: string) {
-    const comment = await Comment.findByPk(commentId);
-    if (!comment) throw new NotFoundError('Không tìm thấy comment');
-    if (comment.userId !== userId) throw new Error('Bạn không có quyền xóa comment này');
+    const comment = await Comment.findByPk(commentId, {
+      include: [{ model: Comment, as: "replies" }], 
+    });
+    if (!comment) throw new NotFoundError("Không tìm thấy comment");
+    if (comment.userId !== userId) throw new Error("Bạn không có quyền xóa comment này");
+
+    await CommentLike.destroy({ where: { commentId } });
+  
+    if (comment.replies.length > 0) {
+      const replyIds = comment.replies.map(reply => reply.id);
+      await CommentLike.destroy({ where: { commentId: replyIds } }); 
+      await Comment.destroy({ where: { id: replyIds } }); 
+    }
     await comment.destroy();
-    return { message: 'Xóa comment thành công' };
+    return { message: "Xóa comment thành công" };
+  }
+  
+
+  // [Reply to Comment]
+  static async replyToComment(userId: string, commentId: string, content: string) {
+    const parentComment = await Comment.findByPk(commentId);
+    if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
+    return await Comment.create({
+      userId,
+      postId: parentComment.postId,
+      content,
+      parentId: commentId,
+    });
+  }
+
+  // [Get Replies for a Specific Comment]
+  static async getRepliesByParentId(parentId: string) {
+    const cacheKey = `comment_replies:${parentId}`;
+    const cachedReplies = await CacheRepository.get(cacheKey);
+    if (cachedReplies) {
+      return JSON.parse(cachedReplies);
+    }
+    const replies = await Comment.findAll({
+      where: { parentId },
+      include: [{ model: User, attributes: ["id", "fullname"] }],
+      order: [["createdAt", "DESC"]],
+    });
+    await CacheRepository.set(cacheKey, replies, 600);
+    return replies;
   }
 
 }
