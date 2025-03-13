@@ -1,0 +1,142 @@
+tags:
+  - name: Comment-Like
+
+paths:
+  /commentlike/like:
+    post:
+      tags:
+        - Comment-Like
+      summary: Thích một bình luận
+      description: Người dùng có thể thích (like) một bình luận.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - commentId
+              properties:
+                commentId:
+                  type: string
+                  example: "7a668746-fe05-4244-96e0-6fefe4c9af43"
+                  description: ID của bình luận
+      responses:
+        "200":
+          description: Thao tác thích bình luận thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentLike"
+        "401":
+          description: Người dùng chưa đăng nhập
+        "404":
+          description: Không tìm thấy bình luận
+        "500":
+          description: Lỗi máy chủ
+
+  /commentlike/dislike:
+    post:
+      tags:
+        - Comment-Like
+      summary: Không thích một bình luận
+      description: Người dùng có thể không thích (dislike) một bình luận.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - commentId
+              properties:
+                commentId:
+                  type: string
+                  example: "7a668746-fe05-4244-96e0-6fefe4c9af43"
+                  description: ID của bình luận
+      responses:
+        "200":
+          description: Thao tác không thích bình luận thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentLike"
+        "401":
+          description: Người dùng chưa đăng nhập
+        "404":
+          description: Không tìm thấy bình luận
+        "500":
+          description: Lỗi máy chủ
+
+  /commentlike/{commentId}/reactions:
+    get:
+      tags:
+        - Comment-Like
+      summary: Lấy số lượt thích và không thích của một bình luận
+      description: Trả về số lượng like và dislike của một bình luận.
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "7a668746-fe05-4244-96e0-6fefe4c9af43"
+          description: ID của bình luận
+      responses:
+        "200":
+          description: Số lượt thích và không thích của bình luận
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CommentLike"
+        "404":
+          description: Không tìm thấy bình luận
+        "500":
+          description: Lỗi máy chủ
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    CommentLike:
+      type: object
+      description: Bảng lưu thông tin thích (like) và không thích (dislike) của người dùng đối với bình luận
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "b1234567-89ab-cdef-0123-456789abcdef"
+          description: ID duy nhất của bản ghi like/dislike
+        userId:
+          type: string
+          format: uuid
+          example: "1a2b3c4d-5e6f-7890-ab12-cd34ef56gh78"
+          description: ID của người dùng đã thích hoặc không thích bình luận
+        commentId:
+          type: string
+          format: uuid
+          example: "7a668746-fe05-4244-96e0-6fefe4c9af43"
+          description: ID của bình luận được thích hoặc không thích
+        status:
+          type: string
+          enum: [LIKE, DISLIKE]
+          example: "LIKE"
+          description: Trạng thái của phản ứng (LIKE hoặc DISLIKE)
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T12:00:00Z"
+          description: Thời điểm phản ứng được tạo
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T12:30:00Z"
+          description: Thời điểm phản ứng được cập nhật lần cuối
