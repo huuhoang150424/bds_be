@@ -1,0 +1,93 @@
+components:
+  schemas:
+    PostHistory:
+      type: object
+      properties:
+        postId:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID của bài đăng liên quan
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID của người dùng liên quan
+        priceUnit:
+          type: string
+          enum: [VND, USD, EUR] # Điều chỉnh theo enum PriceUnit
+          description: Đơn vị giá
+        title:
+          type: string
+          description: Tiêu đề bài đăng
+        address:
+          type: string
+          description: Địa chỉ bài đăng
+        price:
+          type: number
+          format: double
+          description: Giá của bài đăng
+        squareMeters:
+          type: integer
+          description: Diện tích bài đăng
+        priority:
+          type: integer
+          default: 0
+          description: Mức độ ưu tiên
+        description:
+          type: string
+          nullable: true
+          description: Mô tả bài đăng
+        floor:
+          type: integer
+          nullable: true
+          description: Số tầng
+        bedroom:
+          type: integer
+          nullable: true
+          description: Số phòng ngủ
+        bathroom:
+          type: integer
+          nullable: true
+          description: Số phòng tắm
+        isFurniture:
+          type: boolean
+          nullable: true
+          description: Có nội thất hay không
+        slug:
+          type: string
+          description: Slug của bài đăng
+        direction:
+          type: string
+          enum: [North, South, East, West] # Điều chỉnh theo enum Directions
+          description: Hướng của bất động sản
+        verified:
+          type: boolean
+          description: Trạng thái xác thực
+        expiredDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Ngày hết hạn của bài đăng
+        status:
+          type: string
+          enum: [Active, Inactive, Pending] # Điều chỉnh theo enum StatusPost
+          description: Trạng thái bài đăng
+        action:
+          type: string
+          enum: [Create, Update, Delete] # Điều chỉnh theo enum ActionType
+          description: Loại hành động thực hiện trên bài đăng
+        changeBy:
+          type: string
+          format: uuid
+          nullable: true
+          description: ID của người thực hiện thay đổi
+        changedAt:
+          type: string
+          format: date-time
+          description: Ngày thực hiện thay đổi
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

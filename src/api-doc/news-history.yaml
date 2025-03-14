@@ -1,0 +1,72 @@
+components:
+  schemas:
+    NewsHistory:
+      type: object
+      description: Lịch sử chỉnh sửa tin tức
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78"
+          description: ID duy nhất của bản ghi lịch sử tin tức
+        newsId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "7a668746-fe05-4244-96e0-6fefe4c9af43"
+          description: ID của bài viết gốc (có thể null nếu bài viết bị xóa)
+        userId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "1a2b3c4d-5e6f-7890-ab12-cd34ef56gh78"
+          description: ID của người tạo lịch sử chỉnh sửa (có thể null nếu người dùng bị xóa)
+        createdBy:
+          type: string
+          enum: [ADMIN, EDITOR, WRITER]
+          example: "EDITOR"
+          description: Vai trò của người thực hiện thay đổi
+        title:
+          type: string
+          example: "Bản tin cập nhật thị trường chứng khoán"
+          description: Tiêu đề của bài viết trong lịch sử chỉnh sửa
+        content:
+          type: string
+          example: "Nội dung mới của bài viết..."
+          description: Nội dung mới sau khi chỉnh sửa
+        originPost:
+          type: string
+          nullable: true
+          example: "Nội dung cũ của bài viết..."
+          description: Nội dung bài viết trước khi chỉnh sửa
+        imageUrl:
+          type: string
+          nullable: true
+          example: "https://example.com/image.jpg"
+          description: URL ảnh đại diện của bài viết
+        category:
+          type: string
+          enum: [SPORTS, POLITICS, TECHNOLOGY, ENTERTAINMENT]
+          example: "TECHNOLOGY"
+          description: Thể loại của bài viết
+        readingTime:
+          type: integer
+          nullable: true
+          example: 5
+          description: Thời gian đọc ước tính (phút)
+        action:
+          type: string
+          enum: [CREATE, UPDATE, DELETE]
+          example: "UPDATE"
+          description: Hành động thực hiện trên bài viết
+        changedAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T12:30:00Z"
+          description: Thời điểm thay đổi bài viết
+        changeBy:
+          type: string
+          format: uuid
+          nullable: true
+          example: "3f4g5h6i-7j8k-90lm-no12-pq34rs56tu78"
+          description: ID của người thực hiện chỉnh sửa

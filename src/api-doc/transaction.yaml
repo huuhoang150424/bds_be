@@ -1,0 +1,156 @@
+tags:
+  - name: Transaction
+
+paths:
+  /transactions/create:
+    post:
+      tags:
+        - Transaction
+      summary: Tạo giao dịch mới
+      description: Người dùng có thể tạo giao dịch thanh toán mới.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - amount
+                - description
+              properties:
+                amount:
+                  type: number
+                  example: 100000
+                description:
+                  type: string
+                  example: "Nạp tiền vào ví"
+      responses:
+        "200":
+          description: Giao dịch đã được tạo thành công.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transaction"
+        "400":
+          description: Dữ liệu không hợp lệ.
+        "401":
+          description: Người dùng chưa xác thực.
+        "500":
+          description: Lỗi server.
+
+  /transactions/webhook:
+    post:
+      tags:
+        - Transaction
+      summary: Xử lý webhook thanh toán
+      description: Hệ thống thanh toán gửi webhook để cập nhật trạng thái giao dịch.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - orderCode
+                - status
+                - signature
+              properties:
+                orderCode:
+                  type: integer
+                  example: 123456
+                status:
+                  type: string
+                  enum: [completed, failed, cancelled]
+                signature:
+                  type: string
+                  example: "abcdef123456"
+      responses:
+        "200":
+          description: Webhook đã được xử lý thành công.
+        "400":
+          description: Trạng thái hoặc chữ ký không hợp lệ.
+        "500":
+          description: Lỗi server.
+
+  /transactions/success:
+    get:
+      tags:
+        - Transaction
+      summary: Xác nhận thanh toán thành công
+      description: Cập nhật trạng thái giao dịch khi thanh toán hoàn tất.
+      parameters:
+        - name: orderCode
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Thanh toán thành công.
+        "400":
+          description: orderCode không hợp lệ.
+        "500":
+          description: Lỗi server.
+
+  /transactions/cancel:
+    get:
+      tags:
+        - Transaction
+      summary: Hủy giao dịch thanh toán
+      description: Cập nhật trạng thái giao dịch khi thanh toán bị hủy.
+      parameters:
+        - name: orderCode
+          in: query
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Hủy thanh toán thành công.
+        "400":
+          description: orderCode không hợp lệ.
+        "500":
+          description: Lỗi server.
+
+components:
+  schemas:
+    Transaction:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          example: "abc123"
+        userId:
+          type: string
+          example: "user789"
+        amount:
+          type: number
+          example: 100000
+        description:
+          type: string
+          example: "Nạp tiền vào ví"
+        orderCode:
+          type: integer
+          example: 123456
+        paymentMethod:
+          type: string
+          enum: [bank_transfer, credit_card]
+        status:
+          type: string
+          enum: [pending, completed, failed, cancelled]
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-14T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-14T12:30:00Z"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

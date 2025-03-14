@@ -1,0 +1,38 @@
+components:
+  schemas:
+    TagPost:
+      type: object
+      description: Liên kết giữa thẻ (tag) và bài viết (post hoặc post draft)
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "c789f012-3456-gh78-ijkl-90mn123opqrs"
+          description: ID duy nhất của TagPost
+        tagId:
+          type: string
+          format: uuid
+          example: "d123f456-7890-ab12-cd34-ef56gh78ijkl"
+          description: ID của thẻ liên kết
+        postId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "a234b567-890c-de12-fg34-hijk567lmnop"
+          description: ID của bài viết (có thể là null nếu bài viết chưa được xuất bản)
+        postDraftId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "x345y678-901z-ab23-cd45-efgh678ijkl"
+          description: ID của bài viết nháp (có thể là null nếu bài viết đã được xuất bản)
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T12:30:00Z"
+          description: Thời điểm tạo liên kết
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T14:00:00Z"
+          description: Thời điểm cập nhật liên kết gần nhất

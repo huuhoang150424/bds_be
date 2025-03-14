@@ -1,0 +1,27 @@
+components:
+  schemas:
+    Image:
+      type: object
+      description: Hình ảnh liên kết với bài viết hoặc bản nháp
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "c123d456-7890-ab12-ef34-gh56ij78klmn"
+          description: ID duy nhất của hình ảnh
+        postId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "b234c567-890d-ef12-gh34-ijkl567mnopq"
+          description: ID của bài viết chứa hình ảnh (nếu có)
+        postDraftId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "d345e678-901f-gh23-ijkl-567mnopq890r"
+          description: ID của bản nháp bài viết chứa hình ảnh (nếu có)
+        imageUrl:
+          type: string
+          example: "https://example.com/uploads/image1.jpg"
+          description: Đường dẫn của hình ảnh

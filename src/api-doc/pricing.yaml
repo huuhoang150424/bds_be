@@ -1,0 +1,125 @@
+tags:
+  - name: Pricing
+
+paths:
+  /pricing/buyPricing:
+    post:
+      tags:
+        - Pricing
+      summary: Mua gói thành viên
+      description: Người dùng có thể mua một gói thành viên.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pricingId
+              properties:
+                pricingId:
+                  type: string
+                  example: "12345"
+      responses:
+        "201":
+          description: Mua gói thành công.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Mua gói thành công!"
+                  pricing:
+                    $ref: "#/components/schemas/Pricing"
+        "400":
+          description: Số dư không đủ hoặc đã có gói VIP đang hoạt động.
+        "401":
+          description: Người dùng chưa đăng nhập.
+        "500":
+          description: Lỗi server.
+
+  /pricing/updatePricing:
+    put:
+      tags:
+        - Pricing
+      summary: Nâng cấp gói thành viên
+      description: Người dùng có thể nâng cấp lên gói thành viên cao hơn.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - pricingId
+              properties:
+                pricingId:
+                  type: string
+                  example: "67890"
+      responses:
+        "200":
+          description: Nâng cấp gói thành công.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Nâng cấp gói Vip thành công!"
+                  pricing:
+                    $ref: "#/components/schemas/Pricing"
+        "400":
+          description: Số dư không đủ hoặc đã có gói cao hơn.
+        "401":
+          description: Người dùng chưa đăng nhập.
+        "500":
+          description: Lỗi server.
+
+components:
+  schemas:
+    Pricing:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "12345"
+        name:
+          type: string
+          example: "VIP"
+        description:
+          type: string
+          example: "Gói VIP cho thành viên đặc biệt."
+        price:
+          type: number
+          example: 500000
+        discountPercent:
+          type: number
+          example: 10
+        displayDay:
+          type: integer
+          example: 10
+        hasReport:
+          type: boolean
+          example: true
+        maxPost:
+          type: integer
+          example: 100
+        boostDays:
+          type: integer
+          example: 7
+        expiredDay:
+          type: integer
+          example: 30
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

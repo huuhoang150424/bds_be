@@ -1,0 +1,32 @@
+components:
+  schemas:
+    PropertyType:
+      type: object
+      description: Loại bất động sản liên kết với danh mục và bài viết
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "a1b2c3d4-e5f6-7890-ab12-cd34ef56gh78"
+          description: ID duy nhất của loại bất động sản
+        listingTypeId:
+          type: string
+          format: uuid
+          example: "b234c567-890d-ef12-gh34-ijkl567mnopq"
+          description: ID của danh mục bất động sản
+        postId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "c345d678-901e-fg23-hijk-567mnopq890r"
+          description: ID của bài viết liên quan (nếu có)
+        postDraftId:
+          type: string
+          format: uuid
+          nullable: true
+          example: "d456e789-012f-gh34-ijkl-678mnopq901s"
+          description: ID của bản nháp bài viết liên quan (nếu có)
+        name:
+          type: string
+          example: "Căn hộ chung cư"
+          description: Tên loại bất động sản

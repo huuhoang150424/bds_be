@@ -1,0 +1,25 @@
+components:
+  schemas:
+    Tag:
+      type: object
+      description: Thẻ (tag) được sử dụng để phân loại bài viết
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "d123f456-7890-ab12-cd34-ef56gh78ijkl"
+          description: ID duy nhất của thẻ
+        tagName:
+          type: string
+          example: "Technology"
+          description: Tên của thẻ
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T12:30:00Z"
+          description: Thời điểm tạo thẻ
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T14:00:00Z"
+          description: Thời điểm cập nhật thẻ gần nhất

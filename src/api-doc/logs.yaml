@@ -1,0 +1,30 @@
+components:
+  schemas:
+    Log:
+      type: object
+      description: Lưu trữ lịch sử hành động của người dùng
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "f123e456-7890-ab12-cd34-ef56gh78ijkl"
+          description: ID duy nhất của log
+        userId:
+          type: string
+          format: uuid
+          example: "a234b567-890c-de12-fg34-hijk567lmnop"
+          description: ID của người dùng thực hiện hành động
+        action:
+          type: string
+          example: "USER_LOGIN"
+          description: Loại hành động mà người dùng đã thực hiện
+        details:
+          type: string
+          nullable: true
+          example: "Người dùng đăng nhập từ IP 192.168.1.1"
+          description: Chi tiết về hành động được ghi nhận
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-01T12:30:00Z"
+          description: Thời điểm hành động xảy ra

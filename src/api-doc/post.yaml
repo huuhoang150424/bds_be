@@ -1,0 +1,400 @@
+tags:
+  - name: Post
+
+paths:
+  /posts/createPost:
+    post:
+      tags:
+        - Post
+      summary: Tạo bài viết mới
+      description: |
+        Tạo bài đăng mới với thông tin chi tiết và hình ảnh.
+        **Yêu cầu quyền:** Agent hoặc User
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - title
+                - address
+                - squareMeters
+                - description
+                - images
+                - listingType
+                - price
+                - propertyType
+              properties:
+                title:
+                  type: string
+                  example: "Căn hộ cao cấp Quận 1"
+                address:
+                  type: string
+                  example: "123 Nguyễn Huệ, Q1"
+                squareMeters:
+                  type: number
+                  example: 75.5
+                description:
+                  type: string
+                  example: "Full nội thất, view đẹp"
+                floor:
+                  type: integer
+                  example: 12
+                bedroom:
+                  type: integer
+                  example: 2
+                bathroom:
+                  type: integer
+                  example: 2
+                isFurniture:
+                  type: boolean
+                  example: true
+                direction:
+                  type: string
+                  enum:
+                    [Đông, Tây, Nam, Bắc, Đông-Bắc, Tây-Bắc, Đông-Nam, Tây-Nam]
+                  example: "Đông-Nam"
+                status:
+                  type: string
+                  enum: [Còn trống, Đang đám phán, Đã bàn giao]
+                  example: "Còn trống"
+                price:
+                  type: number
+                  example: 2500000000
+                listingType:
+                  type: string
+                  description: ID của loại tin đăng
+                propertyType:
+                  type: string
+                  example: "Căn hộ chung cư"
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  example: ["view đẹp", "gần trung tâm"]
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        "201":
+          description: Tạo bài viết thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "400":
+          description: |
+            Lỗi validate:
+            - Bài đăng đã tồn tại
+            - Đạt giới hạn bài đăng
+            - Dữ liệu không hợp lệ
+        "401":
+          description: Chưa xác thực
+        "403":
+          description: Không có quyền thực hiện
+        "500":
+          description: Lỗi server
+
+  /posts/{slug}/getPost:
+    get:
+      tags:
+        - Post
+      summary: Xem chi tiết bài viết
+      description: Lấy thông tin chi tiết bài viết theo slug
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            example: "can-ho-cao-cap-quan-1"
+      responses:
+        "200":
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "404":
+          description: Không tìm thấy bài viết
+        "500":
+          description: Lỗi server
+
+  /posts/getAllPosts:
+    get:
+      tags:
+        - Post
+      summary: Lấy tất cả bài viết (Admin)
+      description: |
+        Danh sách bài viết phân trang (chỉ Admin)
+        **Yêu cầu quyền:** Admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "403":
+          description: Không có quyền truy cập
+        "500":
+          description: Lỗi server
+
+  /posts/{postId}/updatePost:
+    put:
+      tags:
+        - Post
+      summary: Cập nhật bài viết
+      description: |
+        Cập nhật thông tin bài viết và hình ảnh
+        **Yêu cầu quyền:** Chủ bài viết hoặc Admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PostUpdate"
+      responses:
+        "200":
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "403":
+          description: Không có quyền chỉnh sửa
+        "404":
+          description: Không tìm thấy bài viết
+        "500":
+          description: Lỗi server
+
+  /posts/{postId}/deletePost:
+    delete:
+      tags:
+        - Post
+      summary: Xóa bài viết
+      description: |
+        Xóa bài viết (chỉ chủ bài viết hoặc Admin)
+        **Yêu cầu quyền:** Agent hoặc Admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Xóa thành công
+        "403":
+          description: Không có quyền xóa
+        "404":
+          description: Không tìm thấy bài viết
+        "500":
+          description: Lỗi server
+
+  /posts/{postId}/approvePost:
+    patch:
+      tags:
+        - Post
+      summary: Duyệt bài viết
+      description: |
+        Duyệt bài viết (chỉ Admin)
+        **Yêu cầu quyền:** Admin
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Duyệt thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "400":
+          description: Bài viết đã được duyệt
+        "403":
+          description: Không có quyền
+        "404":
+          description: Không tìm thấy bài viết
+        "500":
+          description: Lỗi server
+
+  /posts/searchPost:
+    get:
+      tags:
+        - Post
+      summary: Tìm kiếm bài viết
+      description: Tìm kiếm bài đăng theo từ khóa và địa chỉ
+      parameters:
+        - name: keyword
+          in: query
+          schema:
+            type: string
+          example: "căn hộ"
+        - name: addresses
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+          example: ["Quận 1", "Quận 3"]
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "500":
+          description: Lỗi server
+
+  /posts/getPostClient:
+    get:
+      tags:
+        - Post
+      summary: Lấy bài viết cho client
+      description: Danh sách bài viết đã xác thực phân trang
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 10
+      responses:
+        "200":
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "500":
+          description: Lỗi server
+
+components:
+  schemas:
+    PostDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+        slug:
+          type: string
+        price:
+          type: number
+        priceUnit:
+          type: string
+          enum: [VND, VND/tháng]
+        address:
+          type: string
+        squareMeters:
+          type: number
+        description:
+          type: string
+        floor:
+          type: integer
+        bedroom:
+          type: integer
+        bathroom:
+          type: integer
+        priority:
+          type: integer
+        isFurniture:
+          type: boolean
+        direction:
+          type: string
+          enum:
+            [
+              "Đông",
+              "Tây",
+              "Nam",
+              "Bắc",
+              "Đông-Bắc",
+              "Tây-Bắc",
+              "Đông-Nam",
+              "Tây-Nam",
+            ]
+        status:
+          type: string
+          enum: ["Còn trống", "Đang đàm phán", "Đã bàn giao"]
+        verified:
+          type: boolean
+        expiredDate:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/Image"
+        tags:
+          type: array
+          items:
+            type: string
+        user:
+          $ref: "#/components/schemas/User"
+        propertyType:
+          $ref: "#/components/schemas/PropertyType"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
