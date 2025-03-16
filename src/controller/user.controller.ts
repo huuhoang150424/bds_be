@@ -70,7 +70,7 @@ class UserController {
     const {userId} = req.params;
     try {
 			await UserService.toggleLockUser(userId,'LOCK');
-      return res.status(200).json(ApiResponse.success(null, "Mở khóa thành công"));
+      return res.status(200).json(ApiResponse.success(null, "khóa người dùng thành công"));
     } catch (error) {
       next(error);
     }

@@ -215,6 +215,12 @@ class PostDraftService {
     if (postDraft?.status===StatusPostDraft.PUBLISHED) {
       throw new BadRequestError('Bạn đã xuất bài viết nháp này rồi');
     }
+		const existingPost = await Post.findOne({
+			where: { title: postDraft?.title }
+		});
+		if (existingPost) {
+			throw new BadRequestError('Tiêu đề bài viết đã tồn tại. Vui lòng chọn tiêu đề khác!');
+		}
     let userPricing = await UserPricing.findOne({
       where: { userId:postDraft?.userId },
       include: [{ model: Pricing }],
