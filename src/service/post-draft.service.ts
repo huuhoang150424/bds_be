@@ -2,7 +2,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { PostDraft, Tag, TagPost, Image, ListingType, PropertyType, Post, UserPricing, Pricing } from '@models';
 import { NotFoundError,BadRequestError } from '@helper';
-import { StatusPost, StatusPostDraft } from '@models/enums';
+import { PriceUnit, StatusPost, StatusPostDraft } from '@models/enums';
 
 class PostDraftService {
   static async createPostDraft(userId: string, data: any, imageUrls: string[]) {
@@ -18,7 +18,7 @@ class PostDraftService {
     if (existsPost) {
       throw new BadRequestError('Bản nháp đã tồn tại');
     }
-    const priceUnit = listingType.listingType === 'Bán' ? 'VND' : 'VND/tháng';
+    const priceUnit = listingType.listingType === 'Bán' ?  PriceUnit.VND : PriceUnit.VNDPerMonth;
     const newPostDraft = await PostDraft.create({
       userId: userId,
       id: uuidv4(),
