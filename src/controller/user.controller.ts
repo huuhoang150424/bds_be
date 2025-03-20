@@ -7,8 +7,7 @@ import { ApiResponse } from '@helper';
 class UserController {
   //[getAllUser]
   static async getAllUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 10;
+		const { page, limit } = (req as any).pagination;
     try {
       const { rows, count } = await UserService.getAllUser(page, limit);
       return res.status(200).json(
@@ -40,10 +39,9 @@ class UserController {
   //[updateUser]
   static async updateUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const user = (req as any).user;
-    const userId = req.params.userId;
+    const {userId} = req.params;
     const data = req.body;
     const avatar = req.file?.path;
-    console.log(avatar)
     if (avatar) {
       data.avatar = avatar;
     }
@@ -60,11 +58,22 @@ class UserController {
   static async unLockUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const {userId} = req.params;
     try {
+			await UserService.toggleLockUser(userId,'UNLOCK');
       return res.status(200).json(ApiResponse.success(null, "Mở khóa thành công"));
     } catch (error) {
       next(error);
     }
   }
 
+  //[lockUser]
+  static async lockUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const {userId} = req.params;
+    try {
+			await UserService.toggleLockUser(userId,'LOCK');
+      return res.status(200).json(ApiResponse.success(null, "khóa người dùng thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 export default UserController;

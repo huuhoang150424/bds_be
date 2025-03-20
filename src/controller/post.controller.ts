@@ -24,8 +24,7 @@ class PostController {
 	}
 	//[getAllPost]
 	static async getAllPost(req: Request, res: Response, next: NextFunction) {
-		const page = parseInt(req.query.page as string) || 1;
-		const limit = parseInt(req.query.limit as string) || 10;
+		const { page, limit } = (req as any).pagination;
 		try {
 			const posts = await PostService.getPosts(page, limit);
 			return res.status(200).json(ApiResponse.success(posts, "thành công"));
@@ -33,11 +32,11 @@ class PostController {
 			next(error);
 		}
 	}
+	
 
 	//[getAllPost for client]
 	static async getAllPostForClient(req: Request, res: Response, next: NextFunction) {
-		const page = parseInt(req.query.page as string) || 1;
-		const limit = parseInt(req.query.limit as string) || 10;
+		const { page, limit } = (req as any).pagination;
 		try {
 			const posts = await PostService.getPostsForClient(page, limit);
 			return res.status(200).json(ApiResponse.success(posts, "thành công"));

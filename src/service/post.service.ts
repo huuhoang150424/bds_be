@@ -1,5 +1,5 @@
 
-import { ActionType } from '@models/enums/post';
+import { ActionType, PriceUnit } from '@models/enums/post';
 import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing } from '@models';
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
@@ -63,7 +63,7 @@ class PostService {
       if (existsPost) {
         throw new BadRequestError('Bài đăng đã tồn tại');
       }
-      const priceUnit = listingType.listingType === 'Bán' ? 'VND' : 'VND/tháng';
+      const priceUnit = listingType.listingType === 'Bán' ? PriceUnit.VND : PriceUnit.VNDPerMonth;
       const expiredDate = displayDays === -1 ? null : new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000);
       const newPost = await Post.create({
         userId: userId,
