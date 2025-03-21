@@ -24,9 +24,9 @@ class PostController {
 	}
 	//[getAllPost]
 	static async getAllPost(req: Request, res: Response, next: NextFunction) {
-		const { page, limit } = (req as any).pagination;
+		const { page, limit, offset } = (req as any).pagination;
 		try {
-			const posts = await PostService.getPosts(page, limit);
+			const posts = await PostService.getPosts(page, limit, offset);
 			return res.status(200).json(ApiResponse.success(posts, "thành công"));
 		} catch (error) {
 			next(error);

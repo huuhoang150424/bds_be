@@ -112,8 +112,7 @@ class PostDraftService {
     return findPostDraft;
   }
 
-  static async getAllPostDraft(userId:string,page:number,limit: number) {
-    const offset=(page-1)*limit;
+  static async getAllPostDraft(userId:string,page:number,limit: number, offset:number) {
     const {count,rows}=await PostDraft.findAndCountAll({
       limit,
       offset,

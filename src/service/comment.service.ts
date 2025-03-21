@@ -12,7 +12,7 @@ class CommentService {
   }
 
   // [getComment by Post]
-  static async getCommentsByPost(postId: string, page: number, limit: number, cursor?: string) {
+  static async getCommentsByPost(postId: string, page: number, limit: number, offset: number, cursor?: string ) {
     const cacheKey = cursor
       ? `comments:post:${postId}:cursor:${cursor}`
       : `comments:post:${postId}:page:${page}:limit:${limit}`;
@@ -28,7 +28,7 @@ class CommentService {
       where: whereCondition,
       include: ["user"],
       order: [["createdAt", "DESC"]],
-      offset: (page - 1) * limit,
+      offset: offset,
       limit: limit,
     });
     await CacheRepository.set(cacheKey, comments, 60);
@@ -51,22 +51,22 @@ class CommentService {
   // [deleteCommit]
   static async deleteComment(commentId: string, userId: string) {
     const comment = await Comment.findByPk(commentId, {
-      include: [{ model: Comment, as: "replies" }], 
+      include: [{ model: Comment, as: "replies" }],
     });
     if (!comment) throw new NotFoundError("Không tìm thấy comment");
     if (comment.userId !== userId) throw new Error("Bạn không có quyền xóa comment này");
 
     await CommentLike.destroy({ where: { commentId } });
-  
+
     if (comment.replies.length > 0) {
       const replyIds = comment.replies.map(reply => reply.id);
-      await CommentLike.destroy({ where: { commentId: replyIds } }); 
-      await Comment.destroy({ where: { id: replyIds } }); 
+      await CommentLike.destroy({ where: { commentId: replyIds } });
+      await Comment.destroy({ where: { id: replyIds } });
     }
     await comment.destroy();
     return { message: "Xóa comment thành công" };
   }
-  
+
 
   // [Reply to Comment]
   static async replyToComment(userId: string, commentId: string, content: string) {

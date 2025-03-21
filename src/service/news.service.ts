@@ -23,7 +23,7 @@ class NewsService {
     });
   }
 
-  static async getAllNews(lastId?: string, limit: number = 10) {
+  static async getAllNews( limit: number = 10,lastId?: string) {
     const cacheKey = `news:loadmore:lastId:${lastId || 'none'}:limit:${limit}`;
     const cachedData = await CacheRepository.get(cacheKey);
     if (cachedData) {

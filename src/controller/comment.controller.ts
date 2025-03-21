@@ -21,10 +21,10 @@ class CommentController {
   // [getCommentsByPost]
   static async getCommentsByPost(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
-		const { page, limit } = (req as any).pagination;
+		const { page, limit, offset } = (req as any).pagination;
     const cursor = req.query.cursor as string | undefined;
     try {
-      const comments = await CommentService.getCommentsByPost(postId, page, limit, cursor);
+      const comments = await CommentService.getCommentsByPost(postId, page, limit,offset,cursor);
       return res.status(200).json(ApiResponse.success(comments, "Danh sách bình luận"));
     } catch (error) {
       next(error);

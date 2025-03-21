@@ -196,8 +196,7 @@ class PostService {
     return post;
   }
 
-  static async getPosts(page: number, limit: number) {
-    const offset = (page - 1) * limit;
+  static async getPosts(page: number, limit: number, offset:number) {
     const now = new Date();
     const { count, rows } = await Post.findAndCountAll({
       limit: limit,
