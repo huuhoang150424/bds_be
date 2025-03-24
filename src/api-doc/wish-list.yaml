@@ -1,0 +1,302 @@
+tags:
+  - name: wishlist
+
+paths:
+  /wishlist/addWishlist:
+    post:
+      tags:
+        - Wishlist
+      summary: Thêm bài đăng vào danh sách yêu thích
+      description: API này cho phép người dùng thêm một bài đăng vào danh sách yêu thích của họ.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - userId
+                - postId
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  example: "e27ad3c1-c99b-4fcb-8f96-fbb2ccb5ae15"
+                postId:
+                  type: string
+                  format: uuid
+                  example: "e27ad3c1-c99b-4fcb-8f96-fbb2ccb5ae15"
+      responses:
+        201:
+          description: Thêm vào danh sách yêu thích thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: "Thêm bài đăng vào wishlist thành công"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: " Tim bài đăng Thành công"
+   
+        400:
+          description: Bài đăng đã có trong danh sách yêu thích
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 400
+                  message:
+                    type: string
+                    example: "Post is already in wishlist"
+                  data:
+                    type: null
+        404:
+          description: Không tìm thấy bài đăng
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 404
+                  message:
+                    type: string
+                    example: "Post not found"
+                  data:
+                    type: null
+
+  /wishlist/removeFromWishlist:
+    delete:
+      tags:
+        - Wishlist
+      summary: Xóa bài đăng khỏi danh sách yêu thích
+      description: API này cho phép người dùng xóa một bài đăng khỏi danh sách yêu thích của họ.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - postId
+                - userId
+              properties:
+                userId:
+                  type: string
+                  format: uuid
+                  example: "e27ad3c1-c99b-4fcb-8f96-fbb2ccb5ae15"
+                postId:
+                  type: string
+                  format: uuid
+                  example: "1d0cd2c2-23c6-4fcb-a09b-380e593ced52"
+      responses:
+        200:
+          description: Xóa khỏi danh sách yêu thích thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: "Xóa bài đăng thành công"
+                  data:
+                    type: null
+        404:
+          description: Không tìm thấy mục trong danh sách yêu thích
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 404
+                  message:
+                    type: string
+                    example: "Wishlist item not found"
+                  data:
+                    type: null
+
+  /wishlist/getUserWishlist:
+    get:
+      tags:
+        - Wishlist
+      summary: Lấy danh sách wishlist của người dùng
+      description: API này cho phép người dùng lấy danh sách các bài đăng mà họ đã thêm vào wishlist.
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Lấy danh sách wishlist thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 200
+                  message:
+                    type: string
+                    example: "Wishlist retrieved successfully"
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          format: uuid
+                          example: "028f8bfd-26f2-4b0c-b6f4-65158d538d67"
+                        createdAt:
+                          type: string
+                          format: date-time
+                          example: "2025-03-21T16:28:18.000Z"
+                        updatedAt:
+                          type: string
+                          format: date-time
+                          example: "2025-03-21T16:28:18.000Z"
+                        userId:
+                          type: string
+                          format: uuid
+                          example: "d5a5b35e-7354-49ec-a2d3-1b19d1aa1ce2"
+                        postId:
+                          type: string
+                          format: uuid
+                          example: "e27ad3c1-c99b-4fcb-8f96-fbb2ccb5ae15"
+                        post:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              format: uuid
+                              example: "e27ad3c1-c99b-4fcb-8f96-fbb2ccb5ae15"
+                            title:
+                              type: string
+                              example: "Nhà phố quận 7, gần Phú Mỹ Hưng"
+                            priceUnit:
+                              type: string
+                              example: "VND"
+                            address:
+                              type: string
+                              example: "456 Lê Văn Lương, Quận 7, TP. Hồ Chí Minh"
+                            price:
+                              type: number
+                              example: 7000000000
+                            squareMeters:
+                              type: number
+                              example: 120
+                            description:
+                              type: string
+                              example: "Nhà phố đẹp, thuận tiện di chuyển, gần nhiều tiện ích."
+                            floor:
+                              type: integer
+                              example: 3
+                            bedroom:
+                              type: integer
+                              example: 4
+                            bathroom:
+                              type: integer
+                              example: 3
+                            direction:
+                              type: string
+                              example: "Nam"
+                            verified:
+                              type: boolean
+                              example: false
+                            status:
+                              type: string
+                              example: "Đang đàm phán"
+        401:
+          description: Người dùng chưa đăng nhập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 401
+                  message:
+                    type: string
+                    example: "Unauthorized"
+                  data:
+                    type: null
+
+components:
+  schemas:
+    Wishlist:
+      type: object
+      description: Danh sách yêu thích của người dùng
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID của wishlist
+          example: "028f8bfd-26f2-4b0c-b6f4-65158d538d67"
+        userId:
+          type: string
+          format: uuid
+          description: ID của người dùng
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        user:
+          $ref: "#/components/schemas/User"
+        postId:
+          type: string
+          format: uuid
+          description: ID của bài đăng
+          example: "e27ad3c1-c99b-4fcb-8f96-fbb2ccb5ae15"
+        post:
+          type: object
+          description: Thông tin bài đăng
+          properties:
+            id:
+              type: string
+              format: uuid
+              example: "e27ad3c1-c99b-4fcb-8f96-fbb2ccb5ae15"
+            title:
+              type: string
+              example: "Bán nhà mặt tiền đường Nguyễn Trãi"
+            price:
+              type: number
+              format: double
+              example: 5000000000
+            createdAt:
+              type: string
+              format: date-time
+              example: "2024-03-09T12:00:00Z"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-03-09T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2024-03-09T12:30:00Z"
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

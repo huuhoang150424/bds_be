@@ -97,7 +97,7 @@ class AuthService {
 
   static async verifyCode(email: string, otpCode: string) {
     const otpCodeStore = await CacheRepository.get(`mail-${email}`);
-    if (otpCode !== otpCodeStore) {
+    if (!otpCodeStore || otpCode !== otpCodeStore) {
       throw new UnauthorizedError('Mã OTP không hợp lệ hoặc đã hết hạn');
     }
     await CacheRepository.delete(`mail-${email}`);

@@ -13,13 +13,11 @@ class WishlistService {
     if (existingWishlistItem) {
       throw new BadRequestError("Post is already in wishlist");
     }
-
     const wishlist = await Wishlist.create({
       id: uuidv4(),
       userId,
       postId,
     });
-
     return wishlist.id;
   }
 

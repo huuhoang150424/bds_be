@@ -23,7 +23,7 @@ class NewsService {
     });
   }
 
-  static async getAllNews( limit: number = 10,lastId?: string) {
+  static async getAllNews(limit: number = 10, lastId?: string) {
     const cacheKey = `news:loadmore:lastId:${lastId || 'none'}:limit:${limit}`;
     const cachedData = await CacheRepository.get(cacheKey);
     if (cachedData) {
@@ -56,21 +56,19 @@ class NewsService {
 
   static async updateNews(newsId: string, userId: string, image: string, updatedData: Partial<News>) {
     return await sequelize.transaction(async (transaction: Transaction) => {
-      const news = await News.findByPk(newsId, { transaction });
+      const news = await News.findOne({ where: { id: newsId, userId }, transaction });
       if (!news) {
-        throw new NotFoundError("Tin tức không tồn tại");
-      }
-      if (news.userId !== userId) {
-        throw new UnauthorizedError("Bạn không có quyền cập nhật tin này");
+        throw new NotFoundError("Tin tức không tồn tại hoặc bạn không có quyền cập nhật");
       }
       if (Object.keys(updatedData).length === 0) {
         throw new BadRequestError("Không có dữ liệu nào để cập nhật");
       }
       await this.saveNewsHistory(newsId, userId, ActionType.UPDATE, transaction);
-      await news.update({  imageUrl: image ,...updatedData}, { transaction });
+      await news.update({ imageUrl: image, ...updatedData }, { transaction });
       return news;
     });
   }
+
 
   static async deleteNews(id: string, userId: string) {
     return await sequelize.transaction(async (transaction: Transaction) => {

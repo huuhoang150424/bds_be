@@ -9,7 +9,7 @@ class WishlistController {
     const { postId } = req.body;
     try {
       const wishlistId = await WishlistService.addToWishlist(userId, postId);
-      return res.status(201).json(new ApiResponse(201, wishlistId, "Added to wishlist successfully"));
+      return res.status(201).json(new ApiResponse(201, wishlistId, "Tim bài đăng thành công"));
     } catch (error) {
       next(error);
     }
@@ -21,7 +21,7 @@ class WishlistController {
     const { postId } = req.body;
     try {
       await WishlistService.removeFromWishlist(userId, postId);
-      return res.status(200).json(new ApiResponse(200, "Removed from wishlist successfully", null));
+      return res.status(200).json(new ApiResponse(200, "Xóa bài đăng thành công", null));
     } catch (error) {
       next(error);
     }

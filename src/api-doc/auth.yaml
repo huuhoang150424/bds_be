@@ -2,6 +2,71 @@ tags:
   - name: Auth
 
 paths:
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Đăng Ký
+      description: API cho phép người dùng đăng ký tài khoản mới.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - fullname
+                - email
+                - password
+                - confirmPassword
+              properties:
+                fullname:
+                  type: string
+                  example: "Nguyễn Văn A"
+                email:
+                  type: string
+                  format: email
+                  example: "nguyenvana@gamil.com"
+                password:
+                  type: string
+                  format: password
+                  example: "123456"
+                confirmPassword:
+                  type: string
+                  format: password
+                  example: "123456"
+      responses:
+        201:
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 201
+                  message:
+                    type: string
+                    example: "Đăng ký thành công"
+                  data:
+                    type: null
+        403:
+          description: Email đã được đăng ký hoặc xác nhận mật khẩu không khớp
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: number
+                    example: 403
+                  message:
+                    type: string
+                    example: "Email đã được đăng ký"
+                  data:
+                    type: null
+
   /auth/login:
     post:
       tags:
@@ -21,11 +86,11 @@ paths:
                 email:
                   type: string
                   format: email
-                  example: johndoe@example.com
+                  example: user1@gmail.com
                 password:
                   type: string
                   format: password
-                  example: "12345678"
+                  example: "123456"
       responses:
         "200":
           description: Đăng nhập thành công, trả về access token, refresh token và thông tin người dùng.
@@ -36,7 +101,7 @@ paths:
                 properties:
                   access_token:
                     type: string
-                    example: "eyJhbGciOiJIUzI1Ni..."
+                    example: "eyJhbGciOiJIUzI1Ni...xYjE5ZDFhYTFjZTIiLCJyb2xlIjoiQWRtaW4iLCJpYXQiOjE3NDI1NjY2MDYsImV4cCI6MTc0MjY1MzAwNn0.TEqeiNT6pXXQrNAsoqFjBXu41mT-ZglteSR20KMTCiA"
                   refresh_token:
                     type: string
                     example: "eyJhbGciOiJIUzI1Ni..."
@@ -67,7 +132,7 @@ paths:
         "500":
           description: Lỗi server
 
-  /auth/forgot-password:
+  /auth/forgotPassword:
     post:
       tags:
         - Auth
@@ -85,16 +150,37 @@ paths:
                 email:
                   type: string
                   format: email
-                  example: johndoe@example.com
+                  example: lengoctai2402@gmail.com
       responses:
         "200":
           description: Email đặt lại mật khẩu đã được gửi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "Gửi email đặt lại mật khẩu thành công"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Thành công"
+                      otpExpires:
+                        type: string
+                        format: date-time
+                        example: "2025-03-21T14:39:32.729Z"
         "400":
           description: Email không hợp lệ
         "500":
           description: Lỗi server
 
-  /auth/verify-code:
+  /auth/verifyCode:
     post:
       tags:
         - Auth
@@ -108,18 +194,36 @@ paths:
               type: object
               required:
                 - email
-                - code
+                - otpCode
               properties:
                 email:
                   type: string
                   format: email
-                  example: johndoe@example.com
-                code:
+                  example: lengoctai2402@gmail.com
+                otpCode:
                   type: string
-                  example: "123456"
+                  example: "3456"
       responses:
         "200":
-          description: Mã xác thực hợp lệ
+          description: Mã xác thực đã được gửi
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "Mã OTP Hợp Lệ"
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: "Xác Thực Thành công"
+
         "400":
           description: Mã không hợp lệ hoặc hết hạn
         "500":
@@ -206,7 +310,6 @@ components:
           type: string
           format: date-time
           example: "2024-03-09T12:30:00Z"
-
 
   securitySchemes:
     BearerAuth:
