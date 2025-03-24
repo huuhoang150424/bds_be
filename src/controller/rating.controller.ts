@@ -9,9 +9,8 @@ class RatingController {
   static async createRating(req: Request, res: Response, next: NextFunction) {
     const { userId } = (req as any).user;
     const { postId, rating } = req.body;
-    const numericRating = Number(rating);
     try {
-      const newRating = await RatingService.createRating(userId, postId, numericRating);
+      const newRating = await RatingService.createRating(userId, postId, rating);
       return res.status(201).json(ApiResponse.success(newRating, "Rating created successfully"));
     } catch (error) {
       next(error);

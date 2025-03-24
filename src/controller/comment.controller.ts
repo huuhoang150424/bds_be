@@ -64,9 +64,6 @@ class CommentController {
     const { commentId } = req.params;
     const { content } = req.body;
     try {
-      if (!content) {
-        return res.status(400).json(ApiResponse.error("Nội dung không được để trống", 400));
-      }
       const parentComment = await Comment.findByPk(commentId);
       if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
       const reply = await Comment.create({

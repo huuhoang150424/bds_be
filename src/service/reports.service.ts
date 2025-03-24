@@ -15,9 +15,6 @@ class ReportsService {
     if (!postExists) {
       throw new NotFoundError("Post not found");
     }
-    if (!Object.values(ReportReason).includes(reason)) {
-      throw new BadRequestError(`Invalid report reason. Must be one of: ${Object.values(ReportReason).join(", ")}`);
-    }
     const report = await Report.create({
       id: uuidv4(),
       userId,

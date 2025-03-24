@@ -13,7 +13,7 @@ class ReportsController {
     }
     try {
       const reportId = await ReportsService.createReport({ userId, postId, reason, content });
-      return res.status(201).json(new ApiResponse(201, reportId, "Report created successfully"));
+      return res.status(201).json(new ApiResponse(201, reportId, "Tạo báo cáo thành công"));
     } catch (error) {
       next(error);
     }
