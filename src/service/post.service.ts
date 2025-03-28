@@ -196,7 +196,7 @@ class PostService {
     return post;
   }
 
-  static async getPosts(page: number, limit: number, offset:number) {
+  static async getPosts(page: number, limit: number, offset: number) {
     const now = new Date();
     const { count, rows } = await Post.findAndCountAll({
       limit: limit,
@@ -412,6 +412,52 @@ class PostService {
       currentPage: page,
       posts: paginatedPosts,
     };
+  }
+
+  static async getPostOutstanding() {
+    const cachedData = await CacheRepository.get('outstanding_posts');
+    // if (cachedData) {
+    //   return JSON.parse(cachedData);
+    // }
+    const posts = await Post.findAll({
+      attributes: [
+        'id',
+        'title',
+        'slug',
+        'price',
+        'squareMeters',
+        'address',
+        'createdAt',
+        'priority',
+				'priceUnit',
+				'expiredDate',
+        [
+          Post.sequelize!.literal(`
+            (
+              (SELECT COUNT(*) FROM user_views WHERE user_views.post_id = \`Post\`.\`id\`) * 0.5 +
+              (SELECT COUNT(*) FROM wishlists WHERE wishlists.post_id = \`Post\`.\`id\`) * 0.3 +
+              (SELECT COUNT(*) FROM comments WHERE comments.post_id = \`Post\`.\`id\`) * 0.2
+            )`),
+          'score',
+        ],
+      ],
+      include: [
+        { model: Image, attributes: ['image_url'], limit: 1 },
+        { model: PropertyType, attributes: ['name'] },
+      ],
+      where: {
+        verified: true,
+        //status: { [Op.ne]: 'Đã bàn giao' },
+        expiredDate: { [Op.gte]: new Date() },
+      },
+      order: [
+        [Post.sequelize!.literal('score'), 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
+      limit: 20,
+    });
+    await CacheRepository.set('outstanding_posts', posts, 300);
+    return posts;
   }
 }
 

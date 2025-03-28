@@ -22,7 +22,8 @@ import {
 	ListingType,
 	PostDraft,
 	NewsHistory,
-	CommentLike } from '@models/index';
+	CommentLike,
+	UserView } from '@models/index';
 
 
 
@@ -64,7 +65,8 @@ export const sequelize = new Sequelize({
 		ListingType,
 		PostDraft,
 		NewsHistory,
-		CommentLike
+		CommentLike,
+		UserView
   ],
   logging: false,
 });

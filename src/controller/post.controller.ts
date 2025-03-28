@@ -124,6 +124,17 @@ class PostController {
 			next(error);
 		}
 	}
+
+
+	//[get post outstanding]
+	static async getPostOutstanding(req: Request, res: Response, next: NextFunction) {
+    try {
+      const posts = await PostService.getPostOutstanding();
+      return res.status(200).json(ApiResponse.success(posts, 'Lấy bài viết nổi bật thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

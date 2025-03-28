@@ -19,7 +19,7 @@ export const seedUsers = async () => {
       phone: "0123456734",
       emailVerified: false,
     },
-    ...Array.from({ length: 20 }, (_, i) => ({
+    ...Array.from({ length: 100 }, (_, i) => ({
       fullname: `User ${i + 1}`,
       email: `user${i + 1}@gmail.com`,
       roles: Roles.User,
@@ -40,6 +40,4 @@ export const seedUsers = async () => {
       });
     })
   );
-
-  console.log("✅ Users seeded successfully!");
 };

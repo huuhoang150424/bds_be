@@ -1,8 +1,9 @@
-import { seedComment } from './comment';
+import { seedWishlists } from './wishlists';
+import { seedComments } from './comment';
 import {seedUsers} from './user';
 import {seedPricings} from './pricing';
 import {seedListingTypes} from './listing-types';
-import {seederPost} from './post';
+import { seederPost, seedUserViews } from './post';
 import {seedNews} from "./news";
 import {seedReport} from "./report";
 
@@ -12,6 +13,8 @@ export {
 	seedListingTypes,
 	seederPost,
 	seedNews,
-	seedComment,
-	seedReport
+	seedComments,
+	seedReport,
+	seedWishlists,
+	seedUserViews
 }
