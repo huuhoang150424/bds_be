@@ -1,6 +1,6 @@
 
 import { ActionType, Roles } from "@models/enums";
-import { News, NewsHistory } from "@models";
+import { News, NewsHistory, User } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, Transaction } from "sequelize";
@@ -23,21 +23,49 @@ class NewsService {
     });
   }
 
-  static async getAllNews(limit: number = 10, lastId?: string) {
-    const cacheKey = `news:loadmore:lastId:${lastId || 'none'}:limit:${limit}`;
-    const cachedData = await CacheRepository.get(cacheKey);
-    if (cachedData) {
-      return cachedData;
-    }
-    const whereCondition = lastId ? { id: { [Op.lt]: lastId } } : {};
-    const newsList = await News.findAll({
-      where: whereCondition,
-      order: sequelize.random(),
-      limit,
-    });
-    await CacheRepository.set(cacheKey, newsList, 300);
-    return newsList;
-  }
+
+	static async getAllNews(limit: number = 10, lastCreatedAt?: string) {
+		const MAX_TOTAL_LIMIT = 30;
+	
+		const whereCondition = lastCreatedAt ? { createdAt: { [Op.lte]: new Date(lastCreatedAt) } } : {};
+		
+		const newsList = await News.findAll({
+			where: whereCondition,
+			order: [["createdAt", "DESC"]],
+			limit,
+			include: [{ model: User, as: "author", attributes: ["fullname"] }],
+		});
+	
+		const lastNewsCreatedAt = newsList.length > 0 ? newsList[newsList.length - 1].createdAt : null;
+	
+		const skippedCount = lastCreatedAt
+			? await News.count({
+					where: { createdAt: { [Op.gt]: new Date(lastCreatedAt) } },
+				})
+			: 0;
+	
+		const totalLoaded = skippedCount + newsList.length;
+	
+		const totalRemaining = await News.count({
+			where: lastNewsCreatedAt ? { createdAt: { [Op.lt]: lastNewsCreatedAt } } : {},
+		});
+		const hasMore = totalRemaining > 0 && totalLoaded < MAX_TOTAL_LIMIT;
+	
+		const adjustedNewsList = totalLoaded > MAX_TOTAL_LIMIT
+			? newsList.slice(0, MAX_TOTAL_LIMIT - skippedCount)
+			: newsList;
+	
+		const result = {
+			data: adjustedNewsList,
+			meta: {
+				hasNextPage: hasMore,
+				nextCreatedAt: lastNewsCreatedAt,
+				total: await News.count(),
+			},
+		};
+	
+		return result;
+	}
 
   static async getNew(slug: string) {
     const cacheKey = `news:slug:${slug}`;
