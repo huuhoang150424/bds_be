@@ -6,7 +6,6 @@ export const seederPost = async () => {
   const listingType = await ListingType.findOne();
 
   if (!user || !listingType) {
-    console.log("Cần có ít nhất một user và một listing type trong database.");
     return;
   }
 

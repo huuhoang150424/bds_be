@@ -1,6 +1,6 @@
 
 import { ActionType, PriceUnit } from '@models/enums/post';
-import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing } from '@models';
+import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing, UserView, Wishlist,Comment } from '@models';
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
@@ -416,9 +416,9 @@ class PostService {
 
   static async getPostOutstanding() {
     const cachedData = await CacheRepository.get('outstanding_posts');
-    // if (cachedData) {
-    //   return JSON.parse(cachedData);
-    // }
+    if (cachedData) {
+      return JSON.parse(cachedData);
+    }
     const posts = await Post.findAll({
       attributes: [
         'id',
@@ -429,8 +429,9 @@ class PostService {
         'address',
         'createdAt',
         'priority',
-				'priceUnit',
-				'expiredDate',
+        'priceUnit',
+        'expiredDate',
+        'status',
         [
           Post.sequelize!.literal(`
             (
@@ -447,7 +448,6 @@ class PostService {
       ],
       where: {
         verified: true,
-        //status: { [Op.ne]: 'Đã bàn giao' },
         expiredDate: { [Op.gte]: new Date() },
       },
       order: [
@@ -458,6 +458,160 @@ class PostService {
     });
     await CacheRepository.set('outstanding_posts', posts, 300);
     return posts;
+  }
+
+	static async getPostHabit(userId: string, limit: number = 10) {
+		const cacheKey = `post_habit_${userId}`;
+		const cachedData = await CacheRepository.get(cacheKey);
+		// if (cachedData) {
+		// 	return JSON.parse(cachedData);
+		// }
+	
+		const userViews = await UserView.findAll({ where: { userId }, attributes: ['postId'] });
+		const userWishlists = await Wishlist.findAll({ where: { userId }, attributes: ['postId'] });
+		const userComments = await Comment.findAll({ where: { userId }, attributes: ['postId'] });
+		const interactedPostIds: string[] = [
+			...new Set([
+				...userViews.map(v => String(v.postId)), 
+				...userWishlists.map(w => String(w.postId)), 
+				...userComments.map(c => String(c.postId)),
+			]),
+		];
+		
+	
+		if (interactedPostIds.length === 0) {
+			const defaultPosts = await PostService.getDefaultRecommendations(limit);
+			await CacheRepository.set(cacheKey, defaultPosts, 300);
+			return defaultPosts;
+		}
+	
+		const interactedPosts = await Post.findAll({
+			where: { id: { [Op.in]: interactedPostIds } },
+			include: [{ model: PropertyType, attributes: ['name'] }],
+		});
+	
+		const contentScores = await PostService.calculateContentBasedScores(interactedPosts);
+	
+		const collabScores = await PostService.calculateCollaborativeScores(userId, interactedPostIds);
+	
+		const posts = await Post.findAll({
+			attributes: ['id', 'title', 'slug', 'price', 'squareMeters', 'address', 'createdAt', 'priority'],
+			include: [
+				{ model: Image, attributes: ['image_url'], limit: 1 },
+				{ model: PropertyType, attributes: ['name'] },
+			],
+			where: {
+				verified: true,
+				status: { [Op.ne]: 'Đã bàn giao' },
+				expiredDate: { [Op.gte]: new Date() },
+				id: { [Op.notIn]: interactedPostIds },
+			},
+		});
+	
+		const now = Date.now();
+		posts.forEach(post => {
+			const contentScore = contentScores[post.id] || 0;
+			const collabScore = collabScores[post.id] || 0;
+			const ageInDays = (now - post.createdAt.getTime()) / (1000 * 60 * 60 * 24);
+			const decayFactor = Math.exp(-0.05 * ageInDays);
+			(post as any).score = (contentScore * 0.4) + (collabScore * 0.4) + (post.priority * 0.2) * decayFactor;
+		});
+	
+		const topPosts = posts
+			.sort((a, b) => (b as any).score - (a as any).score)
+			.slice(0, limit);
+	
+		if (topPosts.length > 0) {
+			await CacheRepository.set(cacheKey, topPosts, 300);
+		}
+	
+		return topPosts;
+	}
+
+  private static async calculateContentBasedScores(interactedPosts: Post[]) {
+    const scores: { [postId: string]: number } = {};
+    const avgPrice = interactedPosts.reduce((sum, p) => sum + p.price, 0) / interactedPosts.length;
+    const avgArea = interactedPosts.reduce((sum, p) => sum + p.squareMeters, 0) / interactedPosts.length;
+    const propertyTypes = [...new Set(interactedPosts.map((p) => p.propertyType[0]?.name))];
+
+    const allPosts = await Post.findAll({
+      where: { verified: true, status: { [Op.ne]: 'Đã bàn giao' }, expiredDate: { [Op.gte]: new Date() } },
+      include: [{ model: PropertyType, attributes: ['name'] }],
+    });
+
+    allPosts.forEach((post) => {
+      let similarity = 0;
+      similarity += 1 - Math.abs(post.price - avgPrice) / avgPrice;
+      similarity += 1 - Math.abs(post.squareMeters - avgArea) / avgArea;
+      if (propertyTypes.includes(post.propertyType[0]?.name)) similarity += 1;
+      scores[post.id] = similarity / 3;
+    });
+
+    return scores;
+  }
+
+  private static async calculateCollaborativeScores(userId: string, interactedPostIds: string[]) {
+    const scores: { [postId: string]: number } = {};
+
+    const similarUsers = await UserView.findAll({
+      where: { postId: { [Op.in]: interactedPostIds }, userId: { [Op.ne]: userId } },
+      attributes: ['userId'],
+      group: ['userId'],
+    });
+    const similarUserIds = similarUsers.map((u) => u.userId);
+
+    const similarInteractions = await Promise.all([
+      UserView.findAll({ where: { userId: { [Op.in]: similarUserIds } }, attributes: ['postId'] }),
+      Wishlist.findAll({ where: { userId: { [Op.in]: similarUserIds } }, attributes: ['postId'] }),
+      Comment.findAll({ where: { userId: { [Op.in]: similarUserIds } }, attributes: ['postId'] }),
+    ]);
+
+    const recommendedPostIds = [
+      ...new Set(
+        similarInteractions
+          .flat()
+					.map((i) => String(i.postId))
+          .filter((id) => !interactedPostIds.includes(id)),
+      ),
+    ];
+
+    recommendedPostIds.forEach((postId) => {
+      scores[postId] = (scores[postId] || 0) + 1;
+    });
+
+    const maxScore = Math.max(...Object.values(scores), 1);
+    Object.keys(scores).forEach((postId) => {
+      scores[postId] /= maxScore;
+    });
+
+    return scores;
+  }
+  private static async getDefaultRecommendations(limit: number) {
+    return await Post.findAll({
+      attributes: [
+        'id',
+        'title',
+        'slug',
+        'price',
+        'squareMeters',
+        'address',
+        'createdAt',
+        'priority',
+        'priceUnit',
+        'expiredDate',
+        'status',
+      ],
+      include: [
+        { model: Image, attributes: ['image_url'], limit: 1 },
+        { model: PropertyType, attributes: ['name'] },
+      ],
+      where: {
+        verified: true,
+        expiredDate: { [Op.gte]: new Date() },
+      },
+      order: [['createdAt', 'DESC']],
+      limit,
+    });
   }
 }
 
