@@ -1,29 +1,23 @@
 import { v4 as uuidv4 } from "uuid";
-import Comment from "@models/comment.model";
+import Wishlist from "@models/wish-list.model";
 import User from "@models/user.model";
 import Post from "@models/post.model";
-import { CommentStatus } from "@models/enums";
 
-export const seedComments = async () => {
+export const seedWishlists = async () => {
   const users = await User.findAll();
   const posts = await Post.findAll();
-
-  const commentsData = [];
-  for (let i = 0; i < 1000; i++) {
+  const wishlistsData = [];
+  for (let i = 0; i < 500; i++) { // Tạo 500 wishlist
     const randomUser = users[Math.floor(Math.random() * users.length)];
     const randomPost = posts[Math.floor(Math.random() * posts.length)];
 
-    commentsData.push({
+    wishlistsData.push({
       id: uuidv4(),
       userId: randomUser.id,
       postId: randomPost.id,
-      content: `Bình luận số ${i + 1}: Đây là một bài viết tuyệt vời!`,
-      status: CommentStatus.ACTIVE,
-      parentId: null, 
       createdAt: new Date(),
       updatedAt: new Date(),
     });
   }
-
-  await Comment.bulkCreate(commentsData);
+  await Wishlist.bulkCreate(wishlistsData);
 };

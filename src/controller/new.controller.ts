@@ -22,16 +22,16 @@ class NewsController {
   }
 
   // [getAllNews] 
-  static async getAllNews(req: Request, res: Response, next: NextFunction) {
-    const lastId = req.query.lastId as string | undefined;
-    const {  limit } = (req as any).pagination;
-    try {
-      const newsList = await NewsService.getAllNews( limit,lastId);
-      return res.status(200).json(ApiResponse.success(newsList, "Lấy danh sách tin tức thành công"));
-    } catch (error) {
-      next(error);
-    }
-  }
+	static async getAllNews(req: Request, res: Response, next: NextFunction) {
+		const lastCreatedAt = req.query.lastCreatedAt as string | undefined;
+		const { limit } = (req as any).pagination;
+		try {
+			const newsList = await NewsService.getAllNews(limit, lastCreatedAt);
+			return res.status(200).json(ApiResponse.success(newsList, "Lấy danh sách tin tức thành công"));
+		} catch (error) {
+			next(error);  
+		}
+	}
 
   // [getNew]
   static async getNews(req: Request, res: Response, next: NextFunction) {

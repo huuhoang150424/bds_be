@@ -20,6 +20,7 @@ import PropertyType from './property-types.model';
 import PostDraft from './post-draft.model';
 import NewsHistory from "./news-history.model";
 import CommentLike from "./comment-like.model";
+import UserView from "./user-view.model";
 
 export {
 	User,
@@ -43,5 +44,6 @@ export {
 	ListingType,
 	PostDraft,
 	NewsHistory,
-	CommentLike
+	CommentLike,
+	UserView
 };
