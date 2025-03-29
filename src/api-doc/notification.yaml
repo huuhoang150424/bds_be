@@ -1,0 +1,39 @@
+components:
+  schemas:
+    Notification:
+      type: object
+      description: Thông báo của hệ thống gửi đến người dùng
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "c123d456-7890-ab12-ef34-gh56ij78klmn"
+          description: ID duy nhất của thông báo
+        userId:
+          type: string
+          format: uuid
+          example: "b234c567-890d-ef12-gh34-ijkl567mnopq"
+          description: ID của người dùng nhận thông báo
+        message:
+          type: string
+          example: "Bạn có một tin nhắn mới"
+          description: Nội dung thông báo
+        isRead:
+          type: boolean
+          example: false
+          description: Trạng thái đã đọc của thông báo
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-03-24T12:34:56Z"
+          description: Thời điểm thông báo được tạo
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-03-25T08:15:30Z"
+          description: Thời điểm thông báo được cập nhật lần cuối
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

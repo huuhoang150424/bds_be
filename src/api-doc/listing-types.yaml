@@ -1,0 +1,30 @@
+components:
+  schemas:
+    ListingType:
+      type: string
+      enum: ["Bán", "Cho thuê", "Dự án"]
+      example: "Bán"
+      description: Loại niêm yết của bất động sản
+
+    PropertyType:
+      type: string
+      enum:
+        - "Căn hộ chung cư"
+        - "Nhà mặt phố"
+        - "Nhà riêng"
+        - "Biệt thự"
+        - "Đất nền"
+        - "Nhà đất thương mại"
+        - "Khu nghỉ dưỡng"
+        - "Trang trại"
+        - "Kho"
+        - "Nhà xưởng"
+        - "Khác"
+        - "Bán đất"
+      example: "Căn hộ chung cư"
+      description: Loại tài sản bất động sản
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

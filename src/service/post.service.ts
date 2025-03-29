@@ -147,7 +147,7 @@ class PostService {
         },
         {
           model: Image,
-          attributes: [],
+          attributes: ['imageUrl'],
         },
         {
           model: TagPost,

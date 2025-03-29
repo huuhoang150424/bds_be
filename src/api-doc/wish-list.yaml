@@ -5,7 +5,7 @@ paths:
   /wishlist/addWishlist:
     post:
       tags:
-        - Wishlist
+        - wishlist
       summary: Thêm bài đăng vào danh sách yêu thích
       description: API này cho phép người dùng thêm một bài đăng vào danh sách yêu thích của họ.
       security:
@@ -83,7 +83,7 @@ paths:
   /wishlist/removeFromWishlist:
     delete:
       tags:
-        - Wishlist
+        - wishlist
       summary: Xóa bài đăng khỏi danh sách yêu thích
       description: API này cho phép người dùng xóa một bài đăng khỏi danh sách yêu thích của họ.
       security:
@@ -141,7 +141,7 @@ paths:
   /wishlist/getUserWishlist:
     get:
       tags:
-        - Wishlist
+        - wishlist
       summary: Lấy danh sách wishlist của người dùng
       description: API này cho phép người dùng lấy danh sách các bài đăng mà họ đã thêm vào wishlist.
       security:
