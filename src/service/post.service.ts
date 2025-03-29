@@ -359,9 +359,24 @@ class PostService {
     }
     const posts = await Post.findAll({
       where: { verified: true },
-      raw: true,
+      include: [
+        {
+          model: Image,
+          attributes: ['image_url'],
+          limit: 1,
+        },
+      ],
+      //raw: true,
     });
-    await CacheRepository.set(cacheKey, posts, 600);
+    const formattedPosts = posts.map((post) => {
+      const postData = post.toJSON();
+      return {
+        ...postData,
+        image_url: postData.Image ? postData.Image.image_url : null,
+      };
+    });
+
+    await CacheRepository.set(cacheKey, formattedPosts, 600);
     return posts;
   }
 

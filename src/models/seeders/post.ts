@@ -23,7 +23,7 @@ export const seederPost = async () => {
       floor: Math.floor(Math.random() * 20) + 1,
       bedroom: Math.floor(Math.random() * 3) + 1,
       bathroom: Math.floor(Math.random() * 2) + 1, 
-      priority: Math.floor(Math.random() * 5), 
+      priority: Math.floor(Math.random() * 4), 
       isFurniture: Math.random() > 0.5, 
       direction: ["Bắc", "Nam", "Đông", "Tây"][Math.floor(Math.random() * 4)],
       verified: Math.random() > 0.2, // 80% được xác minh
@@ -46,7 +46,7 @@ export const seederPost = async () => {
         id: uuidv4(),
         postId: post.id,
         imageUrl:
-          "https://lh3.googleusercontent.com/proxy/sample-image-url",
+          "https://xaydunganthienphat.com.vn/upload/filemanager/mau%20nha/mau%20nha%20cap%204%20mai%20thai%203%20phong%20ngu/mau-nha-cap-4-mai-thai-3-phong-ngu-1-phong-tho-mau-so-2.jpg",
       },
     ]);
     const tag = await Tag.create({ id: uuidv4(), tagName: "Hot" });
