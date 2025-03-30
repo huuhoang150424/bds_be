@@ -2,7 +2,7 @@ tags:
   - name: Comment
 
 paths:
-  /comments:
+  /comments/createComment:
     post:
       tags:
         - Comment
@@ -20,12 +20,12 @@ paths:
               properties:
                 postId:
                   type: string
-                  example: "12345"
+                  example: "0993585b-1d11-4ffd-b479-5196017e9e0c"
                 content:
                   type: string
-                  example: "Bài viết rất hay!"
+                  example: "Bài viết này như hay vcl ra, tôi không tích"
       responses:
-        "201":
+        "200":
           description: Bình luận đã được tạo thành công.
           content:
             application/json:
@@ -38,47 +38,69 @@ paths:
         "500":
           description: Lỗi server.
 
-  /comments/{postId}:
+  /comments/{postId}/getCommentsByPostId:
     get:
       tags:
         - Comment
       summary: Lấy danh sách bình luận của bài viết
-      description: Trả về danh sách bình luận của một bài viết cụ thể.
+      description: |
+        Trả về danh sách bình luận của một bài viết cụ thể với phân trang dựa trên `nextCreatedAt`.
+        - Lần đầu gọi API, chỉ truyền `limit` để lấy danh sách bình luận mới nhất.
+        - Các lần tiếp theo, truyền `nextCreatedAt` từ response trước để lấy bình luận cũ hơn.
       parameters:
         - name: postId
           in: path
           required: true
           schema:
             type: string
-        - name: page
-          in: query
-          schema:
-            type: integer
-            default: 1
+          example: "0993585b-1d11-4ffd-b479-5196017e9e0c"
         - name: limit
           in: query
           schema:
             type: integer
             default: 10
-        - name: cursor
+            description: Số lượng bình luận trả về mỗi lần gọi API.
+        - name: nextCreatedAt
           in: query
           schema:
             type: string
+            format: date-time
+            description: Timestamp của bình luận cuối cùng từ response trước để lấy tiếp bình luận cũ hơn.
+            example: "2025-03-30T08:34:35.515Z"
       responses:
         "200":
           description: Danh sách bình luận trả về thành công.
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Comment"
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Comment"
+                  meta:
+                    type: object
+                    properties:
+                      hasNextPage:
+                        type: boolean
+                        example: true
+                      nextCreatedAt:
+                        type: string
+                        format: date-time
+                        nullable: true
+                        example: "2025-03-30T08:20:12.123Z"
+                      total:
+                        type: integer
+                        example: 50
         "400":
-          description: Yêu cầu không hợp lệ.
+          description: Yêu cầu không hợp lệ (thiếu `postId` hoặc sai định dạng `nextCreatedAt`).
+        "404":
+          description: Không tìm thấy bài viết hoặc không có bình luận nào.
         "500":
           description: Lỗi server.
 
-  /comments/{commentId}:
+  /comments/{commentId}/updateComment:
     put:
       tags:
         - Comment
@@ -116,6 +138,7 @@ paths:
         "500":
           description: Lỗi server.
 
+  /comments/{commentId}/deleteComment:
     delete:
       tags:
         - Comment
@@ -137,31 +160,151 @@ paths:
         "500":
           description: Lỗi server.
 
+  /comments/{commentId}/reply:
+    post:
+      tags:
+        - Comment
+      summary: Phản hồi một bình luận
+      description: |
+        Cho phép người dùng phản hồi một bình luận đã có.
+        - **Bình luận gốc phải tồn tại** (`commentId` hợp lệ).
+        - **Người phản hồi phải đăng nhập**.
+        - Nếu người dùng phản hồi bình luận của người khác, một thông báo sẽ được gửi đến chủ sở hữu của bình luận gốc.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID của bình luận gốc mà bạn muốn phản hồi.
+          example: "2dca5e5b-e9b1-4595-89a5-7a2fef9e9fa7"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: "Tôi đồng ý với ý kiến của bạn!"
+                  description: Nội dung của bình luận phản hồi.
+      responses:
+        "201":
+          description: Phản hồi bình luận thành công.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 201
+                  message:
+                    type: string
+                    example: "Đã phản hồi bình luận"
+                  data:
+                    $ref: "#/components/schemas/Comment"
+        "400":
+          description: Yêu cầu không hợp lệ (thiếu nội dung phản hồi).
+        "401":
+          description: Người dùng chưa đăng nhập.
+        "404":
+          description: Bình luận gốc không tồn tại.
+        "500":
+          description: Lỗi server.
+
+  /comments/{commentId}/replies:
+    get:
+      tags:
+        - Comment
+      summary: Lấy danh sách phản hồi của một bình luận
+      description: |
+        Trả về danh sách các phản hồi cho một bình luận cụ thể.
+        - **Chỉ lấy các phản hồi trực tiếp** (không lấy phản hồi lồng nhau nhiều cấp).
+        - **Dữ liệu được sắp xếp theo thời gian** (mới nhất trước).
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: ID của bình luận gốc.
+          example: "2dca5e5b-e9b1-4595-89a5-7a2fef9e9fa7"
+      responses:
+        "200":
+          description: Danh sách phản hồi được trả về thành công.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: integer
+                    example: 200
+                  message:
+                    type: string
+                    example: "Danh sách phản hồi"
+                  data:
+                    type: array
+                    items:
+                      allOf:
+                        - $ref: "#/components/schemas/Comment"
+                        - type: object
+                          properties:
+                            user:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  example: "49fb7d5b-7bff-496f-bf77-2e6abfc33506"
+                                fullname:
+                                  type: string
+                                  example: "Admin User"
+        "400":
+          description: Yêu cầu không hợp lệ.
+        "404":
+          description: Không tìm thấy bình luận gốc.
+        "500":
+          description: Lỗi server.
+
+
 components:
   schemas:
     Comment:
       type: object
       properties:
-        commentId:
+        id:
           type: string
-          example: "98765"
-        postId:
+          example: "626dc00b-7126-4d2a-803e-d5ed14fb086a"
+        status:
           type: string
-          example: "12345"
+          example: "ACTIVE"
         userId:
           type: string
-          example: "67890"
+          example: "49fb7d5b-7bff-496f-bf77-2e6abfc33506"
+        postId:
+          type: string
+          example: "0993585b-1d11-4ffd-b479-5196017e9e0c"
         content:
           type: string
           example: "Bài viết rất hay!"
+        parentId:
+          type: string
+          nullable: true
+          example: null # Nếu là bình luận gốc
         createdAt:
           type: string
           format: date-time
-          example: "2025-03-07T12:00:00Z"
+          example: "2025-03-30T09:06:32.756Z"
         updatedAt:
           type: string
           format: date-time
-          example: "2025-03-07T12:30:00Z"
+          example: "2025-03-30T09:06:32.756Z"
 
   securitySchemes:
     BearerAuth:
