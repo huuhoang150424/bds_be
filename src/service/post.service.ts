@@ -137,7 +137,9 @@ class PostService {
 
   static async getPost(slug: string) {
     const cachePost = await CacheRepository.get(`post:${slug}`);
-    if (cachePost) return cachePost;
+    if (cachePost) {
+			return JSON.parse(cachePost);
+		} 
     const post = await Post.findOne({
       where: { slug },
       include: [
@@ -147,7 +149,7 @@ class PostService {
         },
         {
           model: Image,
-          attributes: [],
+          attributes: ['image_url'],
         },
         {
           model: TagPost,

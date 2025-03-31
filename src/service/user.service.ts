@@ -1,5 +1,5 @@
 import { User } from '@models';
-import { NotFoundError, UnauthorizedError } from '@helper';
+import { BadRequestError, NotFoundError, UnauthorizedError } from '@helper';
 
 class UserService {
 
@@ -38,6 +38,20 @@ class UserService {
 		await findUser.save();
 		return findUser;
 	}
+
+	static async updatePhone(userId: string, phone: number) {
+		const findUser = await this.getUserById(userId);
+	
+		const phoneStr = phone.toString();
+	
+		if (!/^\d{10}$/.test(phoneStr)) {
+			throw new BadRequestError("Số điện thoại phải 10 số");
+		}
+		findUser.phone = phone;
+		await findUser.save();
+		return findUser;
+	}
+	
 }
 
 

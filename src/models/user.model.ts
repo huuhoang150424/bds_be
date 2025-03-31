@@ -23,8 +23,16 @@ export default class User extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isLock!: boolean;
 
-  @Column(DataType.STRING)
-  phone!: string;
+	@Column({
+		type: DataType.NUMBER,
+		allowNull: false,
+		validate: {
+			len: [10, 10],
+			isNumeric: true, 
+		},
+	})
+	phone!: number;
+	
 
   @AllowNull(false)
   @Column(DataType.STRING)

@@ -9,5 +9,5 @@ Router.get("/:userId/getUser",verifyRole(["User","Agent"]), UserController.getUs
 Router.put("/:userId/updateUser",uploadCloud.single("image"),verifyRole(["User","Agent"]), UserController.updateUser as any);
 Router.patch("/:userId/unLockUser",verifyRole(["Admin"]), UserController.unLockUser as any);
 Router.patch("/:userId/lockUser",verifyRole(["Admin"]), UserController.lockUser as any);
-
+Router.patch("/updatePhone",verifyRole(["User","Agent"]), UserController.updatePhone as any);
 export default Router;
