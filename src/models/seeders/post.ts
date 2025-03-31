@@ -10,7 +10,7 @@ export const seederPost = async () => {
   }
 
   const postsData = Array.from({ length: 100 }, (_, i) => {
-    const district = Math.floor(Math.random() * 10) + 1; // Quận ngẫu nhiên từ 1-10
+    const district = Math.floor(Math.random() * 10) + 1; 
     return {
       id: uuidv4(),
       userId: user.id,

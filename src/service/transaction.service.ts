@@ -3,6 +3,7 @@ import { BadRequestError, NotFoundError } from '@helper';
 import { payOS } from '@config/payos';
 import { sequelize } from '@config/database';
 import NotificationService from '@service/notification.service';
+import { Status } from '@models/enums';
 
 class TransactionService {
   static async createTransaction(userId: string, amount: number, description: string) {
@@ -14,7 +15,7 @@ class TransactionService {
       userId,
       amount,
       description,
-      status: 'pending',
+      status: Status.PENDING,
       paymentMethod: 'bank_transfer',
     });
     console.log(transaction);

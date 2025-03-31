@@ -135,40 +135,77 @@ class PostService {
     return post;
   }
 
-  static async getPost(slug: string) {
-    const cachePost = await CacheRepository.get(`post:${slug}`);
-    if (cachePost) {
+	static async getPost(slug: string) {
+		const cachePost = await CacheRepository.get(`post:${slug}`);
+		if (cachePost) {
 			return JSON.parse(cachePost);
-		} 
-    const post = await Post.findOne({
-      where: { slug },
-      include: [
-        {
-          model: User,
-          attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
-        },
-        {
-          model: Image,
-          attributes: ['image_url'],
-        },
-        {
-          model: TagPost,
-          attributes: ['id'],
-          include: [
-            {
-              model: Tag,
-              attributes: ['tagName'],
-            },
-          ],
-        },
-      ],
-    });
-    if (!post) {
-      throw new NotFoundError('Không tìm thấy bài đăng');
-    }
-    await CacheRepository.set(`post:${slug}`, post, 300);
-    return post;
-  }
+		}
+	
+		const post = await Post.findOne({
+			where: { slug },
+			include: [
+				{
+					model: User,
+					attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
+				},
+				{
+					model: Image,
+					attributes: ['image_url'],
+				},
+				{
+					model: TagPost,
+					attributes: ['id'],
+					include: [
+						{
+							model: Tag,
+							attributes: ['tagName'],
+						},
+					],
+				},
+			],
+		});
+	
+		if (!post) {
+			throw new NotFoundError('Không tìm thấy bài đăng');
+		}
+		const postCount = await Post.count({
+			where: { userId: post.userId },
+		});
+	
+		const priceHistory = await PostHistory.findAll({
+			where: { postId: post.id },
+			attributes: ['price', 'changedAt'],
+			order: [['changedAt', 'ASC']],
+		});
+	
+		const uniquePriceHistory = priceHistory
+			.filter((history, index, self) =>
+				index === self.findIndex((h) => h.price === history.price)
+			)
+			.map((history) => ({
+				price: history.price,
+				changed_at: history.changedAt,
+			}));
+	
+		if (!uniquePriceHistory.some((h) => h.price === post.price)) {
+			uniquePriceHistory.push({
+				price: post.price,
+				changed_at: post.updatedAt || new Date(),
+			});
+		}
+	
+		const postWithPriceHistory = {
+			...post.toJSON(),
+			user: {
+				...post.user.toJSON(),
+				postCount,
+			},
+			priceHistory: uniquePriceHistory,
+		};
+	
+		await CacheRepository.set(`post:${slug}`, JSON.stringify(postWithPriceHistory), 300);
+		return postWithPriceHistory;
+	}
 
   static async deletePost(postId: string, userId: string) {
     const transaction = await sequelize.transaction();

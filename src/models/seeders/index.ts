@@ -1,3 +1,4 @@
+import { seedPostHistory } from './post-history';
 import { seedWishlists } from './wishlists';
 import { seedComments } from './comment';
 import {seedUsers} from './user';
@@ -16,5 +17,6 @@ export {
 	seedComments,
 	seedReport,
 	seedWishlists,
-	seedUserViews
+	seedUserViews,
+	seedPostHistory
 }
