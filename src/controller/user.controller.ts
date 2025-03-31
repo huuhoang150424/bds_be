@@ -2,7 +2,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import UserService from '@service/user.service';
-import { ApiResponse } from '@helper';
+import { ApiResponse, BadRequestError } from '@helper';
 
 class UserController {
   //[getAllUser]
@@ -54,27 +54,23 @@ class UserController {
   }
 
 
-  //[unLockUser]
-  static async unLockUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    const {userId} = req.params;
+	static async toggleUserLock(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { userId } = req.params;
+    const { action } = req.query; 
     try {
-			await UserService.toggleLockUser(userId,'UNLOCK');
-      return res.status(200).json(ApiResponse.success(null, "Mở khóa thành công"));
+        const upperAction = (action as string)?.toUpperCase();
+        if (!['LOCK', 'UNLOCK'].includes(upperAction)) {
+            throw new BadRequestError('Chỉ chấp nhận LOCK hoặc UNLOCK');
+        }
+        await UserService.toggleLockUser(userId, upperAction);
+        const message = upperAction === 'UNLOCK' 
+            ? "Mở khóa thành công" 
+            : "Khóa người dùng thành công";
+        return res.status(200).json(ApiResponse.success(null, message));
     } catch (error) {
-      next(error);
+        next(error);
     }
-  }
-
-  //[lockUser]
-  static async lockUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    const {userId} = req.params;
-    try {
-			await UserService.toggleLockUser(userId,'LOCK');
-      return res.status(200).json(ApiResponse.success(null, "khóa người dùng thành công"));
-    } catch (error) {
-      next(error);
-    }
-  }
+}
 
 
 	static async updatePhone(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
