@@ -203,7 +203,7 @@ class PostService {
 			priceHistory: uniquePriceHistory,
 		};
 	
-		await CacheRepository.set(`post:${slug}`, JSON.stringify(postWithPriceHistory), 300);
+		await CacheRepository.set(`post:${slug}`, postWithPriceHistory, 300);
 		return postWithPriceHistory;
 	}
 
