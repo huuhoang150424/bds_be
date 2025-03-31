@@ -24,14 +24,15 @@ export default class User extends BaseModel<string> {
   isLock!: boolean;
 
 	@Column({
-		type: DataType.NUMBER,
+		type: DataType.STRING, 
 		allowNull: false,
 		validate: {
-			len: [10, 10],
+			len: [10, 11], 
 			isNumeric: true, 
 		},
 	})
-	phone!: number;
+	phone!: string;
+	
 	
 
   @AllowNull(false)

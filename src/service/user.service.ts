@@ -39,7 +39,7 @@ class UserService {
 		return findUser;
 	}
 
-	static async updatePhone(userId: string, phone: number) {
+	static async updatePhone(userId: string, phone: string) {
 		const findUser = await this.getUserById(userId);
 	
 		const phoneStr = phone.toString();
