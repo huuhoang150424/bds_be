@@ -12,6 +12,7 @@ Router.post("/refreshToken", AuthController.refreshToken as any);
 Router.post("/forgotPassword", AuthController.forgotPassword as any);
 Router.post("/verifyCode", AuthController.verifyCode as any);
 Router.patch("/changePassword",verifyRole(["User"]), AuthController.changePassword as any);
+Router.patch("/resetPassword", AuthController.resetPassword as any);
 Router.post("/verifyAccount", AuthController.verifyAccount as any);
 Router.get("/verifyMail", AuthController.verifyEmail as any);
 

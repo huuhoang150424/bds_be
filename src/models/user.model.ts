@@ -23,9 +23,10 @@ export default class User extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isLock!: boolean;
 
+	@Default(null)
 	@Column({
 		type: DataType.STRING, 
-		allowNull: false,
+		// allowNull: true,
 		validate: {
 			len: [10, 11], 
 			isNumeric: true, 

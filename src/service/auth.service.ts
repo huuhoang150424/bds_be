@@ -97,12 +97,32 @@ class AuthService {
 
   static async verifyCode(email: string, otpCode: string) {
     const otpCodeStore = await CacheRepository.get(`mail-${email}`);
-    if (!otpCodeStore || otpCode !== otpCodeStore) {
+    if (!otpCodeStore || JSON.parse(otpCodeStore) !==otpCode ) {
       throw new UnauthorizedError('Mã OTP không hợp lệ hoặc đã hết hạn');
     }
+		const resetToken = uuidv4();
+		await CacheRepository.set(`resetToken-${email}`, resetToken, 300);
     await CacheRepository.delete(`mail-${email}`);
-    return { message: 'Xác thực thành công' };
+    return { message: 'Xác thực thành công',resetToken };
   }
+
+	static async resetPassword(email: string, newPassword: string, resetToken: string) {
+    const storedToken = await CacheRepository.get(`resetToken-${email}`);
+    if (!storedToken || JSON.parse(storedToken)  !== resetToken) {
+      throw new BadRequestError('Token không hợp lệ hoặc đã hết hạn');
+    }
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      throw new NotFoundError('Người dùng không tồn tại');
+    }
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
+    user.password = hashedPassword;
+    await user.save();
+    await CacheRepository.delete(`resetToken-${email}`);
+    return { message: 'Đổi mật khẩu thành công' };
+  }
+
 
   static async changePassword(userId: number, oldPassword: string, newPassword: string, confirmPassword: string) {
     const user = await User.findOne({ where: { id:userId } });
@@ -136,7 +156,7 @@ class AuthService {
       throw new BadRequestError('Email đã có một yêu cầu xác thực đang chờ xử lý.');
     }
     await CacheRepository.set(`verify:${email}`, verificationToken, 900);
-		const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${verificationToken}&email=${email}`;
+		const verificationLink = `${process.env.FRONTEND_URL}?token=${verificationToken}&email=${email}`;
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
@@ -156,7 +176,7 @@ class AuthService {
 	static async verifyEmail(token: string, email: string) {
     const storedToken = await CacheRepository.get(`verify:${email}`);
 
-    if (!storedToken || storedToken !== token) {
+    if (!storedToken || JSON.parse(storedToken) !== token) {
       throw new TokenError('Token không hợp lệ hoặc đã hết hạn');
     }
 
@@ -172,6 +192,7 @@ class AuthService {
 
     return { message: 'Email đã được xác thực thành công' };
   }
+
 }
 
 export default AuthService;

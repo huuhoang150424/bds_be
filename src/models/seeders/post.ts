@@ -33,25 +33,37 @@ export const seederPost = async () => {
     };
   });
 
-  for (const postData of postsData) {
-    const post = await Post.create(postData);
-    await PropertyType.create({
-      id: uuidv4(),
-      listingTypeId: listingType.id,
-      postId: post.id,
-      name: ["Căn hộ", "Nhà phố", "Biệt thự"][Math.floor(Math.random() * 3)],
-    });
-    await Image.bulkCreate([
-      {
-        id: uuidv4(),
-        postId: post.id,
-        imageUrl:
-          "https://xaydunganthienphat.com.vn/upload/filemanager/mau%20nha/mau%20nha%20cap%204%20mai%20thai%203%20phong%20ngu/mau-nha-cap-4-mai-thai-3-phong-ngu-1-phong-tho-mau-so-2.jpg",
-      },
-    ]);
-    const tag = await Tag.create({ id: uuidv4(), tagName: "Hot" });
-    await TagPost.create({ id: uuidv4(), postId: post.id, tagId: tag.id });
-  }
+	const imageUrls = [
+		"https://cdn.hita.com.vn/storage/blog/meo-vat-gia-dinh/anh-ngoi-nha-9.jpg",
+		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSoStzDovGJyNEWEwE-FaNPbjKenYUrX1_3O-tAnndeqK9kmiLYvCWaaJ6zy1b-G7MuJSA&usqp=CAU",
+		"https://xaydungancu.com.vn/wp-content/uploads/2023/03/anh-nha-dep-phong-cach-hien-dai-11.jpg",
+		"https://anphatgroups.vn/upload/post/mau-biet-thu-dep-9680.jpg",
+		"https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/07/hinh-anh-ngoi-nha-6.jpg",
+		"https://thanhvietcorp.vn/uploads/images/Bao%20chi/download-hinh-ngoi-nha-1024x684.jpg",
+		"https://cdn.hita.com.vn/storage/blog/meo-vat-gia-dinh/anh-ngoi-nha-28.jpg",
+		"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSblI1sIp7Qx6E-tCbJn97j7yYinA7Cze5ksg&s",
+	];
+	
+	for (const postData of postsData) {
+		const post = await Post.create(postData);
+	
+		await PropertyType.create({
+			id: uuidv4(),
+			listingTypeId: listingType.id,
+			postId: post.id,
+			name: ["Căn hộ", "Nhà phố", "Biệt thự"][Math.floor(Math.random() * 3)],
+		});
+		const images = imageUrls.map((url) => ({
+			id: uuidv4(),
+			postId: post.id,
+			imageUrl: url,
+		}));
+		await Image.bulkCreate(images);
+	
+		const tag = await Tag.create({ id: uuidv4(), tagName: "Hot" });
+		await TagPost.create({ id: uuidv4(), postId: post.id, tagId: tag.id });
+	}
+	
 };
 
 

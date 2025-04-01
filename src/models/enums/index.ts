@@ -1,5 +1,5 @@
 import { CategoryNew } from './new';
-import { Roles } from './role';
+import { Roles,UserAction } from './role';
 import { ListingTypes, PropertyType, Directions, PriceUnit, StatusPost ,ActionType,StatusPostDraft} from './post';
 import { ProcessingStatus ,ReportReason} from './report';
 import { PricingLevel,PaymentMethod } from './pricing';
@@ -22,5 +22,6 @@ export {
 	ActionType,
 	StatusPostDraft,
 	LikeStatus,
-	CommentStatus
+	CommentStatus,
+	UserAction
 };

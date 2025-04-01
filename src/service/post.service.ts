@@ -517,9 +517,9 @@ class PostService {
 	static async getPostHabit(userId: string, limit: number = 10) {
 		const cacheKey = `post_habit_${userId}`;
 		const cachedData = await CacheRepository.get(cacheKey);
-		// if (cachedData) {
-		// 	return JSON.parse(cachedData);
-		// }
+		if (cachedData) {
+			return JSON.parse(cachedData);
+		}
 	
 		const userViews = await UserView.findAll({ where: { userId }, attributes: ['postId'] });
 		const userWishlists = await Wishlist.findAll({ where: { userId }, attributes: ['postId'] });
