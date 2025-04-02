@@ -13,7 +13,7 @@ const generaAccessToken = async (user: any) => {
       role: user.roles,
     },
     tokenKey,
-    { expiresIn: "1d" }
+    { expiresIn: "1h" }
   );
 };
 
@@ -24,7 +24,8 @@ const generaRefreshToken = async (user: any) => {
   }
   return jwt.sign(
     {
-      userId: user.id
+      userId: user.id,
+			role: user.roles,
     },
     tokenKey,
     { expiresIn:"365d"},

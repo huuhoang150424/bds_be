@@ -58,20 +58,32 @@ class AuthService {
     return user;
   }
 
-  static async refreshToken(refreshToken: string) {
+	static async refreshToken(refreshToken: string) {
     if (!refreshToken) {
       throw new UnauthorizedError('Không cấp lại được token');
     }
-
+    
     return new Promise((resolve, reject) => {
-      jwt.verify(refreshToken, process.env.REFRESH_TOKEN_KEY!, (err, decoded: any) => {
+      const refreshKey = process.env.REFRESH_TOKEN_KEY;
+      
+      if (!refreshKey) {
+        return reject(new UnauthorizedError('Không tìm thấy REFRESH_TOKEN_KEY'));
+      }
+      
+      jwt.verify(refreshToken, refreshKey, async (err, decoded: any) => {
         if (err) {
-          reject(new UnauthorizedError('Không cấp lại được token'));
+          return reject(new UnauthorizedError('Không cấp lại được token'));
         }
-        const accessToken = jwt.sign({ userId: decoded.userId, role: decoded.role }, process.env.ACCESS_TOKEN_KEY!, {
-          expiresIn: '1d',
-        });
-        resolve({ message: 'Thành công', accessToken });
+        try {
+          const user = {
+            id: decoded.userId,
+            roles: decoded.role
+          };
+          const accessToken = await generaAccessToken(user);
+          resolve({ message: 'Thành công', accessToken });
+        } catch (error) {
+          reject(new UnauthorizedError('Lỗi khi tạo access token mới'));
+        }
       });
     });
   }
