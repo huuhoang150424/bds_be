@@ -134,7 +134,6 @@ class PostService {
     }
     return post;
   }
-
 	static async getPost(slug: string) {
 		const cachePost = await CacheRepository.get(`post:${slug}`);
 		if (cachePost) {
@@ -206,6 +205,7 @@ class PostService {
 		await CacheRepository.set(`post:${slug}`, postWithPriceHistory, 300);
 		return postWithPriceHistory;
 	}
+
 
   static async deletePost(postId: string, userId: string) {
     const transaction = await sequelize.transaction();

@@ -12,28 +12,39 @@ class CommentService {
   }
 
   // [getComment by Post]
-  static async getCommentsByPost(postId: string, page: number, limit: number, offset: number, cursor?: string ) {
-    const cacheKey = cursor
-      ? `comments:post:${postId}:cursor:${cursor}`
-      : `comments:post:${postId}:page:${page}:limit:${limit}`;
-    const cachedComments = await CacheRepository.get(cacheKey);
-    if (cachedComments) {
-      return JSON.parse(cachedComments);
+  static async getCommentsByPost(postId: string, limit: number = 10, nextCreatedAt?: string) {
+    const MAX_TOTAL_LIMIT = 30;
+    const whereCondition: any = { postId };
+
+    if (nextCreatedAt) {
+      whereCondition.createdAt = { [Op.lt]: new Date(nextCreatedAt) };
     }
-    let whereCondition: any = { postId };
-    if (cursor) {
-      whereCondition.createdAt = { [Op.lt]: cursor };
-    }
+
     const comments = await Comment.findAll({
       where: whereCondition,
-      include: ["user"],
+      include: [{ model: User, as: "user", attributes: ["fullname"] }],
       order: [["createdAt", "DESC"]],
-      offset: offset,
-      limit: limit,
+      limit: limit + 1,  
     });
-    await CacheRepository.set(cacheKey, comments, 60);
-    return comments;
+
+    const hasMore = comments.length > limit;
+
+    if (hasMore) {
+      comments.pop();
+    }
+    const lastCommentCreatedAt = comments.length > 0 ? comments[comments.length - 1].createdAt : null;
+
+    return {
+      data: comments,
+      meta: {
+        hasNextPage: hasMore,  
+        nextCreatedAt: lastCommentCreatedAt,
+        total: await Comment.count({ where: { postId } }),
+      },
+    };
   }
+
+
 
   // [updateComment]
   static async updateComment(commentId: string, userId: string, content: string) {
