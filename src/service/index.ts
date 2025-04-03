@@ -11,6 +11,7 @@ import WishlistService from "./wishlist.service";
 import RatingService from "./rating.service";
 import PostDraftService from "./post-draft.service";
 import CommentLikeService from "./comment-like.service";
+import ChatService from "./chat.service";
 
 export {
 	AuthService,
@@ -25,5 +26,6 @@ export {
 	PostDraftService,
 	WishlistService,
 	RatingService,
-	CommentLikeService
+	CommentLikeService,
+	ChatService
 }

@@ -12,14 +12,23 @@ import { swaggerDoc } from 'api-doc/swagger';
 import swaggerUi from "swagger-ui-express";
 import "dotenv/config";
 import {checkAndUpdatePostsOnStartup} from '@helper';
-import {setupNotificationSocket} from '@socket';
+import {setupNotificationSocket,chatSocket} from '@socket';
 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
-export const io = new Server(server, { cors: { origin: "*" } });
+export const io = new Server(server, {
+  cors: {
+    origin: 'http://localhost:5173', 
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
+});
 setupNotificationSocket(io);
+chatSocket(io);
+
+
 app.use(express.json());
 app.use(body_parser.json({ limit: '50mb' }));
 app.use(morgan('combined'));

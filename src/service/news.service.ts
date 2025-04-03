@@ -71,7 +71,7 @@ class NewsService {
     const cacheKey = `news:slug:${slug}`;
     const cachedNews = await CacheRepository.get(cacheKey);
     if (cachedNews) {
-      return cachedNews;
+      return JSON.parse(cachedNews);
     }
     const findNews = await News.findOne({ where: { slug } });
     if (!findNews) {

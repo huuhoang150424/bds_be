@@ -10,6 +10,8 @@ import TransactionController from "./transaction.controller";
 import PostDraftController from "./post-draft.controller";
 import WishlistController from "./wishlist.controller";
 import CommentLikeController from "./comment-like.controller";
+import ChatController from "./chat.controller";
+
 
 export {
 	AuthController,
@@ -23,5 +25,6 @@ export {
 	TransactionController,
 	PostDraftController,
 	WishlistController,
-	CommentLikeController
+	CommentLikeController,
+	ChatController
 }
