@@ -71,7 +71,8 @@ class PostController {
 
 	//[search post]
 	static async searchPost(req: Request, res: Response, next: NextFunction) {
-		const { keyword, addresses, page = 1, limit = 10 } = req.query;
+		const {  addresses } = req.query;
+		const { page, limit,offset } = (req as any).pagination;
 		let addressList: string[] = [];
 		if (typeof addresses === 'string') {
 			addressList = [addresses];
@@ -79,11 +80,7 @@ class PostController {
 			addressList = addresses.map((addr) => String(addr));
 		}
 		try {
-			const result = await PostService.searchPosts(
-				keyword as string,
-				addressList,
-				Number(page),
-				Number(limit)
+			const result = await PostService.searchPosts(	addressList,page,limit,offset
 			);
 			return res.status(200).json(ApiResponse.success(result, 'Thành công'));
 		} catch (error) {

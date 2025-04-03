@@ -3,18 +3,16 @@ import { ChatService } from '@service';
 
 export const chatSocket = (io: any) => {
   io.on('connection', (socket: Socket) => {
-    console.log(`💬 Chat client connected: ${socket.id}`);
+    console.log(` Chat client connected: ${socket.id}`);
 
     socket.on('chatMessage', async (data: { content: string }) => {
       try {
         const { content } = data;
-        console.log("gửi lên: ", content);
         if (!content) {
           socket.emit('chatResponse', { message: 'Nội dung tin nhắn không được để trống', posts: [] });
           return;
         }
         const conditions = await ChatService.parseUserRequest(content);
-        console.log('Parsed conditions:', conditions);
         const isEmptyConditions = Object.keys(conditions).length === 0 || 
           Object.values(conditions).every(value => value === null || value === undefined);
         if (isEmptyConditions) {
@@ -37,11 +35,10 @@ export const chatSocket = (io: any) => {
         console.error('Error in chat:', error);
         socket.emit('chatResponse', { message: 'Có lỗi xảy ra', posts: [] });
       }
-      console.log("check");
     });
 
     socket.on('disconnect', () => {
-      console.log(`❌ Chat client disconnected: ${socket.id}`);
+      console.log(` Chat client disconnected: ${socket.id}`);
     });
   });
 };
