@@ -22,7 +22,7 @@ class AuthService {
 
 		const user = await User.findOne({
 			where: { email },
-			attributes: ["id", "fullname", "email", "phone", "avatar", "balance", "score", "password","roles"],
+			attributes: ["id", "fullname", "email", "phone", "avatar", "balance", "score", "password","roles","emailVerified"],
 		});
 		
     if (!user) {
