@@ -1,6 +1,6 @@
 import { seedPostHistory } from './post-history';
 import { seedWishlists } from './wishlists';
-import { seedComments } from './comment';
+import { seedComments, seedCommentLikes } from './comment';
 import {seedUsers} from './user';
 import {seedPricings} from './pricing';
 import {seedListingTypes} from './listing-types';
@@ -18,5 +18,6 @@ export {
 	seedReport,
 	seedWishlists,
 	seedUserViews,
-	seedPostHistory
+	seedPostHistory,
+	seedCommentLikes
 }

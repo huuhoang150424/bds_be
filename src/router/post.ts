@@ -19,6 +19,7 @@ Router.get("/searchPost",paginationMiddleware,PostController.searchPost as any);
 Router.get("/getPostClient",paginationMiddleware, PostController.getAllPostForClient as any);
 Router.get("/getPostOutstanding", PostController.getPostOutstanding as any);
 Router.get("/getPostHabit", verifyRole(["Agent","User"]),PostController.getPostHabit as any);
+Router.get("/filterPost", paginationMiddleware,PostController.filterPost as any);
 
 //post draft
 Router.post("/createPostDraft",uploadCloud.array("images"),validateCreatePostDraft,verifyRole(["Agent","User"]), PostDraftController.create as any);

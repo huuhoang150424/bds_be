@@ -62,5 +62,4 @@ export const seedPostHistory = async () => {
   postHistoryData.sort((a, b) => a.changedAt.getTime() - b.changedAt.getTime());
 
   await PostHistory.bulkCreate(postHistoryData);
-  console.log(`Đã tạo ${postHistoryData.length} bản ghi trong post_history`);
 };

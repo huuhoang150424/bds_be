@@ -91,7 +91,9 @@ class PostController {
 	//[filter post]
 	static async filterPost(req: Request, res: Response, next: NextFunction) {
 		try {
-			return res.status(200).json(ApiResponse.success({}, "thành công"));
+			const { page, limit, offset } = (req as any).pagination;
+			const result = await PostService.filterPosts(req.query, page, limit, offset);
+			return res.status(200).json(ApiResponse.success(result, "thành công"));
 		} catch (error) {
 			next(error);
 		}
