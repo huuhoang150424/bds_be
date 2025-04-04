@@ -1,6 +1,7 @@
 
 import { Comment, User, CommentLike } from '@models';
 import { NotFoundError, ForbiddenError, CacheRepository } from '@helper';
+import { NotificationService } from "@service";
 import { Op } from "sequelize";
 
 
@@ -24,7 +25,7 @@ class CommentService {
       where: whereCondition,
       include: [{ model: User, as: "user", attributes: ["fullname"] }],
       order: [["createdAt", "DESC"]],
-      limit: limit + 1,  
+      limit: limit + 1,
     });
 
     const hasMore = comments.length > limit;
@@ -37,7 +38,7 @@ class CommentService {
     return {
       data: comments,
       meta: {
-        hasNextPage: hasMore,  
+        hasNextPage: hasMore,
         nextCreatedAt: lastCommentCreatedAt,
         total: await Comment.count({ where: { postId } }),
       },
@@ -80,16 +81,31 @@ class CommentService {
 
 
   // [Reply to Comment]
-  static async replyToComment(userId: string, commentId: string, content: string) {
-    const parentComment = await Comment.findByPk(commentId);
-    if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
-    return await Comment.create({
+  static async replyToComment(userId: string, commentId: string, postId: string, content: string) {
+    let parentId: string | null = null;
+    let parentCommentUserId: string | null = null;
+    if (commentId) {
+      const parentComment = await Comment.findByPk(commentId);
+      if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
+
+      parentId = parentComment.id;
+      parentCommentUserId = parentComment.userId;
+    }
+    const newComment = await Comment.create({
       userId,
-      postId: parentComment.postId,
+      postId,
       content,
-      parentId: commentId,
+      parentId,
     });
+    if (parentCommentUserId && parentCommentUserId !== userId) {
+      await NotificationService.createNotification(
+        parentCommentUserId,
+        `Người dùng ${userId} đã phản hồi bình luận của bạn: "${content}"`
+      );
+    }
+    return newComment;
   }
+
 
   // [Get Replies for a Specific Comment]
   static async getRepliesByParentId(parentId: string) {
@@ -100,7 +116,12 @@ class CommentService {
     }
     const replies = await Comment.findAll({
       where: { parentId },
-      include: [{ model: User, attributes: ["id", "fullname"] }],
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", 'avatar']
+        }
+      ],
       order: [["createdAt", "DESC"]],
     });
     await CacheRepository.set(cacheKey, replies, 600);

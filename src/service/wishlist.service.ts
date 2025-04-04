@@ -1,5 +1,5 @@
 'use strict';
-import { Wishlist, Post } from "@models";
+import { Wishlist, Post, Image } from "@models";
 import { NotFoundError, BadRequestError } from "@helper";
 import { v4 as uuidv4 } from "uuid";
 
@@ -33,7 +33,14 @@ class WishlistService {
   static async getUserWishlist(userId: string) {
     return await Wishlist.findAll({
       where: { userId },
-      include: ["post"],
+      include: [
+        {
+          model: Post,
+          include: [
+            { model: Image }
+          ]
+        }
+      ],
     });
   }
 }
