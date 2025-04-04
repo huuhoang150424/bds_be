@@ -74,6 +74,23 @@ class NewsController {
     }
   }
 
+
+	static async findNews(req: Request, res: Response, next: NextFunction) {
+		const { keyword } = req.query;
+		const { limit, page, offset } = (req as any).pagination;
+		
+		try {
+			const result = await NewsService.findNews(
+				keyword as string, 
+				Number(page), 
+				Number(limit), 
+				Number(offset)
+			);
+			return res.status(200).json(ApiResponse.success(result, "thành công"));
+		} catch (error) {
+			next(error);
+		}
+	}
 }
 
 export default NewsController;

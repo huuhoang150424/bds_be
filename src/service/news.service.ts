@@ -134,6 +134,22 @@ class NewsService {
     );
   }
 
+
+	static async findNews(keyword: string, page: number, limit: number, offset: number) {
+		const news = await News.findAndCountAll({
+			where: {
+				title: {
+					[Op.like]: `%${keyword}%`
+				}
+			},
+			limit,
+			offset,
+			order: [["createdAt", "DESC"]],
+			distinct: true
+		});
+		return news;
+	}
+
 }
 
 export default NewsService;

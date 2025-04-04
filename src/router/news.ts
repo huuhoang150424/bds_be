@@ -13,7 +13,7 @@ Router.get("/getAllNew",paginationMiddleware, NewController.getAllNews as any);
 Router.get("/:slug/getNews", NewController.getNews as any);
 Router.delete("/:newsId/delete", verifyRole(["User"]), NewController.deleteNews as any);
 Router.put("/:newsId/update", uploadCloud.single("image"), validatorUpdateNews, verifyRole(["User"]), NewController.updateNews as any);
-
+Router.get("/findNews",paginationMiddleware, NewController.findNews as any);
 
 
 export default Router;
