@@ -21,11 +21,11 @@ class CommentController {
   // [getCommentsByPost]
   static async getCommentsByPost(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
-    const { limit } = (req as any).pagination; 
-    const nextCreatedAt  = req.query.nextCreatedAt  as string | undefined; 
-  
+    const { limit } = (req as any).pagination;
+    const nextCreatedAt = req.query.nextCreatedAt as string | undefined;
+
     try {
-      const comments = await CommentService.getCommentsByPost(postId, limit, nextCreatedAt );
+      const comments = await CommentService.getCommentsByPost(postId, limit, nextCreatedAt);
       return res.status(200).json(ApiResponse.success(comments, "Danh sách bình luận"));
     } catch (error) {
       next(error);
@@ -61,24 +61,10 @@ class CommentController {
 
   // [Reply to Comment]
   static async replyToComment(req: Request, res: Response, next: NextFunction) {
-    const { userId } = (req as any).user;
-    const { commentId } = req.params;
-    const { content } = req.body;
+    const { userId } = (req as any).user; 
+    const { commentId, postId, content } = req.body; 
     try {
-      const parentComment = await Comment.findByPk(commentId);
-      if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
-      const reply = await Comment.create({
-        userId,
-        postId: parentComment.postId,
-        content,
-        parentId: commentId,
-      });
-      if (parentComment.userId !== userId) {
-        await NotificationService.createNotification(
-          parentComment.userId,
-          `Người dùng ${userId} đã phản hồi bình luận của bạn: "${content}"`
-        );
-      }
+      const reply = await CommentService.replyToComment(userId, commentId, postId, content);
       return res.status(201).json(ApiResponse.success(reply, "Đã phản hồi bình luận"));
     } catch (error) {
       next(error);

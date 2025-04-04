@@ -8,7 +8,7 @@ Router.post('/createComment', validatorCreateComment, verifyRole(["User"]),  Com
 Router.get('/:postId/getCommentByPostId', paginationMiddleware,CommentController.getCommentsByPost as any);
 Router.put('/:commentId/updateComment',validatorUpdateComment, verifyRole(["User"]), CommentController.updateComment as any);
 Router.delete('/:commentId/deleteComment', verifyRole(["User"]), CommentController.deleteComment as any);
-Router.post("/:commentId/reply", validatorReplyToComment, verifyRole(["User"]), CommentController.replyToComment as any);
+Router.post("/reply", validatorReplyToComment, verifyRole(["User"]), CommentController.replyToComment as any);
 Router.get("/:commentId/replies", verifyRole(["User"]), CommentController.getReplies as any);
 
 
