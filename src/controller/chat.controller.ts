@@ -2,16 +2,19 @@
 
 import { Request, Response, NextFunction } from 'express';
 import {ChatService} from '@service';
-import { ApiResponse } from '@helper';
+import { ApiResponse, BadRequestError } from '@helper';
 
 class ChatController {
-  static async sendMessage(req: Request, res: Response, next: NextFunction) {
-    const { content } = req.body;
-    if (!content) {
-      return res.status(400).json(ApiResponse.error('Nội dung tin nhắn không được để trống'));
-    }
-    try {
 
+
+	static async getConversationList(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+
+    try {
+      const conversations = await ChatService.getConversationList(userId);
+      return res.status(200).json(
+        ApiResponse.success(conversations, 'Thành công')
+      );
     } catch (error) {
       next(error);
     }

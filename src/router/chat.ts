@@ -4,7 +4,7 @@ import { ChatController } from '@controller';
 
 const Router = express.Router();
 
-Router.post('/send', verifyRole(['User']), ChatController.sendMessage as any);
 
+Router.get('/getAllConversation', verifyRole(['User','Agent']), ChatController.getConversationList as any);
 
 export default Router;

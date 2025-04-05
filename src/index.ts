@@ -12,7 +12,7 @@ import { swaggerDoc } from 'api-doc/swagger';
 import swaggerUi from "swagger-ui-express";
 import "dotenv/config";
 import {checkAndUpdatePostsOnStartup} from '@helper';
-import {setupNotificationSocket,chatSocket} from '@socket';
+import {setupNotificationSocket,botSocket} from '@socket';
 
 
 const app = express();
@@ -26,7 +26,8 @@ export const io = new Server(server, {
   },
 });
 setupNotificationSocket(io);
-chatSocket(io);
+botSocket(io);
+
 
 
 app.use(express.json());

@@ -73,8 +73,8 @@ class UserController {
     const { userId } = (req as any).user;
     const { phone } = req.body;
     try {
-      await UserService.updatePhone(userId, phone);
-      return res.status(200).json(ApiResponse.success(null, 'cập nhất số điện thoại thành công'));
+      const result =await UserService.updatePhone(userId, phone);
+      return res.status(200).json(ApiResponse.success(result, 'cập nhất số điện thoại thành công'));
     } catch (error) {
       next(error);
     }

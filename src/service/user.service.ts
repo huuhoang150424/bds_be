@@ -54,7 +54,7 @@ class UserService {
     }
     findUser.phone = phone;
     await findUser.save();
-    return findUser;
+    return {newPhone:phone};
   }
 }
 
