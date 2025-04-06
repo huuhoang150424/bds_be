@@ -1,5 +1,5 @@
 
-import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany,BeforeCreate } from 'sequelize-typescript';
+import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany, BeforeCreate } from 'sequelize-typescript';
 import { Post, PostDraft, Transaction, Comment, Rating, Wishlist, Report, Notification, News, CommentLike } from '@models';
 import { Roles } from './enums';
 import BaseModel from './base.model';
@@ -42,6 +42,10 @@ export default class User extends BaseModel<string> {
 
 	@Column({ type: DataType.DATE, defaultValue: null })
   lastActive!: Date | null;
+
+  @Default(null)
+  @Column(DataType.STRING)
+  address!: string;
 
   @AllowNull(false)
   @Column(DataType.STRING)

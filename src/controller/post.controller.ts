@@ -47,8 +47,9 @@ class PostController {
 	//[getPost]
 	static async getPost(req: Request, res: Response, next: NextFunction) {
 		const { slug } = req.params;
+		const { userId } = (req as any).user;
 		try {
-			const post = await PostService.getPost(slug);
+			const post = await PostService.getPost(slug, userId);
 			return res.status(200).json(
 				ApiResponse.success(post, "thành công")
 			);

@@ -1,6 +1,6 @@
 
 import { ActionType, PriceUnit } from '@models/enums/post';
-import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing, UserView, Wishlist,Comment } from '@models';
+import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing, UserView, Wishlist, Comment } from '@models';
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
@@ -134,7 +134,8 @@ class PostService {
     }
     return post;
   }
-  static async getPost(slug: string) {
+
+  static async getPost(slug: string, userId?: string) {
     const cachePost = await CacheRepository.get(`post:${slug}`);
     if (cachePost) {
       return JSON.parse(cachePost);
@@ -167,6 +168,25 @@ class PostService {
     if (!post) {
       throw new NotFoundError('Không tìm thấy bài đăng');
     }
+
+    // 👇 Thêm lượt xem nếu userId tồn tại và chưa từng xem bài này
+    if (userId) {
+      const existingView = await UserView.findOne({
+        where: {
+          userId: userId,
+          postId: post.id,
+        },
+      });
+
+      if (!existingView) {
+        await UserView.create({
+          userId: userId,
+          postId: post.id,
+          viewedAt: new Date(),
+        });
+      }
+    }
+
     const postCount = await Post.count({
       where: { userId: post.userId },
     });
@@ -203,6 +223,7 @@ class PostService {
     await CacheRepository.set(`post:${slug}`, postWithPriceHistory, 300);
     return postWithPriceHistory;
   }
+
 
   static async deletePost(postId: string, userId: string) {
     const transaction = await sequelize.transaction();
@@ -366,10 +387,10 @@ class PostService {
         [Op.and]: [
           addresses.length > 0
             ? {
-                [Op.or]: addresses.map((addr) => ({
-                  address: { [Op.like]: `%${addr}%` },
-                })),
-              }
+              [Op.or]: addresses.map((addr) => ({
+                address: { [Op.like]: `%${addr}%` },
+              })),
+            }
             : {},
         ],
       },
@@ -679,105 +700,105 @@ class PostService {
       limit,
     });
   }
-	static async filterPosts(query: any, page: number = 1, limit: number = 10, offset: number) {
-		const {
-			keyword, tagIds, minPrice, maxPrice, floor, minSquareMeters, maxSquareMeters,
-			directions, bedrooms, bathrooms, propertyTypeIds, listingTypeIds, sortBy, order
-		} = query;
-		const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
-			if (!value) return [];
-			if (Array.isArray(value)) return value.map(parser);
-			return [parser(value)];
-		};
-		const whereCondition: any = {};
-		if (keyword) {
-			whereCondition[Op.or] = [
-				{ title: { [Op.like]: `%${keyword}%` } },
-				{ description: { [Op.like]: `%${keyword}%` } },
-				{ address: { [Op.like]: `%${keyword}%` } },
-			];
-		}
-		if (minPrice || maxPrice) {
-			whereCondition.price = {
-				...(minPrice ? { [Op.gte]: Number(minPrice) } : {}),
-				...(maxPrice ? { [Op.lte]: Number(maxPrice) } : {}),
-			};
-		}
-		if (minSquareMeters || maxSquareMeters) {
-			whereCondition.squareMeters = {
-				...(minSquareMeters ? { [Op.gte]: Number(minSquareMeters) } : {}),
-				...(maxSquareMeters ? { [Op.lte]: Number(maxSquareMeters) } : {}),
-			};
-		}
-		const directionArray = toArray(directions,String);
-		if (directionArray.length > 0) {
-			whereCondition.direction = { [Op.in]: directionArray };
-		}
-		const bedroomArray = toArray(bedrooms,Number);
-		if (bedroomArray.length > 0) {
-			whereCondition.bedroom = { [Op.in]: bedroomArray };
-		}
-		const bathroomArray = toArray(bathrooms,Number);
-		if (bathroomArray.length > 0) {
-			whereCondition.bathroom = { [Op.in]: bathroomArray };
-		}
-		if (floor) {
-			whereCondition.floor = Number(floor);
-		}
-		const includeConditions: any = [
-			{ model: Image, attributes: ['image_url'] },
-			{ model: User, attributes: ['fullname', 'id', 'phone'] },
-		];
-		const tagIdArray = toArray(tagIds,String);
-		if (tagIdArray.length > 0) {
-			includeConditions.push({
-				model: TagPost,
-				where: { tagId: { [Op.in]: tagIdArray } },
-				required: true,
-			});
-		}
-		const propertyTypeIdArray = toArray(propertyTypeIds,String);
-		if (propertyTypeIdArray.length > 0) {
-			includeConditions.push({
-				model: PropertyType,
-				where: { id: { [Op.in]: propertyTypeIdArray } },
-				required: true,
-			});
-		}
-		const listingTypeIdArray = toArray(listingTypeIds,String);
-		if (listingTypeIdArray.length > 0) {
-			includeConditions.push({
-				model: PropertyType,
-				include: [
-					{
-						model: ListingType,
-						where: { id: { [Op.in]: listingTypeIdArray } },
-						required: true,
-					},
-				],
-			});
-		}
-		let orderCondition: any = [['createdAt', 'DESC']];
-		if (sortBy) {
-			const orderType = order === 'asc' ? 'ASC' : 'DESC';
-			orderCondition = [[sortBy, orderType]];
-		}
-		const { count, rows } = await Post.findAndCountAll({
-			where: whereCondition,
-			include: includeConditions,
-			limit,
-			offset: offset || (page-1)*limit,
-			order: orderCondition,
-			distinct: true
-		});
-	
-		return {
-			total: count,
-			posts: rows,
-			page,
-			totalPages: Math.ceil(count / limit),
-		};
-	}
+  static async filterPosts(query: any, page: number = 1, limit: number = 10, offset: number) {
+    const {
+      keyword, tagIds, minPrice, maxPrice, floor, minSquareMeters, maxSquareMeters,
+      directions, bedrooms, bathrooms, propertyTypeIds, listingTypeIds, sortBy, order
+    } = query;
+    const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value.map(parser);
+      return [parser(value)];
+    };
+    const whereCondition: any = {};
+    if (keyword) {
+      whereCondition[Op.or] = [
+        { title: { [Op.like]: `%${keyword}%` } },
+        { description: { [Op.like]: `%${keyword}%` } },
+        { address: { [Op.like]: `%${keyword}%` } },
+      ];
+    }
+    if (minPrice || maxPrice) {
+      whereCondition.price = {
+        ...(minPrice ? { [Op.gte]: Number(minPrice) } : {}),
+        ...(maxPrice ? { [Op.lte]: Number(maxPrice) } : {}),
+      };
+    }
+    if (minSquareMeters || maxSquareMeters) {
+      whereCondition.squareMeters = {
+        ...(minSquareMeters ? { [Op.gte]: Number(minSquareMeters) } : {}),
+        ...(maxSquareMeters ? { [Op.lte]: Number(maxSquareMeters) } : {}),
+      };
+    }
+    const directionArray = toArray(directions, String);
+    if (directionArray.length > 0) {
+      whereCondition.direction = { [Op.in]: directionArray };
+    }
+    const bedroomArray = toArray(bedrooms, Number);
+    if (bedroomArray.length > 0) {
+      whereCondition.bedroom = { [Op.in]: bedroomArray };
+    }
+    const bathroomArray = toArray(bathrooms, Number);
+    if (bathroomArray.length > 0) {
+      whereCondition.bathroom = { [Op.in]: bathroomArray };
+    }
+    if (floor) {
+      whereCondition.floor = Number(floor);
+    }
+    const includeConditions: any = [
+      { model: Image, attributes: ['image_url'] },
+      { model: User, attributes: ['fullname', 'id', 'phone'] },
+    ];
+    const tagIdArray = toArray(tagIds, String);
+    if (tagIdArray.length > 0) {
+      includeConditions.push({
+        model: TagPost,
+        where: { tagId: { [Op.in]: tagIdArray } },
+        required: true,
+      });
+    }
+    const propertyTypeIdArray = toArray(propertyTypeIds, String);
+    if (propertyTypeIdArray.length > 0) {
+      includeConditions.push({
+        model: PropertyType,
+        where: { id: { [Op.in]: propertyTypeIdArray } },
+        required: true,
+      });
+    }
+    const listingTypeIdArray = toArray(listingTypeIds, String);
+    if (listingTypeIdArray.length > 0) {
+      includeConditions.push({
+        model: PropertyType,
+        include: [
+          {
+            model: ListingType,
+            where: { id: { [Op.in]: listingTypeIdArray } },
+            required: true,
+          },
+        ],
+      });
+    }
+    let orderCondition: any = [['createdAt', 'DESC']];
+    if (sortBy) {
+      const orderType = order === 'asc' ? 'ASC' : 'DESC';
+      orderCondition = [[sortBy, orderType]];
+    }
+    const { count, rows } = await Post.findAndCountAll({
+      where: whereCondition,
+      include: includeConditions,
+      limit,
+      offset: offset || (page - 1) * limit,
+      order: orderCondition,
+      distinct: true
+    });
+
+    return {
+      total: count,
+      posts: rows,
+      page,
+      totalPages: Math.ceil(count / limit),
+    };
+  }
 
 
 }
