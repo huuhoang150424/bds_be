@@ -8,6 +8,7 @@ import Image from '@models/image.model';
 import Message from '@models/message.model';
 import User from '@models/user.model';
 import { io } from 'index';
+import { NotFoundError } from '@helper/index';
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
 const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
@@ -96,47 +97,99 @@ class ChatService {
   }
 
 
+	static async sendMessage(userId: string, receiverId: string, content: string) {
+		try {
+	
+			const sender = await User.findByPk(userId);
+			const receiver = await User.findByPk(receiverId);
+	
+	
+			if (!sender) {
+				throw new Error('Người gửi không tồn tại');
+			}
+			if (!receiver) {
+				throw new Error('Người nhận không tồn tại');
+			}
+	
+			const message = await Message.create({
+				senderId:userId,
+				receiverId,
+				content,
+				isRead: false,
+			});
+	
+			const populatedMessage = await Message.findByPk(message.id, {
+				include: [
+					{ model: User, as: 'sender',attributes:['id','avatar','fullname'] },
+					{ model: User, as: 'receiver',attributes:['id','avatar','fullname'] },
+				],
+			});
+	
+			io.to(userId).emit('newMessageChat', populatedMessage);
+			io.to(receiverId).emit('newMessageChat', populatedMessage);
+			console.log("Gửi")
+			return populatedMessage;
+		} catch (error: any) {
+			throw new Error(`Lỗi khi gửi tin nhắn: ${error.message}`);
+		}
+	}
 
-
-	static async getConversationList(userId: string) {
+	static async getAllMessages(userId: string,receiverId:string) {
     try {
       const messages = await Message.findAll({
         where: {
-          [Op.or]: [{ senderId: userId }, { receiverId: userId }],
+					[Op.or]: [
+						{ senderId: userId, receiverId: receiverId },
+						{ senderId: receiverId, receiverId: userId }, 
+					],
         },
         include: [
           { model: User, as: 'sender', attributes: ['id', 'fullname', 'avatar'] },
           { model: User, as: 'receiver', attributes: ['id', 'fullname', 'avatar'] },
         ],
         order: [['createdAt', 'DESC']],
+				limit: 30
       });
-      const conversations = new Map<string, any>();
-      messages.forEach((message) => {
-        const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
-        const otherUser = message.senderId === userId ? message.receiver : message.sender;
-
-        if (!conversations.has(otherUserId)) {
-          conversations.set(otherUserId, {
-            user: {
-              id: otherUser.id,
-              fullname: otherUser.fullname,
-              avatar: otherUser.avatar,
-            },
-            lastMessage: {
-              content: message.content,
-              createdAt: message.createdAt,
-              isRead: message.isRead,
-              isSentByMe: message.senderId === userId,
-            },
-          });
-        }
-      });
-
-      return Array.from(conversations.values());
+      return messages;
     } catch (error: any) {
-      throw new Error(`Lỗi i: ${error.message}`);
+      throw new Error(`Lỗi : ${error.message}`);
     }
   }
+
+
+	static async getConversationList(userId: string) {
+		try {
+			const messages = await Message.findAll({
+				where: {
+					[Op.or]: [{ senderId: userId }, { receiverId: userId }],
+				},
+				include: [
+					{ model: User, as: 'sender', attributes: ['id', 'fullname', 'avatar'] },
+					{ model: User, as: 'receiver', attributes: ['id', 'fullname', 'avatar'] },
+				],
+				order: [['createdAt', 'DESC']],
+			});
+			
+			const userMap = new Map<string, any>();
+			
+			messages.forEach((message) => {
+				const otherUserId = message.senderId === userId ? message.receiverId : message.senderId;
+				const otherUser = message.senderId === userId ? message.receiver : message.sender;
+				
+				if (!userMap.has(otherUserId)) {
+					userMap.set(otherUserId, {
+						id: otherUser.id,
+						fullname: otherUser.fullname,
+						avatar: otherUser.avatar
+					});
+				}
+			});
+			return Array.from(userMap.values());
+			
+		} catch (error: any) {
+			throw new Error(`Lỗi khi lấy danh sách người dùng chat: ${error.message}`);
+		}
+	}
 
 
 }

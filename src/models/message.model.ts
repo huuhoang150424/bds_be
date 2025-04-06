@@ -13,6 +13,7 @@ import BaseModel from './base.model';
 @Table({
   tableName: 'messages',
   timestamps: true,
+	underscored: true 
 })
 export default class Message extends BaseModel<string> {
   @ForeignKey(() => User)
