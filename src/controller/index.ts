@@ -11,6 +11,7 @@ import PostDraftController from "./post-draft.controller";
 import WishlistController from "./wishlist.controller";
 import CommentLikeController from "./comment-like.controller";
 import ChatController from "./chat.controller";
+import StatisticalController from "./statistical.controller";
 
 
 export {
@@ -26,5 +27,6 @@ export {
 	PostDraftController,
 	WishlistController,
 	CommentLikeController,
-	ChatController
+	ChatController,
+	StatisticalController
 }

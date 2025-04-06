@@ -1,5 +1,5 @@
 
-import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany,BeforeCreate } from 'sequelize-typescript';
+import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany, BeforeCreate } from 'sequelize-typescript';
 import { Post, PostDraft, Transaction, Comment, Rating, Wishlist, Report, Notification, News, CommentLike } from '@models';
 import { Roles } from './enums';
 import BaseModel from './base.model';
@@ -23,18 +23,20 @@ export default class User extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isLock!: boolean;
 
-	@Default(null)
-	@Column({
-		type: DataType.STRING, 
-		// allowNull: true,
-		validate: {
-			len: [10, 11], 
-			isNumeric: true, 
-		},
-	})
-	phone!: string;
-	
-	
+  @Default(null)
+  @Column({
+    type: DataType.STRING,
+    // allowNull: true,
+    validate: {
+      len: [10, 11],
+      isNumeric: true,
+    },
+  })
+  phone!: string;
+  @Default(null)
+  @Column(DataType.STRING)
+  address!: string;
+
 
   @AllowNull(false)
   @Column(DataType.STRING)

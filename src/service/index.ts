@@ -12,6 +12,7 @@ import RatingService from "./rating.service";
 import PostDraftService from "./post-draft.service";
 import CommentLikeService from "./comment-like.service";
 import ChatService from "./chat.service";
+import StatisticalService from "./statistical.service";
 
 export {
 	AuthService,
@@ -27,5 +28,6 @@ export {
 	WishlistService,
 	RatingService,
 	CommentLikeService,
-	ChatService
+	ChatService,
+	StatisticalService
 }
