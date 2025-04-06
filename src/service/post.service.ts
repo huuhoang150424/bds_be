@@ -145,7 +145,7 @@ class PostService {
       include: [
         {
           model: User,
-          attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
+          attributes: ['id', 'fullname', 'email', 'phone', 'avatar','active','lastActive'],
         },
         {
           model: Image,

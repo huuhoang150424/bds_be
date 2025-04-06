@@ -35,6 +35,11 @@ export default class User extends BaseModel<string> {
 	phone!: string;
 	
 	//column status active message
+
+	@Default(false)
+  @Column(DataType.BOOLEAN)
+  active!: boolean;
+
 	@Column({ type: DataType.DATE, defaultValue: null })
   lastActive!: Date | null;
 
