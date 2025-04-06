@@ -35,6 +35,10 @@ export default class Message extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isRead!: boolean; 
 
+	@Default({})
+  @Column(DataType.JSON)
+  reactions!: { [userId: string]: string } //{ "user1": "👍", "user2": "❤️" }
+
   @BelongsTo(() => User, { foreignKey: 'senderId', as: 'sender' })
   sender!: User;
 
