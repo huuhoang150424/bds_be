@@ -2,9 +2,15 @@ import { ActionType, Roles } from "@models/enums";
 import { UserView, Post, User } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
-import { Op, Transaction, Sequelize } from "sequelize";
+import { Op, fn, col, literal, Sequelize } from "sequelize";
+
+interface MonthlyPostCount {
+  month: string;
+  count: string;
+}
 
 class StatisticalService {
+  //[get user  view by address]
   static async getViewByAddress(userId: string) {
     if (!userId) {
       throw new BadRequestError('UserId không được để trống');
@@ -72,6 +78,43 @@ class StatisticalService {
     }));
 
     return data;
+  }
+  //[get Post by Month]
+  static async getPostByMonth(userId: string) {
+    if (!userId) {
+      throw new BadRequestError('UserId không được để trống');
+    }
+
+    const currentYear = new Date().getFullYear();
+
+    // Sửa tên cột từ createdAt thành created_at để khớp với database
+    const result = await Post.findAll({
+      attributes: [
+        [fn('MONTH', col('created_at')), 'month'],
+        [fn('COUNT', col('id')), 'count'],
+      ],
+      where: {
+        userId,
+        created_at: {  // Sửa từ createdAt thành created_at
+          [Op.gte]: new Date(`${currentYear}-01-01T00:00:00.000Z`),
+          [Op.lt]: new Date(`${currentYear + 1}-01-01T00:00:00.000Z`),
+        },
+      },
+      group: [fn('MONTH', col('created_at'))],  
+      order: [[fn('MONTH', col('created_at')), 'ASC']],  
+      raw: true,
+    }) as unknown as MonthlyPostCount[];
+
+    // Tạo array đủ 12 tháng
+    const monthlyData = Array.from({ length: 12 }, (_, index) => {
+      const found = result.find((item) => Number(item.month) === index + 1);
+      return {
+        month: `T${index + 1}`,
+        count: found ? parseInt(found.count) : 0,
+      };
+    });
+
+    return monthlyData;
   }
 
 }

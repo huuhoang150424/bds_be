@@ -15,5 +15,23 @@ class StatisticalController {
       next(error);
     }
   }
+  //[get Post by Month]
+  static async getPostByMonth(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { userId } = (req as any).user;
+    try {
+      if (!userId) {
+        return res.status(400).json(
+          ApiResponse.error('UserId không được để trống')
+        );
+      }
+      const data = await StatisticalService.getPostByMonth(userId);
+      return res.status(200).json(
+        ApiResponse.success(data, 'Thống kê số bài đăng theo tháng thành công')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+  
 };
 export default StatisticalController;
