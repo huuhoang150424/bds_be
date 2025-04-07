@@ -5,5 +5,6 @@ const Router = express.Router();
 
 Router.get('/getViewByAddress',verifyRole(["Agent","User"]), StatisticalController.getViewByAddress as any);
 Router.get('/getPostByMonth',verifyRole(["Agent","User"]), StatisticalController.getPostByMonth as any);
+Router.get('/getTopSearchRegionsWithGrowth',verifyRole(["Agent","User"]), StatisticalController.getTopSearchRegionsWithGrowth as any);
 
 export default Router;

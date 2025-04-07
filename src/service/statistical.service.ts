@@ -9,6 +9,12 @@ interface MonthlyPostCount {
   count: string;
 }
 
+interface RegionStats {
+  address: string;
+  viewCount: number;
+  growthPercentage?: number;
+}
+
 class StatisticalService {
   //[get user  view by address]
   static async getViewByAddress(userId: string) {
@@ -100,8 +106,8 @@ class StatisticalService {
           [Op.lt]: new Date(`${currentYear + 1}-01-01T00:00:00.000Z`),
         },
       },
-      group: [fn('MONTH', col('created_at'))],  
-      order: [[fn('MONTH', col('created_at')), 'ASC']],  
+      group: [fn('MONTH', col('created_at'))],
+      order: [[fn('MONTH', col('created_at')), 'ASC']],
       raw: true,
     }) as unknown as MonthlyPostCount[];
 
@@ -117,6 +123,85 @@ class StatisticalService {
     return monthlyData;
   }
 
+  static async getTopSearchRegionsWithGrowth(limit: number = 5): Promise<RegionStats[]> {
+    const currentDate = new Date();
+    const thirtyDaysAgo = new Date(currentDate);
+    thirtyDaysAgo.setDate(currentDate.getDate() - 30);
+
+    const previousMonthStart = new Date(currentDate.getFullYear(), currentDate.getMonth() - 2, 1);
+    const previousMonthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 0);
+
+    const currentMonthViews = await UserView.findAll({
+      attributes: [
+        [Sequelize.col('post.address'), 'address'],
+        [fn('COUNT', Sequelize.literal('*')), 'viewCount'], 
+      ],
+      include: [
+        {
+          model: Post,
+          attributes: [],
+          required: true,
+        },
+      ],
+      where: {
+        viewedAt: {
+          [Op.gte]: thirtyDaysAgo,
+          [Op.lte]: currentDate,
+        },
+      },
+      group: ['post.address'],
+      order: [[fn('COUNT', Sequelize.literal('*')), 'DESC']],
+      limit: limit,
+      raw: true,
+    });
+
+    const previousMonthViews = await UserView.findAll({
+      attributes: [
+        [Sequelize.col('post.address'), 'address'],
+        [fn('COUNT', Sequelize.literal('*')), 'viewCount'],
+      ],
+      include: [
+        {
+          model: Post,
+          attributes: [],
+          required: true,
+        },
+      ],
+      where: {
+        viewedAt: {
+          [Op.gte]: previousMonthStart,
+          [Op.lte]: previousMonthEnd,
+        },
+      },
+      group: ['post.address'],
+      raw: true,
+    });
+
+    const previousMonthMap: { [key: string]: number } = {};
+    previousMonthViews.forEach((item: any) => {
+      previousMonthMap[item.address] = parseInt(item.viewCount);
+    });
+
+    const result: RegionStats[] = currentMonthViews.map((item: any) => {
+      const address = item.address || 'Không xác định';
+      const currentViewCount = parseInt(item.viewCount);
+      const previousViewCount = previousMonthMap[address] || 0;
+
+      let growthPercentage: number | undefined;
+      if (previousViewCount > 0) {
+        growthPercentage = ((currentViewCount - previousViewCount) / previousViewCount) * 100;
+        growthPercentage = Math.round(growthPercentage * 10) / 10;
+      }
+
+      return {
+        address,
+        viewCount: currentViewCount,
+        growthPercentage,
+      };
+    });
+
+    return result;
+  }
 }
 
 export default StatisticalService;
