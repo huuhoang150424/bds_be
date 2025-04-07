@@ -46,7 +46,7 @@ class AuthController {
   //[logout]
   static async logout(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
-      res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'strict' });
+      res.clearCookie('refreshToken', { httpOnly: true, secure: false, sameSite: 'lax' });
       return res.status(200).json(ApiResponse.success(null, 'Đăng xuất thành công'));
     } catch (error) {
       next(error);

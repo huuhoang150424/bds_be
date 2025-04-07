@@ -7,65 +7,63 @@ import { CommentStatus, LikeStatus } from "@models/enums";
 
 
 const createCommentsRecursive = async (
-  parentId: string | null, 
-  level: number, 
+  parentId: string | null,
+  level: number,
   maxLevel: number,
-  commentsData: any[], 
-  repliesData: any[],
-  users: any[], 
-  posts: any[],
-  maxReplies: number = 5, 
-  maxSubReplies: number = 3
+  commentsData: any[],
+  users: any[],
+  post: any
 ) => {
-  if (level > maxLevel) return; 
-  const randomUser = users[Math.floor(Math.random() * users.length)];
-  const randomPost = posts[Math.floor(Math.random() * posts.length)];
+  if (level > maxLevel) return;
 
-  const commentId = uuidv4();
-  const content = `Bình luận cấp ${level}: Đây là một bài viết tuyệt vời!`;
+  const commentCount = level === 1 ? 3 : 2; 
 
-  const newComment = {
-    id: commentId,
-    userId: randomUser.id,
-    postId: randomPost.id,
-    content,
-    status: CommentStatus.ACTIVE,
-    parentId,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
+  for (let i = 0; i < commentCount; i++) {
+    const randomUser = users[Math.floor(Math.random() * users.length)];
+    const commentId = uuidv4();
+    const content = `Bình luận cấp ${level}: Đây là một bài viết tuyệt vời!`;
 
-  if (level === 0) {
+    const newComment = {
+      id: commentId,
+      userId: randomUser.id,
+      postId: post.id,
+      content,
+      status: CommentStatus.ACTIVE,
+      parentId,
+      level,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
     commentsData.push(newComment);
-  } else {
-    repliesData.push(newComment); 
-  }
 
-  const numberOfReplies = level === 0 ? maxReplies : maxSubReplies;
-  for (let i = 0; i < numberOfReplies; i++) {
-    await createCommentsRecursive(commentId, level + 1, maxLevel, commentsData, repliesData, users, posts);
+    // Gọi đệ quy tạo comment con
+    await createCommentsRecursive(commentId, level + 1, maxLevel, commentsData, users, post);
   }
 };
+
 
 export const seedComments = async () => {
   const users = await User.findAll();
   const posts = await Post.findAll();
   const commentsData: any[] = [];
-  const repliesData: any[] = [];
-  for (let i = 0; i < 100; i++) {
+
+  for (let i = 0; i < 50; i++) {
+    const randomPost = posts[Math.floor(Math.random() * posts.length)];
     await createCommentsRecursive(
       null,
-      0, 
-      3, 
+      1,
+      3,
       commentsData,
-      repliesData,
       users,
-      posts
+      randomPost
     );
   }
+
   await Comment.bulkCreate(commentsData);
-  await Comment.bulkCreate(repliesData);
 };
+
+
 
 
 export const seedCommentLikes = async () => {

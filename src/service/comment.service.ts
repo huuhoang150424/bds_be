@@ -13,37 +13,35 @@ class CommentService {
   }
 
   // [getComment by Post]
-  static async getCommentsByPost(postId: string, limit: number = 10, nextCreatedAt?: string) {
-    const MAX_TOTAL_LIMIT = 30;
-    const whereCondition: any = { postId };
-
-    if (nextCreatedAt) {
-      whereCondition.createdAt = { [Op.lt]: new Date(nextCreatedAt) };
-    }
-
-    const comments = await Comment.findAll({
-      where: whereCondition,
-      include: [{ model: User, as: "user", attributes: ["fullname"] }],
-      order: [["createdAt", "DESC"]],
-      limit: limit + 1,
-    });
-
-    const hasMore = comments.length > limit;
-
-    if (hasMore) {
-      comments.pop();
-    }
-    const lastCommentCreatedAt = comments.length > 0 ? comments[comments.length - 1].createdAt : null;
-
-    return {
-      data: comments,
-      meta: {
-        hasNextPage: hasMore,
-        nextCreatedAt: lastCommentCreatedAt,
-        total: await Comment.count({ where: { postId } }),
-      },
-    };
-  }
+	static async getCommentsByPost(postId: string, limit: number = 5, page: number = 1, offset: number = 0) {
+		const whereCondition: any = {
+			postId,
+			parentId: null, 
+		};
+	
+		const total = await Comment.count({ where: whereCondition });
+	
+		const comments = await Comment.findAll({
+			where: whereCondition,
+			include: [{ model: User, as: "user", attributes: ["fullname", "avatar"] }],
+			order: [["createdAt", "DESC"]],
+			limit,
+			offset,
+		});
+	
+		const totalPages = Math.ceil(total / limit);
+	
+		return {
+			data: comments,
+			meta: {
+				currentPage: page,
+				totalPages,
+				total,
+				hasNextPage: page < totalPages,
+			},
+		};
+	}
+	
 
 
 
@@ -81,39 +79,61 @@ class CommentService {
 
 
   // [Reply to Comment]
-  static async replyToComment(userId: string, commentId: string, postId: string, content: string) {
-    let parentId: string | null = null;
-    let parentCommentUserId: string | null = null;
-    if (commentId) {
-      const parentComment = await Comment.findByPk(commentId);
-      if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
-
-      parentId = parentComment.id;
-      parentCommentUserId = parentComment.userId;
-    }
-    const newComment = await Comment.create({
-      userId,
-      postId,
-      content,
-      parentId,
-    });
-    if (parentCommentUserId && parentCommentUserId !== userId) {
-      await NotificationService.createNotification(
-        parentCommentUserId,
-        `Người dùng ${userId} đã phản hồi bình luận của bạn: "${content}"`
-      );
-    }
-    return newComment;
-  }
+	static async replyToComment(userId: string, commentId: string, postId: string, content: string) {
+		let parentId: string | null = null;
+		let parentCommentUserId: string | null = null;
+		let level = 1;
+	
+		if (commentId) {
+			const parentComment = await Comment.findByPk(commentId, {
+				include: [{ model: Comment, as: 'parentComment' }], 
+			});
+			if (!parentComment) throw new NotFoundError("Bình luận gốc không tồn tại");
+	
+			parentId = parentComment.id;
+			parentCommentUserId = parentComment.userId;
+			level = parentComment.level + 1;
+	
+			if (level > 3) {
+				if (parentComment.parentId) {
+					const grandParentComment = await Comment.findByPk(parentComment.parentId);
+					if (grandParentComment && grandParentComment.level === 2) {
+						parentId = grandParentComment.id; 
+						level = 3; 
+					}
+				} else {
+				
+					level = 3;
+				}
+			}
+		}
+	
+		const newComment = await Comment.create({
+			userId,
+			postId,
+			content,
+			parentId,
+			level, // Lưu level đã điều chỉnh
+		});
+	
+		if (parentCommentUserId && parentCommentUserId !== userId) {
+			await NotificationService.createNotification(
+				parentCommentUserId,
+				`Người dùng ${userId} đã phản hồi bình luận của bạn: "${content}"`
+			);
+		}
+	
+		return newComment;
+	}
 
 
   // [Get Replies for a Specific Comment]
   static async getRepliesByParentId(parentId: string) {
-    const cacheKey = `comment_replies:${parentId}`;
-    const cachedReplies = await CacheRepository.get(cacheKey);
-    if (cachedReplies) {
-      return JSON.parse(cachedReplies);
-    }
+    // const cacheKey = `comment_replies:${parentId}`;
+    // const cachedReplies = await CacheRepository.get(cacheKey);
+    // if (cachedReplies) {
+    //   return JSON.parse(cachedReplies);
+    // }
     const replies = await Comment.findAll({
       where: { parentId },
       include: [
@@ -124,7 +144,7 @@ class CommentService {
       ],
       order: [["createdAt", "DESC"]],
     });
-    await CacheRepository.set(cacheKey, replies, 600);
+    //await CacheRepository.set(cacheKey, replies, 600);
     return replies;
   }
 

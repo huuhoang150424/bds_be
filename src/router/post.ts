@@ -8,7 +8,7 @@ import {validateCreatePost,validateCreatePostDraft} from "@validation";
 
 
 Router.post("/createPost",uploadCloud.array("images"),validateCreatePost,verifyRole(["Agent","User"]), PostController.create as any);
-Router.get("/:slug/getPost",verifyRole(["User"]), PostController.getPost as any);
+Router.get("/:slug/getPost", PostController.getPost as any);
 Router.get("/getAllPosts",verifyRole(["Admin"]),paginationMiddleware, PostController.getAllPost as any);
 Router.put("/:postId/updatePost",uploadCloud.array("images"),verifyRole(["Agent","User"]), PostController.updatePost as any);
 Router.delete("/:postId/deletePost",verifyRole(["Agent"]), PostController.deletePost as any);

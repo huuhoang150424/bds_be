@@ -17,6 +17,10 @@ export default class Comment extends BaseModel<string> {
   @Column(DataType.UUID)
   userId!: string;
 
+  @Default(1)
+  @Column(DataType.INTEGER)
+  level!: number;
+
   @BelongsTo(() => User, { onDelete: 'SET NULL' })
   user!: User;
 

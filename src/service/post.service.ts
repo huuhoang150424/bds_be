@@ -168,8 +168,6 @@ class PostService {
     if (!post) {
       throw new NotFoundError('Không tìm thấy bài đăng');
     }
-
-    // 👇 Thêm lượt xem nếu userId tồn tại và chưa từng xem bài này
     if (userId) {
       const existingView = await UserView.findOne({
         where: {
