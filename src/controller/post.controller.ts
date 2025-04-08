@@ -48,7 +48,7 @@ class PostController {
 	static async getPost(req: Request, res: Response, next: NextFunction) {
 		const { slug } = req.params;
 		const userId = (req as any)?.user?.userId;
-	
+		console.log("check ",userId)
 		try {
 			const post = await PostService.getPost(slug, userId); 
 			return res.status(200).json(ApiResponse.success(post, "thành công"));

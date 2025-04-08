@@ -21,6 +21,39 @@ export default class Comment extends BaseModel<string> {
   @Column(DataType.INTEGER)
   level!: number;
 
+	@Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('likeCount') || 0;
+    },
+  })
+  likeCount!: number;
+
+	@Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('dislikeCount') || 0;
+    },
+  })
+  dislikeCount!: number;
+
+
+	@Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('liked') || false;
+    },
+  })
+  liked!: boolean;
+
+	@Column({
+    type: DataType.VIRTUAL,
+    get() {
+      return this.getDataValue('disliked') || false;
+    },
+  })
+  disliked!: boolean;
+
   @BelongsTo(() => User, { onDelete: 'SET NULL' })
   user!: User;
 

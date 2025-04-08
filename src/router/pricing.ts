@@ -2,9 +2,10 @@ import express, { Request, Response } from "express";
 const Router = express.Router();
 import { verifyRole} from "@middleware";
 import {PricingController} from '@controller';
+import { Roles } from "@models/enums";
 
 
-Router.post('/buyPricing', verifyRole(['User','Agent']),PricingController.buyPricing as any);
-Router.put('/updatePricing', verifyRole(['User','Agent']),PricingController.updatePricing as any);
+Router.post('/buyPricing', verifyRole([Roles.User,Roles.Agent]),PricingController.buyPricing as any);
+Router.put('/updatePricing', verifyRole([Roles.User,Roles.Agent]),PricingController.updatePricing as any);
 
 export default Router;

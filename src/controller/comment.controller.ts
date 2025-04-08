@@ -22,9 +22,10 @@ class CommentController {
   static async getCommentsByPost(req: Request, res: Response, next: NextFunction) {
     const { postId } = req.params;
     const { limit,page,offset } = (req as any).pagination;
-
+		const userId = (req as any)?.user?.userId;
     try {
-      const comments = await CommentService.getCommentsByPost(postId, limit ,page,offset);
+			console.log(userId)
+      const comments = await CommentService.getCommentsByPost(postId, limit ,page,offset,userId);
       return res.status(200).json(ApiResponse.success(comments, "Danh sách bình luận"));
     } catch (error) {
       next(error);
@@ -73,8 +74,10 @@ class CommentController {
   // [Get Replies of a Specific Comment]
   static async getReplies(req: Request, res: Response, next: NextFunction) {
     const { commentId } = req.params;
+		const userId = (req as any)?.user?.userId;
     try {
-      const replies = await CommentService.getRepliesByParentId(commentId);
+			console.log(userId)
+      const replies = await CommentService.getRepliesByParentId(commentId,userId);
       return res.status(200).json(ApiResponse.success(replies, "Danh sách phản hồi"));
     } catch (error) {
       next(error);
