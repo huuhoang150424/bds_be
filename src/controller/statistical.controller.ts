@@ -48,5 +48,31 @@ class StatisticalController {
       next(error);
     }
   }
+
+
+  static async getRecentNewsCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    try {
+      const days = parseInt(req.query.days as string) || 7; 
+      if (days <= 0) {
+        return res.status(400).json(ApiResponse.error('Số ngày phải lớn hơn 0'));
+      }
+      const data = await StatisticalService.getRecentNewsCount(days);
+      // Format lại ngày bắt đầu và kết thúc thống kê
+      const startDate = data.period.start;
+      const endDate = data.period.end;
+      const formattedStartDate = `${startDate.getDate()}/${startDate.getMonth() + 1}/${startDate.getFullYear()}`;
+      const formattedEndDate = `${endDate.getDate()}/${endDate.getMonth() + 1}/${endDate.getFullYear()}`;
+      
+      return res.status(200).json(
+        ApiResponse.success({
+          ...data,
+          title: `Thống kê tin đăng trong ${days} ngày gần đây`,
+          subtitle: `Từ ngày ${formattedStartDate} đến ${formattedEndDate}`,
+        }, `Thống kê số lượng tin đăng trong ${days} ngày gần đây thành công`)
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 };
 export default StatisticalController;

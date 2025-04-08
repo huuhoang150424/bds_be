@@ -1,5 +1,5 @@
-import { ActionType, Roles } from "@models/enums";
-import { UserView, Post, User } from "@models";
+import { ActionType, Roles, CategoryNew } from "@models/enums";
+import { UserView, Post, User, News } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize } from "sequelize";
@@ -14,6 +14,39 @@ interface RegionStats {
   viewCount: number;
   growthPercentage?: number;
 }
+
+//News
+interface DailyNewsCount {
+  date: string;
+  count: string;
+}
+
+interface CategoryNewsCount {
+  category: CategoryNew;
+  count: string;
+}
+
+interface NewsWithStats {
+  recentNewsCount: number;
+  totalViews: number;
+  growthPercentage: number;
+  period: {
+    start: Date;
+    end: Date;
+    days: number;
+  };
+  dailyStats: Array<{
+    date: string;
+    count: number;
+    formattedDate: string;
+  }>;
+  categoryStats: Array<{
+    category: CategoryNew;
+    count: number;
+  }>;
+  recentNews: News[];
+}
+
 
 class StatisticalService {
   //[get user  view by address]
@@ -134,7 +167,7 @@ class StatisticalService {
     const currentMonthViews = await UserView.findAll({
       attributes: [
         [Sequelize.col('post.address'), 'address'],
-        [fn('COUNT', Sequelize.literal('*')), 'viewCount'], 
+        [fn('COUNT', Sequelize.literal('*')), 'viewCount'],
       ],
       include: [
         {
@@ -202,6 +235,152 @@ class StatisticalService {
 
     return result;
   }
+
+
+  static async getRecentNewsCount(days: number = 7): Promise<NewsWithStats> {
+    if (days <= 0) {
+      throw new BadRequestError('Số ngày phải lớn hơn 0');
+    }
+
+    const currentDate = new Date();
+    const pastDate = new Date(currentDate);
+    pastDate.setDate(currentDate.getDate() - days);
+
+    // Lấy tổng số tin đăng trong khoảng thời gian
+    const recentNewsCount = await News.count({
+      where: {
+        created_at: {
+          [Op.gte]: pastDate,
+          [Op.lte]: currentDate,
+        },
+      }
+    });
+
+    // Lấy danh sách tin đăng mới nhất để hiển thị
+    const recentNews = await News.findAll({
+      where: {
+        created_at: {
+          [Op.gte]: pastDate,
+          [Op.lte]: currentDate,
+        },
+      },
+      include: [
+        { 
+          model: User, 
+          as: 'author',
+          attributes: ['id', 'fullname', 'avatar'],
+        },
+      ],
+      attributes: ['id', 'title', 'imageUrl', 'created_at', 'slug', 'category', 'view'],
+      order: [['created_at', 'DESC']],
+      limit: 5
+    });
+
+    // Thống kê tin đăng theo ngày
+    const dailyStats = await News.findAll({
+      attributes: [
+        [fn('DATE', col('created_at')), 'date'],
+        [fn('COUNT', col('id')), 'count']
+      ],
+      where: {
+        created_at: {
+          [Op.gte]: pastDate,
+          [Op.lte]: currentDate,
+        },
+      },
+      group: [fn('DATE', col('created_at'))],
+      order: [[fn('DATE', col('created_at')), 'ASC']],
+      raw: true
+    }) as unknown as DailyNewsCount[];
+
+    // Thống kê tin đăng theo danh mục
+    const categoryStats = await News.findAll({
+      attributes: [
+        'category',
+        [fn('COUNT', col('id')), 'count']
+      ],
+      where: {
+        created_at: {
+          [Op.gte]: pastDate,
+          [Op.lte]: currentDate,
+        },
+      },
+      group: ['category'],
+      order: [[literal('count'), 'DESC']],
+      raw: true
+    }) as unknown as CategoryNewsCount[];
+
+    // Tạo mảng đầy đủ các ngày trong khoảng thời gian
+    const dateArray = [];
+    const tempDate = new Date(pastDate);
+    
+    while (tempDate <= currentDate) {
+      const dateStr = tempDate.toISOString().split('T')[0];
+      const found = dailyStats.find((item) => item.date === dateStr);
+      
+      dateArray.push({
+        date: dateStr,
+        count: found ? parseInt(found.count) : 0,
+        formattedDate: `${tempDate.getDate()}/${tempDate.getMonth() + 1}`
+      });
+      
+      tempDate.setDate(tempDate.getDate() + 1);
+    }
+
+    // Tính phần trăm tăng trưởng so với khoảng thời gian trước đó
+    const previousPeriodStartDate = new Date(pastDate);
+    previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - days);
+    
+    const previousPeriodNewsCount = await News.count({
+      where: {
+        created_at: {
+          [Op.gte]: previousPeriodStartDate,
+          [Op.lt]: pastDate,
+        },
+      }
+    });
+    
+    // Tính phần trăm tăng trưởng
+    const growthPercentage = previousPeriodNewsCount > 0 
+      ? Math.round(((recentNewsCount - previousPeriodNewsCount) / previousPeriodNewsCount) * 100 * 10) / 10
+      : 0;
+
+    // Tính tổng view của tất cả tin đăng trong khoảng thời gian
+    const totalViews = await News.sum('view', {
+      where: {
+        created_at: {
+          [Op.gte]: pastDate,
+          [Op.lte]: currentDate,
+        },
+      }
+    }) as number;
+
+    // Tạo đầy đủ danh sách các danh mục, thêm những danh mục không có tin
+    const allCategories = Object.values(CategoryNew);
+    const fullCategoryStats = allCategories.map(category => {
+      const found = categoryStats.find((item) => item.category === category);
+      return {
+        category,
+        count: found ? parseInt(found.count) : 0
+      };
+    }).sort((a, b) => b.count - a.count);
+
+    return {
+      recentNewsCount,
+      totalViews: totalViews || 0,
+      growthPercentage,
+      period: {
+        start: pastDate,
+        end: currentDate,
+        days
+      },
+      dailyStats: dateArray,
+      categoryStats: fullCategoryStats,
+      recentNews
+    };
+  }
+
+
 }
 
 export default StatisticalService;
