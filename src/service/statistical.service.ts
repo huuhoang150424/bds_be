@@ -237,7 +237,10 @@ class StatisticalService {
   }
 
 
-  static async getRecentNewsCount(days: number = 7): Promise<NewsWithStats> {
+  static async getRecentNewsCount(userId: string, days: number = 7): Promise<NewsWithStats> {
+    if (!userId) {
+      throw new BadRequestError('UserId không được để trống');
+    }
     if (days <= 0) {
       throw new BadRequestError('Số ngày phải lớn hơn 0');
     }

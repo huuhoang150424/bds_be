@@ -2,7 +2,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { StatisticalService } from "@service";
-import { ApiResponse, BadRequestError } from "@helper";
+import { ApiResponse, BadRequestError,UnauthorizedError } from "@helper";
 
 class StatisticalController {
   //[get view by Address]
@@ -52,17 +52,21 @@ class StatisticalController {
 
   static async getRecentNewsCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
-      const days = parseInt(req.query.days as string) || 7; 
+      const { userId } = (req as any).user;
+      if (!userId) {
+        throw new UnauthorizedError("Không tìm thấy userId trong token");
+      }
+      const days = parseInt(req.query.days as string) || 7;
       if (days <= 0) {
         return res.status(400).json(ApiResponse.error('Số ngày phải lớn hơn 0'));
       }
-      const data = await StatisticalService.getRecentNewsCount(days);
+      const data = await StatisticalService.getRecentNewsCount(userId, days);
       // Format lại ngày bắt đầu và kết thúc thống kê
       const startDate = data.period.start;
       const endDate = data.period.end;
       const formattedStartDate = `${startDate.getDate()}/${startDate.getMonth() + 1}/${startDate.getFullYear()}`;
       const formattedEndDate = `${endDate.getDate()}/${endDate.getMonth() + 1}/${endDate.getFullYear()}`;
-      
+
       return res.status(200).json(
         ApiResponse.success({
           ...data,
@@ -74,5 +78,7 @@ class StatisticalController {
       next(error);
     }
   }
+
+  
 };
 export default StatisticalController;

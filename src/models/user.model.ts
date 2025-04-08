@@ -1,7 +1,7 @@
 
 import { Table, Column, DataType, BeforeUpdate, Default, AllowNull, HasMany, BeforeCreate } from 'sequelize-typescript';
 import { Post, PostDraft, Transaction, Comment, Rating, Wishlist, Report, Notification, News, CommentLike } from '@models';
-import { Roles } from './enums';
+import { Roles, Gender } from './enums';
 import BaseModel from './base.model';
 import bcrypt from 'bcrypt';
 
@@ -37,6 +37,14 @@ export default class User extends BaseModel<string> {
   @Column(DataType.STRING)
   address!: string;
 
+  @AllowNull(false)
+  @Default(Gender.Other)
+  @Column({ type: DataType.ENUM(...Object.values(Gender)) })
+  gender!: Gender;
+
+  @AllowNull(true)
+  @Column(DataType.DATE)
+  dateOfBirth!: Date;
 
   @AllowNull(false)
   @Column(DataType.STRING)

@@ -6,5 +6,5 @@ const Router = express.Router();
 Router.get('/getViewByAddress',verifyRole(["Agent","User"]), StatisticalController.getViewByAddress as any);
 Router.get('/getPostByMonth',verifyRole(["Agent","User"]), StatisticalController.getPostByMonth as any);
 Router.get('/getTopSearchRegionsWithGrowth',verifyRole(["Agent","User"]), StatisticalController.getTopSearchRegionsWithGrowth as any);
-Router.get('/getRecentNewsCount', StatisticalController.getRecentNewsCount as any);
+Router.get('/getRecentNewsCount',verifyRole(["Agent","User"]), StatisticalController.getRecentNewsCount as any);
 export default Router;
