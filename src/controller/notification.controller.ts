@@ -16,8 +16,30 @@ class NotificationController {
       next(error);
     }
   }
+	
+	static async readNotification(req: Request, res: Response, next: NextFunction) {
+		const {notificationId}=req.params;
+    try {
+			await NotificationService.readNotification(notificationId);
+      return res.status(200).json(
+        ApiResponse.success(null, 'Thành công')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 
-
+	static async readAllNotification(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+    try {
+			await NotificationService.readAllNotification(userId);
+      return res.status(200).json(
+        ApiResponse.success(null, 'Thành công')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default NotificationController;
