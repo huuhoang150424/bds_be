@@ -79,6 +79,14 @@ class StatisticalController {
     }
   }
 
+  static async getUserAgeStatistics(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    try {
+      const data = await StatisticalService.getUserAgeStatistics();
+      return res.status(200).json(ApiResponse.success(data, "Thống kê độ tuổi người dùng theo giới tính thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
   
 };
 export default StatisticalController;

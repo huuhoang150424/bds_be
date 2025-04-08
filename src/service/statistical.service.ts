@@ -47,6 +47,14 @@ interface NewsWithStats {
   recentNews: News[];
 }
 
+//User
+interface AgeGenderStats {
+  ageGroup: string;
+  male: number;
+  female: number;
+  other: number;
+}
+
 
 class StatisticalService {
   //[get user  view by address]
@@ -268,8 +276,8 @@ class StatisticalService {
         },
       },
       include: [
-        { 
-          model: User, 
+        {
+          model: User,
           as: 'author',
           attributes: ['id', 'fullname', 'avatar'],
         },
@@ -316,24 +324,24 @@ class StatisticalService {
     // Tạo mảng đầy đủ các ngày trong khoảng thời gian
     const dateArray = [];
     const tempDate = new Date(pastDate);
-    
+
     while (tempDate <= currentDate) {
       const dateStr = tempDate.toISOString().split('T')[0];
       const found = dailyStats.find((item) => item.date === dateStr);
-      
+
       dateArray.push({
         date: dateStr,
         count: found ? parseInt(found.count) : 0,
         formattedDate: `${tempDate.getDate()}/${tempDate.getMonth() + 1}`
       });
-      
+
       tempDate.setDate(tempDate.getDate() + 1);
     }
 
     // Tính phần trăm tăng trưởng so với khoảng thời gian trước đó
     const previousPeriodStartDate = new Date(pastDate);
     previousPeriodStartDate.setDate(previousPeriodStartDate.getDate() - days);
-    
+
     const previousPeriodNewsCount = await News.count({
       where: {
         created_at: {
@@ -342,9 +350,9 @@ class StatisticalService {
         },
       }
     });
-    
+
     // Tính phần trăm tăng trưởng
-    const growthPercentage = previousPeriodNewsCount > 0 
+    const growthPercentage = previousPeriodNewsCount > 0
       ? Math.round(((recentNewsCount - previousPeriodNewsCount) / previousPeriodNewsCount) * 100 * 10) / 10
       : 0;
 
@@ -384,6 +392,55 @@ class StatisticalService {
   }
 
 
+  static async getUserAgeStatistics(): Promise<AgeGenderStats[]> {
+    const currentYear = new Date().getFullYear();
+
+    // Xác định khoảng tuổi
+    const ageRanges = [
+      { label: "Dưới 18", min: 0, max: 17 },
+      { label: "18 - 24", min: 18, max: 24 },
+      { label: "25 - 34", min: 25, max: 34 },
+      { label: "35 - 44", min: 35, max: 44 },
+      { label: "45 - 54", min: 45, max: 54 },
+      { label: "55 - 64", min: 55, max: 64 },
+      { label: "65 trở lên", min: 65, max: 200 },
+    ];
+
+    const statsPromises = ageRanges.map(async (range) => {
+      const minBirthYear = currentYear - range.max;
+      const maxBirthYear = currentYear - range.min;
+
+      const maleCount = await User.count({
+        where: {
+          gender: "Male",
+          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
+        },
+      });
+
+      const femaleCount = await User.count({
+        where: {
+          gender: "Female",
+          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
+        },
+      });
+
+      const otherCount = await User.count({
+        where: {
+          gender: "Other",
+          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
+        },
+      });
+
+      return {
+        ageGroup: range.label,
+        male: maleCount,
+        female: femaleCount,
+        other: otherCount,
+      };
+    });
+
+    return Promise.all(statsPromises);
+  }
 }
 
 export default StatisticalService;
