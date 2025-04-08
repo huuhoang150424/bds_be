@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { Post, ListingType, PropertyType, Image, Tag, TagPost, User, UserView } from "@models";
+
 export const seederPost = async () => {
   const user = await User.findOne();
   const listingType = await ListingType.findOne();
@@ -7,19 +8,55 @@ export const seederPost = async () => {
   if (!user || !listingType) {
     return;
   }
+
   let tag = await Tag.findOne({ where: { tagName: "Nhà đất bán" } });
   if (!tag) {
     tag = await Tag.create({ id: uuidv4(), tagName: "Nhà đất bán" });
   }
 
+  // Danh sách quận và đường ở Hà Nội
+  const districts = [
+    "Ba Đình",
+    "Hoàn Kiếm",
+    "Đống Đa",
+    "Hai Bà Trưng",
+    "Cầu Giấy",
+    "Thanh Xuân",
+    "Tây Hồ",
+    "Long Biên",
+    "Hoàng Mai",
+    "Hà Đông",
+  ];
+
+  const streets = [
+    "Phố Huế",
+    "Nguyễn Trãi",
+    "Giải Phóng",
+    "Láng",
+    "Kim Mã",
+    "Tây Sơn",
+    "Trần Duy Hưng",
+    "Nguyễn Chí Thanh",
+    "Cầu Giấy",
+    "Hồ Tùng Mậu",
+    "Phạm Văn Đồng",
+    "Đội Cấn",
+    "Liễu Giai",
+    "Nguyễn Văn Cừ",
+    "Tô Hiệu",
+  ];
+
   const postsData = Array.from({ length: 100 }, (_, i) => {
-    const district = Math.floor(Math.random() * 10) + 1;
+    const randomDistrict = districts[Math.floor(Math.random() * districts.length)];
+    const randomStreet = streets[Math.floor(Math.random() * streets.length)];
+    const houseNumber = Math.floor(Math.random() * 200) + 1; // Số nhà ngẫu nhiên từ 1 đến 200
+
     return {
       id: uuidv4(),
       userId: user.id,
-      title: `Căn hộ cao cấp Quận ${district}`,
+      title: `Căn hộ cao cấp ${randomStreet}, ${randomDistrict}`,
       priceUnit: "VND",
-      address: `123 Nguyễn Trãi, Quận ${district}, TP. Hồ Chí Minh`,
+      address: `${houseNumber} ${randomStreet}, ${randomDistrict}, Hà Nội`, // Địa chỉ có thật ở Hà Nội
       price: 4000000000 + Math.random() * 4000000000,
       squareMeters: 80 + Math.floor(Math.random() * 50),
       description: "Căn hộ sang trọng, đầy đủ nội thất, vị trí trung tâm.",
@@ -31,7 +68,7 @@ export const seederPost = async () => {
       direction: ["Bắc", "Nam", "Đông", "Tây"][Math.floor(Math.random() * 4)],
       verified: Math.random() > 0.2,
       status: ["Còn trống", "Đang đàm phán", "Đã bàn giao"][Math.floor(Math.random() * 3)],
-      slug: `can-ho-cao-cap-quan-${district}-${i + 1}`,
+      slug: `can-ho-cao-cap-${randomStreet.toLowerCase().replace(/\s+/g, '-')}-${randomDistrict.toLowerCase().replace(/\s+/g, '-')}-${i + 1}`,
       expiredDate: new Date(Date.now() + Math.random() * 30 * 24 * 60 * 60 * 1000),
     };
   });
@@ -82,9 +119,9 @@ export const seedUserViews = async () => {
     const randomPost = posts[Math.floor(Math.random() * posts.length)];
     const viewedAt = new Date(
       Date.now() - Math.floor(Math.random() * 30 * 24 * 60 * 60 * 1000)
-    ); 
+    );
     userViewsData.push({
-      viewId: i + 1, 
+      viewId: i + 1,
       userId: randomUser.id,
       postId: randomPost.id,
       viewedAt,
