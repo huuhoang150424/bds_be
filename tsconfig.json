@@ -70,7 +70,14 @@
 			],
 			"@api-doc": [
 				"api-doc/index"
+			],
+			"@interface/*": [
+				"interface/*"
+			],
+			"@interface": [
+				"interface/index"
 			]
+			
 		}
 	}
 }

@@ -3,57 +3,7 @@ import { UserView, Post, User, News } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize } from "sequelize";
-
-interface MonthlyPostCount {
-  month: string;
-  count: string;
-}
-
-interface RegionStats {
-  address: string;
-  viewCount: number;
-  growthPercentage?: number;
-}
-
-//News
-interface DailyNewsCount {
-  date: string;
-  count: string;
-}
-
-interface CategoryNewsCount {
-  category: CategoryNew;
-  count: string;
-}
-
-interface NewsWithStats {
-  recentNewsCount: number;
-  totalViews: number;
-  growthPercentage: number;
-  period: {
-    start: Date;
-    end: Date;
-    days: number;
-  };
-  dailyStats: Array<{
-    date: string;
-    count: number;
-    formattedDate: string;
-  }>;
-  categoryStats: Array<{
-    category: CategoryNew;
-    count: number;
-  }>;
-  recentNews: News[];
-}
-
-//User
-interface AgeGenderStats {
-  ageGroup: string;
-  male: number;
-  female: number;
-  other: number;
-}
+import {MonthlyPostCount, RegionStats,DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats} from "@interface";
 
 
 class StatisticalService {
@@ -391,7 +341,7 @@ class StatisticalService {
     };
   }
 
-
+  //[get user age]
   static async getUserAgeStatistics(): Promise<AgeGenderStats[]> {
     const currentYear = new Date().getFullYear();
 
@@ -441,6 +391,27 @@ class StatisticalService {
 
     return Promise.all(statsPromises);
   }
+  
+  //[get top user by post]
+  static async getTopUsersByPost(limit: number = 10): Promise<TopUsersStats[]> {
+
+    const users = await User.findAll({
+      attributes: [
+        "id",
+        "fullname",
+        "email",
+        "avatar",
+        [sequelize.literal("(SELECT COUNT(*) FROM posts WHERE posts.user_id = User.id)"), "postCount"] 
+      ],
+      order: [[sequelize.literal("postCount"), "DESC"]],
+      limit,
+      raw: true,
+    });
+    return users as unknown as TopUsersStats[];
+  }
+
+
+
 }
 
 export default StatisticalService;

@@ -2,7 +2,7 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { StatisticalService } from "@service";
-import { ApiResponse, BadRequestError,UnauthorizedError } from "@helper";
+import { ApiResponse, BadRequestError, UnauthorizedError } from "@helper";
 
 class StatisticalController {
   //[get view by Address]
@@ -87,6 +87,21 @@ class StatisticalController {
       next(error);
     }
   }
+
+
+  static async getTopUsersByPost(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { userId } = (req as any).user;
+    const limit = parseInt(req.query.limit as string) || 10;
   
+    try {
+      const data = await StatisticalService.getTopUsersByPost(limit);
+      return res.status(200).json(ApiResponse.success(data, "Thống kê người dùng đăng bài nhiều nhất thành công"));
+    } catch (error) {
+      console.error("❌ Lỗi khi truy vấn:", error);
+      next(error);
+    }
+  }
+  
+
 };
 export default StatisticalController;
