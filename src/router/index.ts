@@ -12,6 +12,7 @@ import wishlistRouter from "./wishlist";
 import commentlikeRouter from "./comment-like";
 import chatRouter from "./chat";
 import statisticalRouter from "./statistical";
+import notificationRouter from "./notification";
 
 const route=(app:Express)=>{
   app.use("/auth",authRouter)
@@ -28,5 +29,6 @@ const route=(app:Express)=>{
 	app.use("/commentlike", commentlikeRouter)
 	app.use("/chat", chatRouter)
 	app.use("/statistical", statisticalRouter)
+	app.use("/notification", notificationRouter)
 }
 export default route;

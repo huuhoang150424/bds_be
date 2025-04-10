@@ -12,7 +12,7 @@ import WishlistController from "./wishlist.controller";
 import CommentLikeController from "./comment-like.controller";
 import ChatController from "./chat.controller";
 import StatisticalController from "./statistical.controller";
-
+import NotificationController from "./notification.controller";
 
 export {
 	AuthController,
@@ -28,5 +28,6 @@ export {
 	WishlistController,
 	CommentLikeController,
 	ChatController,
-	StatisticalController
+	StatisticalController,
+	NotificationController
 }
