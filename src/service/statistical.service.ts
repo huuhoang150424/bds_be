@@ -3,7 +3,7 @@ import { UserView, Post, User, News } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize } from "sequelize";
-import {MonthlyPostCount, RegionStats,DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats} from "@interface";
+import { MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats } from "@interface";
 
 
 class StatisticalService {
@@ -84,7 +84,6 @@ class StatisticalService {
 
     const currentYear = new Date().getFullYear();
 
-    // Sửa tên cột từ createdAt thành created_at để khớp với database
     const result = await Post.findAll({
       attributes: [
         [fn('MONTH', col('created_at')), 'month'],
@@ -135,7 +134,7 @@ class StatisticalService {
         },
       ],
       where: {
-        viewedAt: {
+        viewed_at: {
           [Op.gte]: thirtyDaysAgo,
           [Op.lte]: currentDate,
         },
@@ -159,7 +158,7 @@ class StatisticalService {
         },
       ],
       where: {
-        viewedAt: {
+        viewed_at: {
           [Op.gte]: previousMonthStart,
           [Op.lte]: previousMonthEnd,
         },
@@ -391,7 +390,7 @@ class StatisticalService {
 
     return Promise.all(statsPromises);
   }
-  
+
   //[get top user by post]
   static async getTopUsersByPost(limit: number = 10): Promise<TopUsersStats[]> {
 
@@ -401,7 +400,7 @@ class StatisticalService {
         "fullname",
         "email",
         "avatar",
-        [sequelize.literal("(SELECT COUNT(*) FROM posts WHERE posts.user_id = User.id)"), "postCount"] 
+        [sequelize.literal("(SELECT COUNT(*) FROM posts WHERE posts.user_id = User.id)"), "postCount"]
       ],
       order: [[sequelize.literal("postCount"), "DESC"]],
       limit,
@@ -410,6 +409,47 @@ class StatisticalService {
     return users as unknown as TopUsersStats[];
   }
 
+
+  static async getDirectAccessCount(startDate: Date, endDate: Date): Promise<{ date: string; count: number }[]> {
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    type DirectAccessResult = {
+      date: string;
+      count: string | number; 
+    };
+
+    const directAccessData = await UserView.findAll({
+      attributes: [
+        [fn("DATE_FORMAT", col("viewed_at"), "%Y-%m-%d"), "date"],
+        [fn("COUNT", col("id")), "count"]
+      ],
+      where: {
+        userId: { [Op.is]: null },
+        viewed_at: { [Op.between]: [startDate, endDate] }
+      },
+      group: [fn("DATE_FORMAT", col("viewed_at"), "%Y-%m-%d")],
+      order: [[fn("DATE_FORMAT", col("viewed_at"), "%Y-%m-%d"), "ASC"]],
+      raw: true
+    }) as unknown as DirectAccessResult[];
+
+    const result: { date: string; count: number }[] = [];
+    const currentDate = new Date(startDate);
+
+    while (currentDate <= endDate) {
+      const dateStr = currentDate.toISOString().split('T')[0]; 
+      const existingData = directAccessData.find(item => item.date === dateStr);
+
+      result.push({
+        date: dateStr,
+        count: existingData ? Number(existingData.count) : 0
+      });
+
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    return result;
+  }
 
 
 }

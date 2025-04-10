@@ -9,6 +9,8 @@ Router.get('/getViewByAddress',verifyRole([Roles.Agent,Roles.User]), Statistical
 Router.get('/getPostByMonth',verifyRole([Roles.Agent,Roles.User]), StatisticalController.getPostByMonth as any);
 Router.get('/getTopSearchRegionsWithGrowth',verifyRole([Roles.Agent,Roles.User]), StatisticalController.getTopSearchRegionsWithGrowth as any);
 Router.get('/getRecentNewsCount',verifyRole([Roles.Agent,Roles.User]), StatisticalController.getRecentNewsCount as any);
+Router.get('/getDirectAccessCount',verifyRole([Roles.Agent,Roles.User]), StatisticalController.getDirectAccessCount as any);
+
 
 // Admin
 Router.get('/getUserAgeStatistics',verifyRole([Roles.Admin]), StatisticalController.getUserAgeStatistics as any);

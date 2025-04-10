@@ -103,5 +103,21 @@ class StatisticalController {
   }
   
 
+  static async getDirectAccessCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    try {
+      const endDate = new Date();
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - 30);
+      
+      if (req.query.startDate) startDate.setTime(Date.parse(req.query.startDate as string));
+      if (req.query.endDate) endDate.setTime(Date.parse(req.query.endDate as string));
+      
+      const data = await StatisticalService.getDirectAccessCount(startDate, endDate);
+      return res.status(200).json(ApiResponse.success(data, "Thống kê số lượng người truy cập trực tiếp thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
+
 };
 export default StatisticalController;
