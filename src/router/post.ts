@@ -30,4 +30,8 @@ Router.delete("/:postDraftId/deletePostDraft",verifyRole([Roles.Agent,Roles.User
 Router.put("/:postDraftId/updatePostDraft",uploadCloud.array("images"),verifyRole([Roles.Agent,Roles.User]), PostDraftController.updatePostDraft as any);
 Router.post("/:postDraftId/publicPostDraft",uploadCloud.array("images"),verifyRole([Roles.Agent,Roles.User]), PostDraftController.publicPostDraft as any);
 
+
+// getListingTypes 
+Router.get("/getListingTypes", PostController.getListingTypes as any);
+
 export default Router;

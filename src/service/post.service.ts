@@ -1,5 +1,5 @@
 
-import { ActionType, PriceUnit } from '@models/enums/post';
+import { ActionType, PriceUnit, ListingTypes } from '@models/enums/post';
 import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing, UserView, Wishlist, Comment } from '@models';
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
@@ -799,6 +799,14 @@ class PostService {
   }
 
 
+  static async getListingTypes(): Promise<{ id: string; listingType: string }[]> {
+    const listingTypes = await ListingType.findAll({
+      attributes: ["id", "listingType"],
+      raw: true,
+    });
+
+    return listingTypes;
+  }
 }
 
 export default PostService;

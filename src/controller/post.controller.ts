@@ -144,6 +144,16 @@ class PostController {
       next(error);
     }
   }
+
+
+	static async getListingTypes(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    try {
+      const listingTypes = await PostService.getListingTypes();
+      return res.status(200).json(ApiResponse.success(listingTypes, "Danh sách loại tin đăng"));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 
