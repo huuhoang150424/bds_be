@@ -1,5 +1,5 @@
 
-import { Report, Post } from '@models';
+import { Report, Post, User } from '@models';
 import { ProcessingStatus, ReportReason } from "@models/enums";
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
@@ -13,7 +13,7 @@ class ReportsService {
     const { userId, postId, reason, content } = data;
     const postExists = await Post.findByPk(postId);
     if (!postExists) {
-      throw new NotFoundError("Post not found");
+      throw new NotFoundError("Không tìm thấy bài đăng");
     }
     const report = await Report.create({
       id: uuidv4(),
@@ -25,6 +25,7 @@ class ReportsService {
     });
     return report.id;
   }
+  
   // [getReportByPostId]
   static async getReportsByPostId(postId: string) {
     return Report.findAll({

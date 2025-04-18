@@ -7,7 +7,8 @@ import { ApiResponse, BadRequestError } from "@helper";
 class ReportsController {
   // [createReport]
   static async createReport(req: Request, res: Response, next: NextFunction) {
-    const { userId, postId, reason, content } = req.body;
+    const userId = (req as any)?.user?.userId;
+    const { postId, reason, content } = req.body;
     if (!userId || !postId || !reason) {
       throw new BadRequestError("Missing required fields: userId, postId, or reason.");
     }

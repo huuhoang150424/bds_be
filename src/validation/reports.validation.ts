@@ -3,13 +3,6 @@ import { validateRequest } from "./validate-request";
 import { ReportReason, ProcessingStatus } from "@models/enums";
 
 const validatorReport = [
-  check("userId")
-    .trim()
-    .notEmpty()
-    .withMessage("User ID is required")
-    .isUUID()
-    .withMessage("Invalid User ID format"),
-
   check("postId")
     .trim()
     .notEmpty()
