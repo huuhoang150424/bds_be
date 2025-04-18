@@ -36,11 +36,8 @@ class ReportsController {
 
   // [getAllReport ]
   static async getAllReports(req: Request, res: Response, next: NextFunction) {
+    const { page, limit, offset } = (req as any).pagination;
     try {
-      const page = Number(req.query.page) || 1;
-      const limit = Number(req.query.limit) || 10;
-      const offset = (page - 1) * limit;
-  
       const reports = await ReportsService.getAllReports(page, limit, offset);
       return res.status(200).json(ApiResponse.success(reports, "Danh sách báo cáo đã được lấy thành công"));
     } catch (error) {

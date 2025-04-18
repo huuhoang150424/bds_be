@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import { Report, User, Post } from "@models";
+import { ReportReason, ProcessingStatus } from "@models/enums";
 
 export const seedReport = async () => {
   const users = await User.findAll({ attributes: ["id"] });
@@ -10,13 +11,8 @@ export const seedReport = async () => {
     return;
   }
 
-  const reasons = [
-    "Nội dung sai sự thật",
-    "Hình ảnh không phù hợp",
-    "Lừa đảo",
-    "Spam",
-    "Vi phạm bản quyền",
-  ];
+  const reportReasons = Object.values(ReportReason); 
+  const reportStatuses = Object.values(ProcessingStatus); 
 
   const reportsToInsert = [];
   for (let i = 0; i < 50; i++) {
@@ -24,8 +20,9 @@ export const seedReport = async () => {
       id: uuidv4(),
       userId: users[Math.floor(Math.random() * users.length)].id,
       postId: posts[Math.floor(Math.random() * posts.length)].id,
-      reason: reasons[Math.floor(Math.random() * reasons.length)],
+      reason: reportReasons[Math.floor(Math.random() * reportReasons.length)], 
       content: "Nội dung báo cáo tự động.",
+      status: reportStatuses[Math.floor(Math.random() * reportStatuses.length)], 
     });
   }
 
