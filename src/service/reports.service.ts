@@ -3,6 +3,7 @@ import { Report, Post, User } from '@models';
 import { ProcessingStatus, ReportReason } from "@models/enums";
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
+import { Op } from 'sequelize';
 
 
 
@@ -30,15 +31,41 @@ class ReportsService {
   static async getReportsByPostId(postId: string) {
     return Report.findAll({
       where: { postId },
-      include: ["user", "post"],
+      attributes: ["id", "postId", "userId", "reason", "content", "status", "createdAt"],
+      include: [
+        { model: User, attributes: ["id", "fullname", "email", "avatar"] },
+        { model: Post, attributes: ["id", "title", "price", "address"] }
+      ],
     });
   }
+  
 
-  // [getAllReport ] phân trang
-  static async getAllReports() {
-    return await Report.findAll({ include: ["user", "post"] });
+  // [getAllReport ] 
+  static async getAllReports(page: number, limit: number, offset: number) {
+    const { count, rows } = await Report.findAndCountAll({
+      limit: limit,
+      offset: offset,
+      include: [
+        {
+          model: User,
+          attributes: ["id", "fullname", "email", "avatar"], 
+        },
+        {
+          model: Post,
+          attributes: ["id", "title", "price", "address"],
+        },
+      ],
+      distinct: true,
+      order: [["createdAt", "DESC"]],
+    });
+  
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      data: rows,
+    };
   }
-
 
 }
 export default ReportsService;
