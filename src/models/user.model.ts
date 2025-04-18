@@ -34,7 +34,11 @@ export default class User extends BaseModel<string> {
 	})
 	phone!: string;
 	
-	//column status active message
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  isProfessional!: boolean;
+	
+	//column status active message 
 
 	@Default(false)
   @Column(DataType.BOOLEAN)

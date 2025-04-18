@@ -1,6 +1,6 @@
 
 import { ActionType, PriceUnit, ListingTypes } from '@models/enums/post';
-import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing, UserView, Wishlist, Comment } from '@models';
+import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing, UserView, Wishlist, Comment, Rating } from '@models';
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
@@ -701,7 +701,8 @@ class PostService {
   static async filterPosts(query: any, page: number = 1, limit: number = 10, offset: number) {
     const {
       keyword, tagIds, minPrice, maxPrice, floor, minSquareMeters, maxSquareMeters,
-      directions, bedrooms, bathrooms, propertyTypeIds, listingTypeIds, sortBy, order
+      directions, bedrooms, bathrooms, propertyTypeIds, listingTypeIds, sortBy, order,
+			ratings, isProfessional, status
     } = query;
     const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
       if (!value) return [];
@@ -709,6 +710,12 @@ class PostService {
       return [parser(value)];
     };
     const whereCondition: any = {};
+		if (status) {
+			const statusArray = toArray(status, String);
+			if (statusArray.length > 0) {
+				whereCondition.status = { [Op.in]: statusArray };
+			}
+		}
     if (keyword) {
       whereCondition[Op.or] = [
         { title: { [Op.like]: `%${keyword}%` } },
@@ -745,8 +752,22 @@ class PostService {
     }
     const includeConditions: any = [
       { model: Image, attributes: ['image_url'] },
-      { model: User, attributes: ['fullname', 'id', 'phone'] },
+			{ 
+				model: User, 
+				attributes: ['fullname', 'id', 'phone', 'isProfessional'],
+				...(isProfessional === 'true' ? { where: { isProfessional: true } } : {})
+			},
     ];
+		const ratingArray = toArray(ratings, Number);
+		if (ratingArray.length > 0) {
+			includeConditions.push({
+				model: Rating,
+				where: {
+					rating: { [Op.in]: ratingArray }
+				},
+				required: true
+			});
+		}
     const tagIdArray = toArray(tagIds, String);
     if (tagIdArray.length > 0) {
       includeConditions.push({
@@ -755,27 +776,30 @@ class PostService {
         required: true,
       });
     }
-    const propertyTypeIdArray = toArray(propertyTypeIds, String);
-    if (propertyTypeIdArray.length > 0) {
-      includeConditions.push({
-        model: PropertyType,
-        where: { id: { [Op.in]: propertyTypeIdArray } },
-        required: true,
-      });
-    }
-    const listingTypeIdArray = toArray(listingTypeIds, String);
-    if (listingTypeIdArray.length > 0) {
-      includeConditions.push({
-        model: PropertyType,
-        include: [
-          {
-            model: ListingType,
-            where: { id: { [Op.in]: listingTypeIdArray } },
-            required: true,
-          },
-        ],
-      });
-    }
+		const propertyTypeNameArray = toArray(propertyTypeIds, String);
+		const listingTypeEnumArray = toArray(listingTypeIds, String);
+		if (listingTypeEnumArray.length > 0) {
+			whereCondition.id = {
+				[Op.in]: sequelize.literal(`(
+					SELECT propertyType.post_id 
+					FROM property_types AS propertyType
+					INNER JOIN listing_types AS listingType 
+					ON propertyType.listing_type_id = listingType.id
+					AND listingType.listing_type IN (${listingTypeEnumArray.map(type => `'${type}'`).join(',')})
+					WHERE propertyType.post_id IS NOT NULL
+				)`)
+			};
+		}
+		if (propertyTypeNameArray.length > 0) {
+			includeConditions.push({
+				model: PropertyType,
+				where: {
+					slug: { [Op.in]: propertyTypeNameArray }
+				},
+				required: true
+			});
+		}
+			
     let orderCondition: any = [['createdAt', 'DESC']];
     if (sortBy) {
       const orderType = order === 'asc' ? 'ASC' : 'DESC';

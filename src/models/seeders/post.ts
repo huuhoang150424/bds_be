@@ -49,14 +49,14 @@ export const seederPost = async () => {
   const postsData = Array.from({ length: 100 }, (_, i) => {
     const randomDistrict = districts[Math.floor(Math.random() * districts.length)];
     const randomStreet = streets[Math.floor(Math.random() * streets.length)];
-    const houseNumber = Math.floor(Math.random() * 200) + 1; // Số nhà ngẫu nhiên từ 1 đến 200
+    const houseNumber = Math.floor(Math.random() * 200) + 1; 
 
     return {
       id: uuidv4(),
       userId: user.id,
       title: `Căn hộ cao cấp ${randomStreet}, ${randomDistrict}`,
       priceUnit: "VND",
-      address: `${houseNumber} ${randomStreet}, ${randomDistrict}, Hà Nội`, // Địa chỉ có thật ở Hà Nội
+      address: `${houseNumber} ${randomStreet}, ${randomDistrict}, Hà Nội`,
       price: 4000000000 + Math.random() * 4000000000,
       squareMeters: 80 + Math.floor(Math.random() * 50),
       description: "Căn hộ sang trọng, đầy đủ nội thất, vị trí trung tâm.",
