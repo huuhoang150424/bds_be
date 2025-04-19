@@ -98,20 +98,22 @@ class PostService {
           });
         }),
       );
-      if (Array.isArray(data.tags) && data.tags.length > 0) {
-        await Promise.all(
-          data.tags.map(async (tagName: string) => {
-            const [tag] = await Tag.findOrCreate({
-              where: { tagName },
-              defaults: { id: uuidv4(), tagName },
-            });
-            await TagPost.create({
-              tagId: tag.id,
-              postId: newPost.id,
-            });
-          }),
-        );
-      }
+			if (!Array.isArray(data.tags)) {
+				data.tags = [data.tags];
+			}
+			console.log(data.tags)
+			await Promise.all(
+				data.tags.map(async (tagName: string) => {
+					const [tag] = await Tag.findOrCreate({
+						where: { tagName },
+						defaults: { id: uuidv4(), tagName },
+					});
+					await TagPost.create({
+						tagId: tag.id,
+						postId: newPost.id,
+					});
+				}),
+			);
       if (!pricing || pricing.name === 'VIP_1') {
         userPricing.remainingPosts -= 1;
         await userPricing.save();
@@ -263,7 +265,9 @@ class PostService {
         },
         {
           model: Image,
-          attributes: [],
+          attributes: [
+						'imageUrl'
+					],
         },
       ],
       distinct: true,
@@ -702,7 +706,7 @@ class PostService {
     const {
       keyword, tagIds, minPrice, maxPrice, floor, minSquareMeters, maxSquareMeters,
       directions, bedrooms, bathrooms, propertyTypeIds, listingTypeIds, sortBy, order,
-			ratings, isProfessional, status
+			ratings, isProfessional, status,isFurniture
     } = query;
     const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
       if (!value) return [];
@@ -750,12 +754,16 @@ class PostService {
     if (floor) {
       whereCondition.floor = Number(floor);
     }
+		if (typeof isFurniture !== 'undefined') {
+			whereCondition.isFurniture = isFurniture === 'true';
+		}
     const includeConditions: any = [
       { model: Image, attributes: ['image_url'] },
-			{ 
-				model: User, 
+			{
+				model: User,
 				attributes: ['fullname', 'id', 'phone', 'isProfessional'],
-				...(isProfessional === 'true' ? { where: { isProfessional: true } } : {})
+				where: isProfessional === 'true' ? { isProfessional: true } : undefined,
+				required: isProfessional === 'true' ? true : false, 
 			},
     ];
 		const ratingArray = toArray(ratings, Number);

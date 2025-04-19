@@ -26,4 +26,5 @@ Router.patch(
   UserController.toggleUserLock as any,
 );
 Router.patch('/updatePhone', verifyRole([Roles.User, Roles.Agent]), UserController.updatePhone as any);
+Router.patch('/registerBroker',   uploadCloud.single('image'),verifyRole([Roles.User, Roles.Agent]), UserController.registerAsBroker as any);
 export default Router;

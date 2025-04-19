@@ -23,28 +23,25 @@ export default class User extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isLock!: boolean;
 
-	@Default(null)
-	@Column({
-		type: DataType.STRING, 
-		// allowNull: true,
-		validate: {
-			len: [10, 11], 
-			isNumeric: true, 
-		},
-	})
-	phone!: string;
-	
+  @Default(null)
+  @Column({
+    type: DataType.STRING,
+    validate: {
+      len: [10, 11],
+      isNumeric: true,
+    },
+  })
+  phone!: string;
+
   @Default(false)
   @Column(DataType.BOOLEAN)
   isProfessional!: boolean;
-	
-	//column status active message 
 
-	@Default(false)
+  @Default(false)
   @Column(DataType.BOOLEAN)
   active!: boolean;
 
-	@Column({ type: DataType.DATE, defaultValue: null })
+  @Column({ type: DataType.DATE, defaultValue: null })
   lastActive!: Date | null;
 
   @Default(null)
@@ -60,7 +57,6 @@ export default class User extends BaseModel<string> {
   @Column(DataType.DATE)
   dateOfBirth!: Date;
 
-
   @AllowNull(false)
   @Column(DataType.STRING)
   password!: string;
@@ -68,6 +64,10 @@ export default class User extends BaseModel<string> {
   @Default("https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg")
   @Column(DataType.STRING)
   avatar!: string;
+
+  @Default("https://hoanghamobile.com/tin-tuc/wp-content/uploads/2023/07/anh-bia-dep-10.jpg")
+  @Column(DataType.STRING)
+  coverPhoto!: string;
 
   @AllowNull(false)
   @Default(0)
@@ -81,6 +81,25 @@ export default class User extends BaseModel<string> {
 
   @Column({ type: DataType.INTEGER, defaultValue: 0 })
   score!: number;
+
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  selfIntroduction!: string; 
+
+	@Default('')
+  @AllowNull(true)
+  @Column(DataType.STRING)
+  certificates!: string;
+
+  @AllowNull(true)
+  @Column({
+    type: DataType.STRING
+  })
+  experienceYears!: string;
+
+  @AllowNull(true)
+  @Column(DataType.JSON)
+  expertise!: string[]; 
 
   @HasMany(() => Post)
   posts!: Post[];
@@ -120,4 +139,14 @@ export default class User extends BaseModel<string> {
       user.password = await bcrypt.hash(user.password, saltRounds);
     }
   }
+
+  // @BeforeUpdate
+  // @BeforeCreate
+  // static validateAgentFields(user: User) {
+  //   if (user.roles === Roles.Agent) {
+  //     if (!user.selfIntroduction || !user.experienceYears || !user.certificates || !user.expertise) {
+  //       throw new Error('Agent must provide self-introduction, experience years, certificates, and expertise.');
+  //     }
+  //   }
+  // }
 }

@@ -79,5 +79,22 @@ class UserController {
       next(error);
     }
   }
+
+
+	static async registerAsBroker(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+		const { userId } = (req as any).user;
+		const data=req.body;
+		const certificates = req.file?.path;
+    if (certificates) {
+      data.certificates = certificates;
+    }
+		try {
+			const result = await UserService.registerAsBroker(userId,data);
+			return res.status(200).json(ApiResponse.success(result, 'Đăng ký môi giới thành công'));
+		} catch (error) {
+			next(error);
+		}
+	}
+	
 }
 export default UserController;

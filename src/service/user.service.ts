@@ -1,5 +1,6 @@
 import { User } from '@models';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '@helper';
+import { Roles } from '@models/enums';
 
 class UserService {
   static async getAllUser(page: number, limit: number) {
@@ -56,6 +57,37 @@ class UserService {
     await findUser.save();
     return {newPhone:phone};
   }
+
+
+	static async registerAsBroker(userId: string, data: any) {
+		const findUser = await this.getUserById(userId);
+		if (!findUser.emailVerified) {
+			throw new BadRequestError('Bạn phải xác thực email trước');
+		}
+
+		if (findUser.roles === Roles.Agent) {
+			throw new BadRequestError('Người dùng đã là môi giới bất động sản');
+		}
+		findUser.roles = Roles.Agent;
+		findUser.address = data.address;
+		findUser.selfIntroduction = data.selfIntroduction;
+		findUser.experienceYears = data.experienceYears;
+		if (data.certificates) {
+			findUser.certificates = data.certificates;
+		}
+		if (data.fullname) {
+			findUser.fullname = data.fullname;
+		}
+		if (data.phone) {
+			findUser.phone = data.phone;
+		}
+		findUser.expertise = data.expertise || [];
+		await findUser.save();
+		return {
+			roles: findUser.roles
+		};
+	}
+	
 }
 
 

@@ -49,12 +49,16 @@ export const validateCreatePost = [
   check('propertyType')
     .notEmpty()
     .withMessage('Property type cannot be empty'),
-  check('tags')
-    .optional()
-    .isArray()
-    .withMessage('Tags must be an array')
-    .custom((tags) => tags.every((tag: any) => typeof tag === 'string'))
-    .withMessage('Each tag must be a string'),
+		check('tags')
+		.optional()
+		.custom((value) => {
+			if (typeof value === 'string') return true;
+			if (Array.isArray(value)) {
+				return value.every((tag) => typeof tag === 'string');
+			}
+			return false;
+		})
+		.withMessage('Tags must be a string or an array of strings'),	
 
 	validateRequest
 ];
