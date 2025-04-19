@@ -1,12 +1,72 @@
 import { ActionType, Roles, CategoryNew } from "@models/enums";
-import { UserView, Post, User, News } from "@models";
+import { UserView, Post, User, News, Image, Comment, Wishlist, Report } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
-import { Op, fn, col, literal, Sequelize } from "sequelize";
+import { Op, fn, col, literal, Sequelize, QueryTypes } from "sequelize";
 import { MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats } from "@interface";
 
 
 class StatisticalService {
+  // getFeaturedPosts 
+  static async getFeaturedPosts(page: number, limit: number, offset: number) {
+    const countQuery = await sequelize.query(`
+        SELECT COUNT(DISTINCT post.id) as total
+        FROM posts AS post
+        WHERE (SELECT COUNT(*) FROM comments WHERE comments.post_id = post.id) > 3
+        AND (SELECT COUNT(*) FROM wishlists WHERE wishlists.post_id = post.id) > 5
+        AND (SELECT COUNT(*) FROM reports WHERE reports.post_id = post.id) < 2
+      `, { type: QueryTypes.SELECT });
+
+    const totalItems = countQuery.length > 0 ? Number((countQuery[0] as any).total) : 0;
+
+    const posts = await Post.findAll({
+      limit,
+      offset,
+      include: [
+        { model: User, attributes: ["id", "fullname", "email", "avatar"] },
+        { model: Image, attributes: ["imageUrl"] }
+      ],
+      attributes: [
+        "id",
+        "title",
+        "address",
+        "price",
+        "squareMeters",
+        "bedroom",
+        "bathroom",
+        "priority",
+        "status",
+        "slug",
+        [Sequelize.literal("(SELECT COUNT(*) FROM comments WHERE comments.post_id = post.id)"), "commentCount"],
+        [Sequelize.literal("(SELECT COUNT(*) FROM wishlists WHERE wishlists.post_id = post.id)"), "wishlistCount"],
+        [Sequelize.literal("(SELECT COUNT(*) FROM reports WHERE reports.post_id = post.id)"), "reportCount"]
+      ],
+      where: {
+        [Op.and]: [
+          Sequelize.literal("(SELECT COUNT(*) FROM comments WHERE comments.post_id = post.id) > 3"),
+          Sequelize.literal("(SELECT COUNT(*) FROM wishlists WHERE wishlists.post_id = post.id) > 5"),
+          Sequelize.literal("(SELECT COUNT(*) FROM reports WHERE reports.post_id = post.id) < 2")
+        ]
+      },
+      order: [
+        ["priority", "DESC"],
+        [Sequelize.literal("(SELECT COUNT(*) FROM wishlists WHERE wishlists.post_id = post.id) + (SELECT COUNT(*) FROM comments WHERE comments.post_id = post.id) - (SELECT COUNT(*) FROM reports WHERE reports.post_id = post.id)"), "DESC"]
+      ],
+      subQuery: false
+    });
+
+    const postsWithDetails = posts.map(post => post.get({ plain: true }));
+
+    return {
+      totalItems,
+      totalPages: Math.ceil(totalItems / limit),
+      currentPage: page,
+      data: postsWithDetails,
+    };
+  }
+
+
+
   //[get user  view by address]
   static async getViewByAddress(userId: string) {
     if (!userId) {
@@ -416,7 +476,7 @@ class StatisticalService {
 
     type DirectAccessResult = {
       date: string;
-      count: string | number; 
+      count: string | number;
     };
 
     const directAccessData = await UserView.findAll({
@@ -437,7 +497,7 @@ class StatisticalService {
     const currentDate = new Date(startDate);
 
     while (currentDate <= endDate) {
-      const dateStr = currentDate.toISOString().split('T')[0]; 
+      const dateStr = currentDate.toISOString().split('T')[0];
       const existingData = directAccessData.find(item => item.date === dateStr);
 
       result.push({

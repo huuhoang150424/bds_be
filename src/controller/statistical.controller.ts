@@ -92,7 +92,7 @@ class StatisticalController {
   static async getTopUsersByPost(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const { userId } = (req as any).user;
     const limit = parseInt(req.query.limit as string) || 10;
-  
+
     try {
       const data = await StatisticalService.getTopUsersByPost(limit);
       return res.status(200).json(ApiResponse.success(data, "Thống kê người dùng đăng bài nhiều nhất thành công"));
@@ -101,23 +101,34 @@ class StatisticalController {
       next(error);
     }
   }
-  
+
 
   static async getDirectAccessCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
       const endDate = new Date();
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - 30);
-      
+
       if (req.query.startDate) startDate.setTime(Date.parse(req.query.startDate as string));
       if (req.query.endDate) endDate.setTime(Date.parse(req.query.endDate as string));
-      
+
       const data = await StatisticalService.getDirectAccessCount(startDate, endDate);
       return res.status(200).json(ApiResponse.success(data, "Thống kê số lượng người truy cập trực tiếp thành công"));
     } catch (error) {
       next(error);
     }
   }
+
+  static async getFeaturedPosts(req: Request, res: Response, next: NextFunction) {
+    const { page, limit, offset } = (req as any).pagination;
+    try {
+      const featuredPosts = await StatisticalService.getFeaturedPosts(page, limit, offset);
+      return res.status(200).json(ApiResponse.success(featuredPosts, "Danh sách BĐS nổi bật đã được lấy"));
+    } catch (error) {
+      next(error);
+    }
+  }
+
 
 };
 export default StatisticalController;
