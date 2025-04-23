@@ -131,6 +131,20 @@ class PostDraftService {
             },
           ],
         },
+				{
+					model: PropertyType,
+					attributes: [
+						'name'
+					],
+					include: [
+						{
+							model: ListingType,
+							attributes: [
+								'listingType'
+							],
+						}
+					]
+				},
       ],
       distinct: true,
       order: [['createdAt', 'DESC']],

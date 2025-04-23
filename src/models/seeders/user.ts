@@ -57,6 +57,7 @@ export const seedUsers = async () => {
         defaults: {
           id: uuidv4(),
           password: password,
+					phone: '0349938737',
           ...user,
         },
       });

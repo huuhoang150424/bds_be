@@ -1,7 +1,7 @@
 'use-strict';
 
 import { ApiResponse } from "@helper";
-import { PostService } from "@service";
+import { PostDraftService, PostService } from "@service";
 import { Request, Response, NextFunction } from 'express';
 
 
@@ -154,6 +154,23 @@ class PostController {
       next(error);
     }
   }
+
+
+	static async getAllPostByUser(req: Request, res: Response, next: NextFunction) {
+		const {type}=req.params;
+		const { page, limit, offset } = (req as any).pagination;
+		const { userId } = (req as any).user;
+		try {
+			const isRegularPost = type === 'Post';
+			const posts = isRegularPost 
+				? await PostService.getPostByUser(page, limit, offset, userId)
+				: await PostDraftService.getAllPostDraft(userId, page, limit, offset);			
+			return res.status(200).json(ApiResponse.success(posts, "thành công"));
+		} catch (error) {
+			next(error);
+		}
+	}
+	
 }
 
 

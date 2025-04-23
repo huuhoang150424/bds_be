@@ -27,17 +27,6 @@ class PostDraftController {
       next(error);
     }
   }
-  //[get all post draft]
-  static async getAllPostDraft(req: Request, res: Response, next: NextFunction) {
-    const { userId } = (req as any).user;
-		const { page, limit,offset } = (req as any).pagination;
-    try {
-      const allPostDraft = await PostDraftService.getAllPostDraft(userId, page, limit, offset);
-      return res.status(200).json(ApiResponse.success(allPostDraft, 'Thành công!'));
-    } catch (error) {
-      next(error);
-    }
-  }
   //[delete post draft]
   static async deletePostDraft(req: Request, res: Response, next: NextFunction) {
     const { postDraftId } = req.params;

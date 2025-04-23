@@ -284,6 +284,59 @@ class PostService {
     };
   }
 
+
+  static async getPostByUser(page: number, limit: number, offset: number,userId:string) {
+    const { count, rows } = await Post.findAndCountAll({
+      limit: limit,
+      offset: offset,
+      include: [
+        {
+          model: Image,
+          attributes: [
+						'imageUrl'
+					],
+        },
+				{
+					model: PropertyType,
+          attributes: [
+						'name'
+					],
+					include: [
+						{
+							model: ListingType,
+							attributes: [
+								'listingType'
+							],
+						}
+					]
+				},
+				{
+					model: TagPost,
+					attributes: ['id'],
+					include: [
+						{
+							model: Tag,
+							attributes: ['tagName'],
+						},
+					],
+				},
+      ],
+      distinct: true,
+      order: [['createdAt', 'DESC']],
+      where: {
+				userId
+      },
+    });
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      data: rows,
+    };
+  }
+
+
+
   static async updatePost(postId: string, userId: string, data: any, imageUrls: string[]) {
     const transaction = await sequelize.transaction();
     try {

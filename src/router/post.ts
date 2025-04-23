@@ -22,10 +22,12 @@ Router.get("/getPostOutstanding", PostController.getPostOutstanding as any);
 Router.get("/getPostHabit", verifyRole([Roles.Agent,Roles.User]),PostController.getPostHabit as any);
 Router.get("/filterPost", paginationMiddleware,PostController.filterPost as any);
 
+
+Router.get("/myPost/:type",verifyRole([Roles.Agent,Roles.User]), paginationMiddleware,PostController.getAllPostByUser as any);
+
 //post draft
 Router.post("/createPostDraft",uploadCloud.array("images"),validateCreatePostDraft,verifyRole([Roles.Agent,Roles.User]), PostDraftController.create as any);
 Router.get("/:postDraftId/getPostDraft",verifyRole([Roles.Agent,Roles.User]),paginationMiddleware, PostDraftController.getPostDraft as any);
-Router.get("/getAllPostDraft",verifyRole([Roles.Agent,Roles.User]), PostDraftController.getAllPostDraft as any);
 Router.delete("/:postDraftId/deletePostDraft",verifyRole([Roles.Agent,Roles.User]), PostDraftController.deletePostDraft as any);
 Router.put("/:postDraftId/updatePostDraft",uploadCloud.array("images"),verifyRole([Roles.Agent,Roles.User]), PostDraftController.updatePostDraft as any);
 Router.post("/:postDraftId/publicPostDraft",uploadCloud.array("images"),verifyRole([Roles.Agent,Roles.User]), PostDraftController.publicPostDraft as any);
