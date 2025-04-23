@@ -42,7 +42,7 @@ export const seedUsers = async () => {
     ...Array.from({ length: 100 }, (_, i) => ({
       fullname: `User ${i + 1}`,
       email: `user${i + 1}@gmail.com`,
-      roles: Roles.User,
+      roles: Roles.Agent,
       emailVerified: true,
       address: addresses[Math.floor(Math.random() * addresses.length)], 
       gender: genders[Math.floor(Math.random() * genders.length)], 

@@ -13,6 +13,7 @@ import PostDraftService from "./post-draft.service";
 import CommentLikeService from "./comment-like.service";
 import ChatService from "./chat.service";
 import StatisticalService from "./statistical.service";
+import ProfessionalAgentService from "./professional-agent.service";
 
 export {
 	AuthService,
@@ -29,5 +30,6 @@ export {
 	RatingService,
 	CommentLikeService,
 	ChatService,
-	StatisticalService
+	StatisticalService,
+	ProfessionalAgentService
 }

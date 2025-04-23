@@ -13,6 +13,7 @@ import commentlikeRouter from "./comment-like";
 import chatRouter from "./chat";
 import statisticalRouter from "./statistical";
 import notificationRouter from "./notification";
+import ProfessionalAgentRouter from "./professional-agent";
 
 const route=(app:Express)=>{
   app.use("/auth",authRouter)
@@ -30,5 +31,6 @@ const route=(app:Express)=>{
 	app.use("/chat", chatRouter)
 	app.use("/statistical", statisticalRouter)
 	app.use("/notification", notificationRouter)
+	app.use("/professionalAgent", ProfessionalAgentRouter)
 }
 export default route;
