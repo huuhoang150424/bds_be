@@ -14,6 +14,7 @@ import CommentLikeService from "./comment-like.service";
 import ChatService from "./chat.service";
 import StatisticalService from "./statistical.service";
 import ProfessionalAgentService from "./professional-agent.service";
+import BannerService from "./banners.service";
 
 export {
 	AuthService,
@@ -31,5 +32,6 @@ export {
 	CommentLikeService,
 	ChatService,
 	StatisticalService,
-	ProfessionalAgentService
+	ProfessionalAgentService,
+	BannerService
 }

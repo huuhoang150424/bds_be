@@ -23,7 +23,8 @@ import {
 	PostDraft,
 	NewsHistory,
 	CommentLike,
-	UserView } from '@models/index';
+	UserView,
+	Banner } from '@models/index';
 
 
 
@@ -66,7 +67,8 @@ export const sequelize = new Sequelize({
 		PostDraft,
 		NewsHistory,
 		CommentLike,
-		UserView
+		UserView,
+		Banner
   ],
   logging: false,
 });

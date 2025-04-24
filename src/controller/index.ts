@@ -14,6 +14,7 @@ import ChatController from "./chat.controller";
 import StatisticalController from "./statistical.controller";
 import NotificationController from "./notification.controller";
 import ProfessionalAgentController  from "./professional-agent.controller";
+import BannerController from "./banners.controller";
 
 export {
 	AuthController,
@@ -31,5 +32,6 @@ export {
 	ChatController,
 	StatisticalController,
 	NotificationController,
-	ProfessionalAgentController 
+	ProfessionalAgentController,
+	BannerController 
 }
