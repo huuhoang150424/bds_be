@@ -7,6 +7,7 @@ import {seedListingTypes} from './listing-types';
 import { seederPost, seedUserViews } from './post';
 import {seedNews} from "./news";
 import {seedReport} from "./report";
+import {seedRatings} from "./rating";
 
 export {
 	seedUsers,
@@ -19,5 +20,6 @@ export {
 	seedWishlists,
 	seedUserViews,
 	seedPostHistory,
-	seedCommentLikes
+	seedCommentLikes,
+	seedRatings
 }

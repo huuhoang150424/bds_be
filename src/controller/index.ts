@@ -13,6 +13,8 @@ import CommentLikeController from "./comment-like.controller";
 import ChatController from "./chat.controller";
 import StatisticalController from "./statistical.controller";
 import NotificationController from "./notification.controller";
+import ProfessionalAgentController  from "./professional-agent.controller";
+import BannerController from "./banners.controller";
 
 export {
 	AuthController,
@@ -29,5 +31,7 @@ export {
 	CommentLikeController,
 	ChatController,
 	StatisticalController,
-	NotificationController
+	NotificationController,
+	ProfessionalAgentController,
+	BannerController 
 }

@@ -5,6 +5,7 @@ import {validatorCreateComment,validatorUpdateComment,validatorReplyToComment} f
 import {validatorCreateNews,validatorUpdateNews} from "./news.validation";
 import {validatorReport} from "./reports.validation";
 import {ratingValidation} from "./rating.validation";
+import {validatorCreateBanner, validatorUpdateBanner} from "./banner.validation";
 
 
 
@@ -19,5 +20,7 @@ export {
 	validatorUpdateNews,
 	validatorCreateNews,
 	validatorReport,
-	ratingValidation
+	ratingValidation,
+	validatorCreateBanner,
+	validatorUpdateBanner
 }

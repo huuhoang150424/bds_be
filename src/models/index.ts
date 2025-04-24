@@ -21,6 +21,7 @@ import PostDraft from './post-draft.model';
 import NewsHistory from "./news-history.model";
 import CommentLike from "./comment-like.model";
 import UserView from "./user-view.model";
+import Banner from "./banner.model";
 
 export {
 	User,
@@ -45,5 +46,6 @@ export {
 	PostDraft,
 	NewsHistory,
 	CommentLike,
-	UserView
+	UserView,
+	Banner
 };
