@@ -31,6 +31,37 @@ class AuthController {
       next(error);
     }
   }
+	//[login with google]
+	static async googleLogin(req: Request, res: Response, next: NextFunction) {
+		const { email, displayName, photoUrl } = req.body;
+    try {
+      const { accessToken, refreshToken, user } = await AuthService.googleLogin({
+        email,
+        displayName,
+        photoUrl
+      });
+      console.log(photoUrl,email,displayName)
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+      
+      return res.status(200).json(
+        ApiResponse.success(
+          {
+            accessToken,
+            user,
+          },
+          'Đăng nhập với Google thành công',
+        ),
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 
   //[register]
   static async register(req: Request, res: Response, next: NextFunction) {

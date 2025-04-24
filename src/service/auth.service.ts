@@ -5,6 +5,7 @@ import { generaAccessToken, generaRefreshToken } from '@helper/general-token';
 import { NotFoundError, UnauthorizedError, transporter, CacheRepository, TokenError,BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import "dotenv/config";
+import { Gender, Roles } from '@models/enums';
 
 
 
@@ -44,6 +45,54 @@ class AuthService {
     const accessToken = await generaAccessToken(user);
     const refreshToken = await generaRefreshToken(user);
     return { accessToken, refreshToken, user };
+  }
+
+	static async googleLogin(googleData: { email: string, displayName: string, photoUrl: string }) {
+    try {
+      let user = await User.findOne({
+        where: { email: googleData.email },
+        attributes: ["id", "fullname", "email", "phone", "avatar", "balance", "score", "roles", "emailVerified"],
+      });
+      if (!user) {
+        
+        user = await User.create({
+          email: googleData.email,
+          fullname: googleData.displayName || 'User',
+          password:  Math.random().toString(36).slice(2, 12),
+          avatar: googleData.photoUrl || "https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg",
+          emailVerified: true,
+          roles: Roles.User,
+          gender: Gender.Other,
+          active: true
+        }, {
+          hooks: false
+        });
+      } else {
+        const needsUpdate = (
+          (googleData.displayName && googleData.displayName !== user.fullname) ||
+          (googleData.photoUrl && googleData.photoUrl !== user.avatar) ||
+          (user.emailVerified === false)
+        );
+        
+        if (needsUpdate) {
+          await user.update({
+            fullname: googleData.displayName || user.fullname,
+            avatar: googleData.photoUrl || user.avatar,
+            emailVerified: true
+          });
+        }
+      }
+      await User.update(
+        { lastActive: new Date() },
+        { where: { id: user.id }, hooks: false }
+      );
+      const accessToken = await generaAccessToken(user);
+      const refreshToken = await generaRefreshToken(user);
+
+      return { accessToken, refreshToken, user };
+    } catch (error:any) {
+      throw new BadRequestError('Đăng nhập với Google thất bại: ' + (error.message));
+    }
   }
 
   static async register(fullname: string, email: string, password: string, confirmPassword: string) {

@@ -39,6 +39,7 @@
 		"typescript": "^5.7.3"
 	},
 	"dependencies": {
+		"@faker-js/faker": "^9.7.0",
 		"@google/generative-ai": "^0.24.0",
 		"@payos/node": "^1.0.10",
 		"axios": "^1.8.1",

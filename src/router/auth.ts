@@ -7,6 +7,7 @@ import { Roles } from "@models/enums";
 
 
 Router.post("/login",validatorLogin, AuthController.login as any);
+Router.post("/loginGoogle", AuthController.googleLogin as any);
 Router.post("/register",validatorRegister, AuthController.register as any);
 Router.post("/logout", verifyRole([Roles.User,Roles.Agent]),AuthController.logout as any);
 Router.post("/refreshToken", AuthController.refreshToken as any);
