@@ -5,6 +5,7 @@ import { ProcessingStatus ,ReportReason} from './report';
 import { PricingLevel,PaymentMethod } from './pricing';
 import { Status } from './transaction';
 import {CommentStatus, LikeStatus} from "./comment";
+import {AppointmentStatus} from "./appointment";
 
 export { 
 	ListingTypes,
@@ -24,5 +25,6 @@ export {
 	LikeStatus,
 	CommentStatus,
 	UserAction,
-	Gender
+	Gender,
+	AppointmentStatus
 };

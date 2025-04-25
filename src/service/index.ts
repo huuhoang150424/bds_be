@@ -15,6 +15,7 @@ import ChatService from "./chat.service";
 import StatisticalService from "./statistical.service";
 import ProfessionalAgentService from "./professional-agent.service";
 import BannerService from "./banners.service";
+import AppointmentService from "./appointment.service";
 
 export {
 	AuthService,
@@ -33,5 +34,6 @@ export {
 	ChatService,
 	StatisticalService,
 	ProfessionalAgentService,
-	BannerService
+	BannerService,
+	AppointmentService
 }

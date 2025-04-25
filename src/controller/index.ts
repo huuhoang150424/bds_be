@@ -15,6 +15,7 @@ import StatisticalController from "./statistical.controller";
 import NotificationController from "./notification.controller";
 import ProfessionalAgentController  from "./professional-agent.controller";
 import BannerController from "./banners.controller";
+import AppointmentController from "./appointment.controller";
 
 export {
 	AuthController,
@@ -33,5 +34,6 @@ export {
 	StatisticalController,
 	NotificationController,
 	ProfessionalAgentController,
-	BannerController 
+	BannerController,
+	AppointmentController 
 }
