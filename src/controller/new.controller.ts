@@ -23,15 +23,20 @@ class NewsController {
 
   // [getAllNews] 
 	static async getAllNews(req: Request, res: Response, next: NextFunction) {
-		const lastCreatedAt = req.query.lastCreatedAt as string | undefined;
-		const { limit } = (req as any).pagination;
-		try {
-			const newsList = await NewsService.getAllNews(limit, lastCreatedAt);
-			return res.status(200).json(ApiResponse.success(newsList, "Lấy danh sách tin tức thành công"));
-		} catch (error) {
-			next(error);  
-		}
-	}
+  const { page, limit } = (req as any).pagination;
+  const lastCreatedAt = req.query.lastCreatedAt as string | undefined;
+
+  if (lastCreatedAt) {
+    page===undefined;
+  }
+
+  try {
+    const newsList = await NewsService.getAllNews(limit, page, lastCreatedAt);
+    return res.status(200).json(ApiResponse.success(newsList, "Lấy danh sách tin tức thành công"));
+  } catch (error) {
+    next(error);
+  }
+}
 
   // [getNew]
   static async getNews(req: Request, res: Response, next: NextFunction) {

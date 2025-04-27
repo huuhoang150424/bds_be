@@ -67,7 +67,7 @@ export const seedNews = async () => {
       view: 100,
       imageUrl:
         'https://hnsofa.com/wp-content/uploads/2023/03/chiem-nguong-50-hinh-anh-phong-canh-buon-tam-trang-cuc-dep_15.jpg',
-      category: CategoryNew.Advice,
+      category: CategoryNew.BUSINESS,
       readingTime: 5,
     },
     {
@@ -77,7 +77,7 @@ export const seedNews = async () => {
       view: 250,
       imageUrl:
         'https://hnsofa.com/wp-content/uploads/2023/03/chiem-nguong-50-hinh-anh-phong-canh-buon-tam-trang-cuc-dep_15.jpg',
-      category: CategoryNew.Market,
+      category: CategoryNew.SCIENCE,
       readingTime: 6,
     },
     ...Array.from({ length: 100 }, (_, i) => {

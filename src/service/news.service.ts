@@ -1,9 +1,8 @@
-
-import { ActionType, Roles } from "@models/enums";
-import { News, NewsHistory, User } from "@models";
-import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
+import { ActionType, Roles } from '@models/enums';
+import { News, NewsHistory, User } from '@models';
+import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from '@helper';
 import { sequelize } from '@config/database';
-import { Op, Transaction } from "sequelize";
+import { Op, Transaction } from 'sequelize';
 
 class NewsService {
   static async createNew(
@@ -34,46 +33,73 @@ class NewsService {
     });
   }
 
-  static async getAllNews(limit: number = 10, lastCreatedAt?: string) {
+  static async getAllNews(limit: number = 10, page?: number, lastCreatedAt?: string) {
     const MAX_TOTAL_LIMIT = 30;
 
-    const whereCondition = lastCreatedAt ? { createdAt: { [Op.lte]: new Date(lastCreatedAt) } } : {};
+    if (lastCreatedAt && isNaN(Date.parse(lastCreatedAt))) {
+      throw new Error('Invalid lastCreatedAt format');
+    }
+
+    const safeLimit = Math.min(Math.max(limit, 1), 100);
+    const safePage = page ? Math.max(page, 1) : 1;
+    let whereCondition = {};
+    let offset = 0;
+
+    if (lastCreatedAt) {
+      whereCondition = { createdAt: { [Op.lte]: new Date(lastCreatedAt) } };
+    } else if (page) {
+      offset = (safePage - 1) * safeLimit;
+    }
 
     const newsList = await News.findAll({
       where: whereCondition,
       order: [['createdAt', 'DESC']],
-      limit,
-      include: [{ model: User, as: 'author', attributes: ['fullname'] }],
+      limit: safeLimit,
+      offset,
+      include: [{ model: User, as: 'author', attributes: ['fullname', 'avatar'] }],
     });
 
     const lastNewsCreatedAt = newsList.length > 0 ? newsList[newsList.length - 1].createdAt : null;
+    const total = await News.count();
+    const totalPages = Math.ceil(total / safeLimit);
 
-    const skippedCount = lastCreatedAt
-      ? await News.count({
-          where: { createdAt: { [Op.gt]: new Date(lastCreatedAt) } },
-        })
-      : 0;
+    const hasMore = lastCreatedAt
+      ? (await News.count({ where: { createdAt: { [Op.lt]: lastNewsCreatedAt } } })) > 0
+      : safePage < totalPages;
 
-    const totalLoaded = skippedCount + newsList.length;
+    let adjustedNewsList = newsList;
 
-    const totalRemaining = await News.count({
-      where: lastNewsCreatedAt ? { createdAt: { [Op.lt]: lastNewsCreatedAt } } : {},
-    });
-    const hasMore = totalRemaining > 0 && totalLoaded < MAX_TOTAL_LIMIT;
+    if (lastCreatedAt) {
+      const skippedCount = await News.count({
+        where: { createdAt: { [Op.gt]: new Date(lastCreatedAt) } },
+      });
 
-    const adjustedNewsList =
-      totalLoaded > MAX_TOTAL_LIMIT ? newsList.slice(0, MAX_TOTAL_LIMIT - skippedCount) : newsList;
+      const totalLoaded = skippedCount + newsList.length;
 
-    const result = {
-      data: adjustedNewsList,
-      meta: {
-        hasNextPage: hasMore,
-        nextCreatedAt: lastNewsCreatedAt,
-        total: await News.count(),
-      },
-    };
+      if (totalLoaded > MAX_TOTAL_LIMIT) {
+        adjustedNewsList = newsList.slice(0, Math.max(0, MAX_TOTAL_LIMIT - skippedCount));
+      }
 
-    return result;
+      return {
+        data: adjustedNewsList,
+        meta: {
+          hasNextPage: hasMore && totalLoaded < MAX_TOTAL_LIMIT,
+          nextCreatedAt: lastNewsCreatedAt,
+          total,
+        },
+      };
+    } else {
+      return {
+        data: adjustedNewsList,
+        meta: {
+          hasNextPage: hasMore,
+          nextCreatedAt: lastNewsCreatedAt,
+          total,
+          currentPage: safePage,
+          totalPages,
+        },
+      };
+    }
   }
 
   static async getNew(slug: string) {

@@ -1,6 +1,10 @@
 export enum CategoryNew {
-  Market = "Thị trường",
-  Policy = "Chính sách",
-  Advice = "Lời khuyên",
-  Other = "Khác",
+  POLITICS = "Chính trị",
+  BUSINESS = "Kinh doanh",
+  TECHNOLOGY = "Công nghệ",
+  HEALTH = "Sức khỏe",
+  ENTERTAINMENT = "Giải trí",
+  SPORTS = "Thể thao",
+  SCIENCE = "Khoa học",
+  EDUCATION = "Giáo dục",
 }
