@@ -22,6 +22,8 @@ import NewsHistory from "./news-history.model";
 import CommentLike from "./comment-like.model";
 import UserView from "./user-view.model";
 import Banner from "./banner.model";
+import Appointment from "./appointments.model";
+import AppointmentHistory from "./appointment_history.model";
 
 export {
 	User,
@@ -47,5 +49,7 @@ export {
 	NewsHistory,
 	CommentLike,
 	UserView,
-	Banner
+	Banner,
+	Appointment,
+	AppointmentHistory
 };

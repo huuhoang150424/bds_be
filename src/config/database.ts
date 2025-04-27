@@ -17,34 +17,37 @@ import {
 	Wishlist,
 	UserPricing,
 	Log,
-	Comment,	
+	Comment,
 	PropertyType,
 	ListingType,
 	PostDraft,
 	NewsHistory,
 	CommentLike,
 	UserView,
-	Banner } from '@models/index';
+	Banner,
+	Appointment,
+	AppointmentHistory
+} from '@models/index';
 
 
 
 
 export const sequelize = new Sequelize({
-  database: process.env.DB_NAME!,
-  dialect: 'mysql',
-  username: process.env.DB_USERNAME,
-  password: process.env.DB_PASSWORD,
-  host: process.env.DB_HOST,
-  port: Number(process.env.DB_PORT),
+	database: process.env.DB_NAME!,
+	dialect: 'mysql',
+	username: process.env.DB_USERNAME,
+	password: process.env.DB_PASSWORD,
+	host: process.env.DB_HOST,
+	port: Number(process.env.DB_PORT),
 	dialectOptions: {
-    charset: 'utf8mb4',
-  },
-  define: {
-    charset: 'utf8mb4',
-    collate: 'utf8mb4_unicode_ci',
-  },
-  models: [
-    //path.resolve(__dirname, '/models')
+		charset: 'utf8mb4',
+	},
+	define: {
+		charset: 'utf8mb4',
+		collate: 'utf8mb4_unicode_ci',
+	},
+	models: [
+		//path.resolve(__dirname, '/models')
 		User,
 		Post,
 		Image,
@@ -68,7 +71,10 @@ export const sequelize = new Sequelize({
 		NewsHistory,
 		CommentLike,
 		UserView,
-		Banner
-  ],
-  logging: false,
+		Banner,
+		Appointment,
+		AppointmentHistory
+
+	],
+	logging: false,
 });

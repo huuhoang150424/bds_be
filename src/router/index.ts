@@ -15,6 +15,7 @@ import statisticalRouter from "./statistical";
 import notificationRouter from "./notification";
 import ProfessionalAgentRouter from "./professional-agent";
 import BannerRouter from "./banners";
+import AppointmentRouter from "./appointment";
 
 const route=(app:Express)=>{
   app.use("/auth",authRouter)
@@ -34,6 +35,6 @@ const route=(app:Express)=>{
 	app.use("/notification", notificationRouter)
 	app.use("/professionalAgent", ProfessionalAgentRouter)
 	app.use("/banner", BannerRouter)
-	
+	app.use("/appointment", AppointmentRouter)
 }
 export default route;
