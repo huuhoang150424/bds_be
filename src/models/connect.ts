@@ -18,7 +18,7 @@ export const connectDatabase = async () => {
 		// await seedCommentLikes();
 		// await seedRatings();
 		// await seedWishlists();
-		console.log(" migrate successfully");
+		//console.log(" migrate successfully");
 		
 	} catch (error) {
 		console.error("Unable to connect to the database:", error);

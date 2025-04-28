@@ -24,6 +24,7 @@ Router.get("/filterPost", paginationMiddleware,PostController.filterPost as any)
 
 
 Router.get("/myPost/:type",verifyRole([Roles.Agent,Roles.User]), paginationMiddleware,PostController.getAllPostByUser as any);
+Router.get("/:userId/getPostTarget",PostController.getAllPostTarget as any);
 
 //post draft
 Router.post("/createPostDraft",uploadCloud.array("images"),validateCreatePostDraft,verifyRole([Roles.Agent,Roles.User]), PostDraftController.create as any);

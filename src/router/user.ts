@@ -7,7 +7,7 @@ import { query } from 'express-validator';
 import { Roles, UserAction } from '@models/enums';
 
 Router.get('/getAllUser', verifyRole([Roles.Admin]), paginationMiddleware, UserController.getAllUser as any);
-Router.get('/:userId/getUser', verifyRole([Roles.User, Roles.Agent]), UserController.getUserById as any);
+Router.get('/:userId/getUser', UserController.getUser as any);
 Router.put(
   '/:userId/updateUser',
   uploadCloud.single('image'),

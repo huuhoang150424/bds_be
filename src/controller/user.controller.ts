@@ -26,10 +26,11 @@ class UserController {
     }
   }
   //[getUserById]
-  static async getUserById(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+  static async getUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const { userId } = req.params;
+		const {type}=req.query;
     try {
-      const findUser = await UserService.getUserById(userId);
+      const findUser = type==='profile'?await UserService.getUserProfile(userId):await UserService.getUserById(userId);
       return res.status(200).json(ApiResponse.success(findUser, 'Thành công'));
     } catch (error) {
       next(error);

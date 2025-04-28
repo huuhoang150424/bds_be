@@ -170,6 +170,16 @@ class PostController {
 			next(error);
 		}
 	}
+
+	static async getAllPostTarget(req: Request, res: Response, next: NextFunction) {
+		const {userId}=req.params;
+		try {
+			const posts =  await PostService.getPostTarget( userId);			
+			return res.status(200).json(ApiResponse.success(posts, "thành công"));
+		} catch (error) {
+			next(error);
+		}
+	}
 	
 }
 

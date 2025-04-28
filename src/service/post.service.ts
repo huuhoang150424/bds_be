@@ -335,7 +335,36 @@ class PostService {
     };
   }
 
-
+  static async getPostTarget(userId:string) {
+    const totals = await Post.findAll({
+			where: {userId:userId},
+      include: [
+        {
+          model: Image,
+          attributes: [
+						'imageUrl'
+					],
+        },
+				{
+					model: PropertyType,
+          attributes: [
+						'name'
+					],
+					include: [
+						{
+							model: ListingType,
+							attributes: [
+								'listingType'
+							],
+						}
+					]
+				}
+      ],
+      order: [['createdAt', 'DESC']],
+			limit:10
+    });
+    return totals;
+  }
 
   static async updatePost(postId: string, userId: string, data: any, imageUrls: string[]) {
     const transaction = await sequelize.transaction();

@@ -1,6 +1,8 @@
-import { User } from '@models';
+import { Post, Rating, User } from '@models';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '@helper';
 import { Roles } from '@models/enums';
+import { sequelize } from '@config/database';
+import { Op } from 'sequelize';
 
 class UserService {
   static async getAllUser(page: number, limit: number) {
@@ -21,6 +23,48 @@ class UserService {
     }
     return findUser;
   }
+	static async getUserProfile(userId: string) {
+		const findUser = await User.findOne({
+			where: { id: userId, roles: Roles.Agent },
+			attributes: [
+				'id', 'fullname', 'email', 'avatar', 'phone', 
+				'isProfessional', 'active', 'address', 'coverPhoto', 
+				'selfIntroduction', 'certificates', 'experienceYears', 'expertise'
+			]
+		});
+	
+		if (!findUser) {
+			throw new NotFoundError('Không tìm thấy người dùng');
+		}
+		const userPosts = await Post.findAll({
+			where: { userId },
+			attributes: ['id']
+		});
+		
+		const postIds = userPosts.map(post => post.id);
+		if (postIds.length === 0) {
+			const result = findUser.toJSON();
+			result.averageRating = '0.0';
+			result.totalRatings = 0;
+			return result;
+		}
+		const ratingSummary = await Rating.findOne({
+			attributes: [
+				[sequelize.fn('AVG', sequelize.col('rating')), 'averageRating'],
+				[sequelize.fn('COUNT', sequelize.col('id')), 'totalRatings']
+			],
+			where: {
+				postId: {
+					[Op.in]: postIds
+				}
+			}
+		});
+		const result = findUser.toJSON();
+		result.averageRating = parseFloat(ratingSummary?.getDataValue('averageRating') || '0').toFixed(1);
+		result.totalRatings = parseInt(ratingSummary?.getDataValue('totalRatings') || '0');
+	
+		return result;
+	}
 
   static async updateUser(userId: string, data: any, user: any) {
     if (user.userId !== userId) {
@@ -55,40 +99,37 @@ class UserService {
     }
     findUser.phone = phone;
     await findUser.save();
-    return {newPhone:phone};
+    return { newPhone: phone };
   }
 
+  static async registerAsBroker(userId: string, data: any) {
+    const findUser = await this.getUserById(userId);
+    if (!findUser.emailVerified) {
+      throw new BadRequestError('Bạn phải xác thực email trước');
+    }
 
-	static async registerAsBroker(userId: string, data: any) {
-		const findUser = await this.getUserById(userId);
-		if (!findUser.emailVerified) {
-			throw new BadRequestError('Bạn phải xác thực email trước');
-		}
-
-		if (findUser.roles === Roles.Agent) {
-			throw new BadRequestError('Người dùng đã là môi giới bất động sản');
-		}
-		findUser.roles = Roles.Agent;
-		findUser.address = data.address;
-		findUser.selfIntroduction = data.selfIntroduction;
-		findUser.experienceYears = data.experienceYears;
-		if (data.certificates) {
-			findUser.certificates = data.certificates;
-		}
-		if (data.fullname) {
-			findUser.fullname = data.fullname;
-		}
-		if (data.phone) {
-			findUser.phone = data.phone;
-		}
-		findUser.expertise = data.expertise || [];
-		await findUser.save();
-		return {
-			roles: findUser.roles
-		};
-	}
-	
+    if (findUser.roles === Roles.Agent) {
+      throw new BadRequestError('Người dùng đã là môi giới bất động sản');
+    }
+    findUser.roles = Roles.Agent;
+    findUser.address = data.address;
+    findUser.selfIntroduction = data.selfIntroduction;
+    findUser.experienceYears = data.experienceYears;
+    if (data.certificates) {
+      findUser.certificates = data.certificates;
+    }
+    if (data.fullname) {
+      findUser.fullname = data.fullname;
+    }
+    if (data.phone) {
+      findUser.phone = data.phone;
+    }
+    findUser.expertise = data.expertise || [];
+    await findUser.save();
+    return {
+      roles: findUser.roles,
+    };
+  }
 }
-
 
 export default UserService;

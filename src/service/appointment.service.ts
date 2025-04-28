@@ -2,7 +2,7 @@
 import { Appointment, AppointmentHistory, Post, User } from '@models';
 import { AppointmentStatus, ActionType } from "@models/enums";
 import { NotFoundError, BadRequestError } from '@helper';
-import { NotificationService } from "@service";
+import { NotificationService, PostService, UserService } from "@service";
 import { v4 as uuidv4 } from 'uuid';
 import { Op, Transaction } from "sequelize";
 import { sequelize } from '@config/database';
@@ -13,34 +13,28 @@ import { sequelize } from '@config/database';
 class AppointmentService {
   static async createAppointment(data: {
     postId: string;
-    requesterId: string;
+		userId:string;
+    receiverId: string;
     appointmentTime: Date;
     duration?: number;
     message?: string;
   }) {
-    const post = await Post.findByPk(data.postId);
-    if (!post) {
-      throw new NotFoundError("Bài đăng không tồn tại!");
-    }
-
-    const receiver = await User.findByPk(post.userId);
-    if (!receiver) {
-      throw new NotFoundError("Người nhận hẹn không tồn tại!");
-    }
 
     const newAppointment = await Appointment.create({
       id: uuidv4(),
       postId: data.postId,
-      requesterId: data.requesterId,
-      receiverId: receiver.id,
+      requesterId: data.userId,
+      receiverId: data.receiverId,
       appointmentTime: data.appointmentTime,
       duration: data.duration || 30,
       status: AppointmentStatus.Pending,
       message: data.message,
     });
+		const user=await UserService.getUserById(data.userId);
+
     await NotificationService.createNotification(
-      receiver.id,
-      `Bạn có một cuộc hẹn mới từ ${data.requesterId} về bài đăng ${data.postId}!`
+      data.receiverId,
+      `Bạn có một cuộc hẹn mới từ ${user.fullname}!`
     );
 
     return newAppointment;

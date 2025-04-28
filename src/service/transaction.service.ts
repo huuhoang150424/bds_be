@@ -57,7 +57,7 @@ class TransactionService {
         await user.save({ transaction: t });
       }
       await t.commit();
-      await NotificationService.createNotification(user.id, `Bạn đã nạp ${transaction.amount} thành công `);
+      await NotificationService.createNotification(user.fullname, `Bạn đã nạp ${transaction.amount} thành công `);
       return transaction;
     } catch (error) {
       await t.rollback();

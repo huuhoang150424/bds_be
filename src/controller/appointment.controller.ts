@@ -8,15 +8,14 @@ import { ApiResponse, BadRequestError } from "@helper";
 
 class AppointmentController {
   static async createAppointment(req: Request, res: Response, next: NextFunction) {
+		const { postId, appointmentTime, duration, message,receiverId } = req.body;
+		const {userId} = (req as any)?.user;
+
     try {
-      const { postId, appointmentTime, duration, message } = req.body;
-      const requesterId = (req as any)?.user?.userId;
-      if (!postId || !appointmentTime) {
-        throw new BadRequestError("Thiếu thông tin bắt buộc: `postId`, `appointmentTime`.");
-      }
       const newAppointment = await AppointmentService.createAppointment({
         postId,
-        requesterId,
+        userId,
+				receiverId,
         appointmentTime,
         duration: duration || 30,
         message,
@@ -31,7 +30,7 @@ class AppointmentController {
   static async updateAppointment(req: Request, res: Response, next: NextFunction) {
     try {
       const { appointmentId } = req.params;
-      const userId = (req as any).user?.userId;
+			const {userId} = (req as any)?.user;
       const updatedData = req.body;
       const changeReason = updatedData.changeReason ?? "Không có lý do cụ thể";
 
@@ -58,7 +57,7 @@ class AppointmentController {
   static async deleteAppointment(req: Request, res: Response, next: NextFunction) {
     try {
       const { appointmentId } = req.params;
-      const userId = (req as any).user?.userId;
+			const {userId} = (req as any)?.user;
 
       if (!appointmentId) {
         throw new BadRequestError("Thiếu `appointmentId`!");
@@ -73,7 +72,7 @@ class AppointmentController {
   //[getUserAppointments]
   static async getUserAppointments(req: Request, res: Response, next: NextFunction) {
     try {
-      const userId = (req as any)?.user?.userId;
+			const {userId} = (req as any)?.user;
       const { status } = req.query;
 
       if (!userId) {
