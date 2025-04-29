@@ -1,7 +1,8 @@
-import { Notification } from '@models';
-import { NotFoundError } from '@helper';
+import { Notification, User } from '@models';
+import { BadRequestError, NotFoundError } from '@helper';
 import { io } from '../index';
 import { Op } from 'sequelize';
+import { Roles } from '@models/enums';
 class NotificationService {
   static async createNotification(userId: string, message: string) {
     const newNotification = await Notification.create({
@@ -44,6 +45,20 @@ class NotificationService {
     });
 
     return notifications;
+  }
+
+  static async getAllNotificationsAdmin(page: number, limit: number, offset: number) {
+    const { rows, count } = await Notification.findAndCountAll({
+      limit,
+      offset,
+      order: [['createdAt', 'DESC']],
+    });
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      data: rows,
+    };
   }
 }
 

@@ -915,7 +915,6 @@ class PostService {
 
   static async getListingTypes(): Promise<{ id: string; listingType: string }[]> {
     const listingTypes = await ListingType.findAll({
-      attributes: ["id", "listingType"],
       raw: true,
     });
 

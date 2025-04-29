@@ -22,9 +22,10 @@ class BannerController {
 
     // [getAllBanners]
   static async getAllBanners(req: Request, res: Response, next: NextFunction) {
+		const { page, limit, offset } = (req as any).pagination;
     try {
-      const banners = await BannerService.getAllBanners();
-      return res.status(200).json(ApiResponse.success(banners, "Banners retrieved successfully!"));
+      const banners = await BannerService.getAllBanners( page, limit, offset );
+      return res.status(200).json(ApiResponse.success(banners, "Thành công!"));
     } catch (error) {
       next(error);
     }

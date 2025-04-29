@@ -1,7 +1,7 @@
-"use strict";
-import { Banner } from "@models";
-import { NotFoundError, BadRequestError } from "@helper";
-import { v4 as uuidv4 } from "uuid";
+'use strict';
+import { Banner } from '@models';
+import { NotFoundError, BadRequestError } from '@helper';
+import { v4 as uuidv4 } from 'uuid';
 
 class BannerService {
   static async createBanner(data: any) {
@@ -9,22 +9,22 @@ class BannerService {
       const { title, targetUrl, displayOrder, isActive, startDate, endDate, imageUrls } = data;
       const startDateObj = new Date(startDate);
       const endDateObj = new Date(endDate);
-      
+
       if (endDateObj <= startDateObj) {
-        throw new BadRequestError("End date must be after start date");
+        throw new BadRequestError('End date must be after start date');
       }
-      
+
       const newBanner = await Banner.create({
         id: uuidv4(),
         title,
         imageUrls,
         targetUrl,
         displayOrder: Number(displayOrder),
-        isActive: isActive === "true" || isActive === true ? true : false,
+        isActive: isActive === 'true' || isActive === true ? true : false,
         startDate: startDateObj,
-        endDate: endDateObj
+        endDate: endDateObj,
       });
-      
+
       return newBanner.toJSON();
     } catch (error) {
       if (error instanceof BadRequestError) {
@@ -34,15 +34,21 @@ class BannerService {
     }
   }
 
-
   //[getAllBanners]
-  static async getAllBanners() {
+  static async getAllBanners({ page, limit, offset }: { page: number; limit: number; offset: number }) {
     try {
-      const banners = await Banner.findAll({
-        order: [["displayOrder", "ASC"]]
+      const { rows, count } = await Banner.findAndCountAll({
+        limit,
+        offset,
+        order: [['displayOrder', 'ASC']],
       });
-      
-      return banners.map(banner => banner.toJSON());
+
+      return {
+        totalItems: count,
+        totalPages: Math.ceil(count / limit),
+        currentPage: page,
+        data: rows,
+      };
     } catch (error) {
       throw new BadRequestError(`Failed to retrieve banners: ${(error as Error).message}`);
     }
@@ -52,11 +58,11 @@ class BannerService {
   static async getBannerById(bannerId: string) {
     try {
       const banner = await Banner.findByPk(bannerId);
-      
+
       if (!banner) {
-        throw new NotFoundError("Banner not found");
+        throw new NotFoundError('Banner not found');
       }
-      
+
       return banner.toJSON();
     } catch (error) {
       if (error instanceof NotFoundError) {
@@ -70,70 +76,70 @@ class BannerService {
   static async updateBanner(bannerId: string, updateData: any) {
     try {
       const banner = await Banner.findByPk(bannerId);
-      
+
       if (!banner) {
-        throw new NotFoundError("Banner not found");
+        throw new NotFoundError('Banner not found');
       }
       const dataToUpdate: any = {};
-      
+
       if (updateData.title !== undefined) {
         dataToUpdate.title = updateData.title;
       }
-      
+
       if (updateData.targetUrl !== undefined) {
         dataToUpdate.targetUrl = updateData.targetUrl;
       }
-      
+
       if (updateData.displayOrder !== undefined) {
         dataToUpdate.displayOrder = Number(updateData.displayOrder);
       }
-      
+
       if (updateData.isActive !== undefined) {
-        dataToUpdate.isActive = updateData.isActive === "true" || updateData.isActive === true ? true : false;
+        dataToUpdate.isActive = updateData.isActive === 'true' || updateData.isActive === true ? true : false;
       }
-      
+
       if (updateData.imageUrls !== undefined) {
         dataToUpdate.imageUrls = updateData.imageUrls;
       }
-      
+
       if (updateData.startDate && updateData.endDate) {
         const startDateObj = new Date(updateData.startDate);
         const endDateObj = new Date(updateData.endDate);
-        
+
         if (endDateObj <= startDateObj) {
-          throw new BadRequestError("End date must be after start date");
+          throw new BadRequestError('End date must be after start date');
         }
-        
+
         dataToUpdate.startDate = startDateObj;
         dataToUpdate.endDate = endDateObj;
       } else if (updateData.startDate) {
         const startDateObj = new Date(updateData.startDate);
         const currentEndDate = banner.endDate;
-        
+
         if (currentEndDate <= startDateObj) {
-          throw new BadRequestError("End date must be after start date");
+          throw new BadRequestError('End date must be after start date');
         }
-        
+
         dataToUpdate.startDate = startDateObj;
       } else if (updateData.endDate) {
         const endDateObj = new Date(updateData.endDate);
         const currentStartDate = banner.startDate;
-        
+
         if (endDateObj <= currentStartDate) {
-          throw new BadRequestError("End date must be after start date");
+          throw new BadRequestError('End date must be after start date');
         }
-        
+
         dataToUpdate.endDate = endDateObj;
       }
-      
+
       await banner.update(dataToUpdate);
-      
+
       const updatedBanner = await Banner.findByPk(bannerId);
-      
+
       if (!updatedBanner) {
-        throw new NotFoundError("Banner not found after update");
+        throw new NotFoundError('Banner not found after update');
       }
-      
+
       return updatedBanner.toJSON();
     } catch (error) {
       if (error instanceof NotFoundError || error instanceof BadRequestError) {
@@ -147,10 +153,10 @@ class BannerService {
   static async deleteBanner(bannerId: string) {
     try {
       const banner = await Banner.findByPk(bannerId);
-      
+
       if (!banner) {
-        throw new NotFoundError("Banner not found");
-      }   
+        throw new NotFoundError('Banner not found');
+      }
       await banner.destroy();
       return true;
     } catch (error) {

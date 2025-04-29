@@ -31,6 +31,17 @@ class PricingController {
 			next(error);
 		}
 	}
+	static async getAllPricing(req: Request, res: Response, next: NextFunction) {
+		const { page, limit, offset } = (req as any).pagination;
+		try {
+			const pricings=await PricingService.getAllPricing(page, limit, offset);
+			return res.status(200).json(
+				ApiResponse.success(pricings, "Thành công!")
+			);
+		} catch (error) {
+			next(error);
+		}
+	}
 }
 
 
