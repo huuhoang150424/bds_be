@@ -11,7 +11,7 @@ import BaseModel from "./base.model";
 
 @Table({ tableName: "banners", timestamps: true })
 export default class Banner extends BaseModel<string> {
- 
+
   @Column({ type: DataType.STRING, allowNull: false })
   title!: string;
 

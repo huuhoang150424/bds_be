@@ -44,6 +44,15 @@ class ReportsController {
       next(error);
     }
   }
+
+  static async getReportsSummary(req: Request, res: Response, next: NextFunction) {
+    try {
+      const summary = await ReportsService.getReportsSummary();
+      return res.status(200).json(ApiResponse.success(summary, "Thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
   
 
 }

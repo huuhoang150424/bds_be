@@ -9,7 +9,7 @@ import { Roles } from "@models/enums";
 Router.post("/createReports",validatorReport,  verifyRole([Roles.User]), ReportsController.createReport  as any);
 Router.get("/:postId/getReportByPostId", verifyRole([Roles.User]), ReportsController.getReportsByPostId as any);
 Router.get("/getAllReports", verifyRole([Roles.User]),paginationMiddleware, ReportsController.getAllReports as any);
-
+Router.get("/getSummary", verifyRole([Roles.Admin]), ReportsController.getReportsSummary as any);
 
 
 export default Router;

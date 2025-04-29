@@ -1,3 +1,5 @@
+import { seedNotifications } from './notification';
+import { seedBanners } from './banner';
 import { seedPostHistory } from './post-history';
 import { seedWishlists } from './wishlists';
 import { seedComments, seedCommentLikes } from './comment';
@@ -21,5 +23,7 @@ export {
 	seedUserViews,
 	seedPostHistory,
 	seedCommentLikes,
-	seedRatings
+	seedRatings,
+	seedBanners,
+	seedNotifications
 }

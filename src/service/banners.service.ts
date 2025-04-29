@@ -35,7 +35,7 @@ class BannerService {
   }
 
   //[getAllBanners]
-  static async getAllBanners({ page, limit, offset }: { page: number; limit: number; offset: number }) {
+  static async getAllBanners( page: number, limit: number, offset: number ) {
     try {
       const { rows, count } = await Banner.findAndCountAll({
         limit,

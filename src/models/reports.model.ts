@@ -4,11 +4,12 @@ import {
   DataType,
   ForeignKey,
   BelongsTo,
-	AllowNull
+	AllowNull,
+  Default
 } from 'sequelize-typescript';
 import User from './user.model';
 import Post from './post.model';
-import { ReportReason ,ProcessingStatus} from './enums';
+import { ReportReason ,ProcessingStatus, SeverityStatus} from './enums';
 import BaseModel from './base.model';
 
 
@@ -38,5 +39,9 @@ export default class Report extends BaseModel<string> {
 
   @Column({type: DataType.ENUM(...Object.values(ProcessingStatus))})
   status!: string;
+
+  @Default(SeverityStatus.Urgent)
+  @Column({type: DataType.ENUM(...Object.values(SeverityStatus))})
+  severity!: string;
 }
 //done

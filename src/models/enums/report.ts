@@ -5,6 +5,16 @@ export enum ProcessingStatus {
 	Reviewing = 'reviewing',
 }
 
+export enum SeverityStatus {
+  Important = "quan trọng",
+  Urgent = "khẩn cấp",
+  Feedback = "góp ý",
+  Suggestion = "đề xuất",
+  Bug = "lỗi hệ thống",
+  Inappropriate = "nội dung không phù hợp",
+  AIFlagged = "AI phát hiện",
+}
+
 export enum ReportReason  {
 	ADDRESS_ISSUE = "Địa chỉ của bất động sản",
   INCORRECT_INFO = "Thông tin giá, diện tích, mô tả không chính xác",

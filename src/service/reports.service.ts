@@ -1,6 +1,6 @@
 
 import { Report, Post, User } from '@models';
-import { ProcessingStatus, ReportReason } from "@models/enums";
+import { ProcessingStatus, ReportReason, SeverityStatus } from "@models/enums";
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
@@ -52,7 +52,7 @@ class ReportsService {
         },
         {
           model: Post,
-          attributes: ["id", "title", "price", "address"],
+          attributes: ["id", "title",  "address"],
         },
       ],
       distinct: true,
@@ -64,6 +64,66 @@ class ReportsService {
       totalPages: Math.ceil(count / limit),
       currentPage: page,
       data: rows,
+    };
+  }
+
+
+  static async getReportsSummary() {
+    const pendingCount = await Report.count({
+      where: { status: ProcessingStatus.Pending }
+    });
+
+    const reviewingCount = await Report.count({
+      where: { status: ProcessingStatus.Reviewing }
+    });
+
+    const resolvedCount = await Report.count({
+      where: { status: ProcessingStatus.Resolved }
+    });
+
+    const rejectedCount = await Report.count({
+      where: { status: ProcessingStatus.Rejected }
+    });
+    const urgentCount = await Report.count({
+      where: { severity: SeverityStatus.Urgent }
+    });
+    const severityCounts: Record<string, number> = {};
+    for (const severity of Object.values(SeverityStatus)) {
+      const count = await Report.count({
+        where: { severity }
+      });
+      severityCounts[severity as string] = count;
+    }
+    const last7DaysCount = await Report.count({
+      where: {
+        createdAt: {
+          [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 7))
+        }
+      }
+    });
+
+    const last30DaysCount = await Report.count({
+      where: {
+        createdAt: {
+          [Op.gte]: new Date(new Date().setDate(new Date().getDate() - 30))
+        }
+      }
+    });
+    const totalCount = await Report.count();
+    return {
+      processingStatus: {
+        pending: pendingCount,
+        reviewing: reviewingCount,
+        resolved: resolvedCount,
+        rejected: rejectedCount,
+        total: totalCount
+      },
+      severityStatus: severityCounts,
+      urgentReports: urgentCount,
+      recentActivity: {
+        last7Days: last7DaysCount,
+        last30Days: last30DaysCount
+      }
     };
   }
 
