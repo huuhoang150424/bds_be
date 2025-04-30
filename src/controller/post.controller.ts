@@ -181,6 +181,37 @@ class PostController {
 		}
 	}
 	
+
+	static async createListingType(req: Request, res: Response, next: NextFunction) {
+		const { listingType } = req.body;
+    try {
+      const newListingType = await PostService.createListingType(listingType);
+			return res.status(201).json(ApiResponse.success(newListingType, "Tạo mới danh mục thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async deleteListingType(req: Request, res: Response, next: NextFunction) {
+		const { id } = req.params;
+    try {
+      await PostService.deleteListingType(id);
+			return res.status(200).json(ApiResponse.success(null, "Xóa danh mục thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+	static async updateListingType(req: Request, res: Response, next: NextFunction){
+    try {
+      const { id } = req.params;
+      const { listingType } = req.body;
+      const updatedListingType = await PostService.updateListingType(id, listingType);
+			return res.status(200).json(ApiResponse.success(updatedListingType, "Cập nhật danh mục thành công"));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

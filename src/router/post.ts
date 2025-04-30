@@ -16,6 +16,11 @@ Router.delete("/:postId/deletePost",verifyRole([Roles.Agent]), PostController.de
 Router.patch("/:postId/approvePost", verifyRole([Roles.Admin]),PostController.approvePost as any);
 Router.get("/searchPost",paginationMiddleware,PostController.searchPost as any);
 
+
+Router.post("/createListingType", verifyRole([Roles.Admin]),PostController.createListingType as any);
+Router.delete("/:id/deleteListingType", verifyRole([Roles.Admin]),PostController.deleteListingType as any);
+Router.put("/:id/updateListingType", verifyRole([Roles.Admin]),PostController.updateListingType as any);
+
 //get post
 Router.get("/getPostClient",paginationMiddleware, PostController.getAllPostForClient as any);
 Router.get("/getPostOutstanding", PostController.getPostOutstanding as any);

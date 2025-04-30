@@ -920,6 +920,52 @@ class PostService {
 
     return listingTypes;
   }
+  
+  static async createListingType(listingType: ListingTypes) {
+    const existingListingType = await ListingType.findOne({
+      where: { listingType },
+    });
+    if (existingListingType) {
+      throw new BadRequestError('Danh mục đã tồn tại');
+    }
+    const newListingType = await ListingType.create({ listingType });
+    return newListingType;
+  }
+
+  static async deleteListingType(id: string): Promise<void> {
+    const listingType = await ListingType.findByPk(id);
+    if (!listingType) {
+      throw new NotFoundError('Danh mục không tồn tại');
+    }
+
+    const propertyTypes = await listingType.$get('propertyType');
+    if (propertyTypes && propertyTypes.length > 0) {
+      throw new BadRequestError('Không thể xóa danh mục');
+    }
+
+    await listingType.destroy();
+  }
+
+
+  static async updateListingType(id: string, listingType: ListingTypes){
+    const listingTypeRecord = await ListingType.findByPk(id);
+
+    if (!listingTypeRecord) {
+      throw new NotFoundError('Danh mục không tồn tại');
+    }
+    const existingListingType = await ListingType.findOne({
+      where: { listingType }
+    });
+
+    if (existingListingType) {
+      throw new BadRequestError('Danh mục đã tồn tại');
+    }
+
+    listingTypeRecord.listingType = listingType;
+    await listingTypeRecord.save();
+
+    return listingTypeRecord;
+  }
 }
 
 export default PostService;
