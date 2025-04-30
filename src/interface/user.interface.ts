@@ -11,3 +11,11 @@ export interface TopUsersStats {
   email: string;
   postCount: number;
 }
+
+export interface NotificationData {
+  message: string;
+  priority?: number;
+  endDate: Date;
+  userId?: string;
+}
+

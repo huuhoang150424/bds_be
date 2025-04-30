@@ -9,4 +9,8 @@ Router.get('/getAllNotification', verifyRole([Roles.User,Roles.Agent]), Notifica
 Router.patch('/:notificationId/readNotification', verifyRole([Roles.User,Roles.Agent]), NotificationController.readNotification as any);
 Router.patch('/readAllNotification', verifyRole([Roles.User,Roles.Agent]), NotificationController.readAllNotification as any);
 Router.get('/getAllNotificationAdmin', verifyRole([Roles.Admin]),paginationMiddleware, NotificationController.getAllNotificationAdmin as any);
+Router.post('/sendNotificationAll', verifyRole([Roles.Admin]), NotificationController.sendNotification as any);
+Router.delete('/getAllNotificationAdmin/:notificationId', verifyRole([Roles.Admin]), NotificationController.deleteNotification as any);
+
+
 export default Router;

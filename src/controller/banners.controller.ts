@@ -1,7 +1,8 @@
 "use strict";
 import { Request, Response, NextFunction } from "express";
 import { BannerService } from "@service";
-import { ApiResponse, BadRequestError } from "@helper";
+import { ApiResponse, BadRequestError, NotFoundError } from "@helper";
+import Banner from "@models/banner.model";
 
 class BannerController {
   static async createBanner(req: Request, res: Response, next: NextFunction) {
@@ -47,13 +48,20 @@ class BannerController {
     try {
       const { bannerId } = req.params;
       const imageFiles = req.files as Express.Multer.File[];
-      const imageUrls = imageFiles ? imageFiles.map((file) => file.path) : undefined;
-      
+      const { deletedImageUrls, ...updateData } = req.body;
+      const banner = await BannerService.getBannerById(bannerId);
+
+      const newImageUrls = imageFiles ? imageFiles.map((file) => file.path) : [];
+      let currentImageUrls = banner.imageUrls || [];
+      if (deletedImageUrls) {
+        const urlsToDelete = Array.isArray(deletedImageUrls) ? deletedImageUrls : [deletedImageUrls];
+        currentImageUrls = currentImageUrls.filter((url:string) => !urlsToDelete.includes(url));
+      }
+      const updatedImageUrls = [...currentImageUrls, ...newImageUrls];
       const updatedBanner = await BannerService.updateBanner(bannerId, {
-        ...req.body,
-        imageUrls
+        ...updateData,
+        imageUrls: updatedImageUrls,
       });
-      
       return res.status(200).json(ApiResponse.success(updatedBanner, "Banner updated successfully!"));
     } catch (error) {
       next(error);
