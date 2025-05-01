@@ -1,9 +1,9 @@
 import { UserService, NotificationService } from '@service';
-import { Pricing, UserPricing } from '@models';
+import { Pricing, User, UserPricing } from '@models';
 import { NotFoundError, BadRequestError } from '@helper';
 import { sequelize } from '@config/database';
 import { Op } from 'sequelize';
-
+import moment from 'moment';
 class PricingService {
   static async buyPricing(userId: string, pricingId: string) {
     const transaction = await sequelize.transaction();
@@ -15,12 +15,16 @@ class PricingService {
         },
         order: [['endDate', 'DESC']],
       });
+
       if (existingUserPricing) {
         throw new BadRequestError('Bạn đã có một gói VIP đang hoạt động!');
       }
       const [user, pricing] = await Promise.all([UserService.getUserById(userId), Pricing.findByPk(pricingId)]);
       if (!pricing) {
         throw new NotFoundError('Gói thành viên không tồn tại!');
+      }
+      if (!pricing.isActive) {
+        throw new BadRequestError('Gói vip đã dừng hoạt động');
       }
       if (user.balance < pricing.price) {
         throw new BadRequestError('Số dư không đủ để mua gói này!');
@@ -128,6 +132,77 @@ class PricingService {
       data: rows,
     };
   }
+
+  static async createPricing(pricingData: Partial<Pricing>) {
+    const pricing = await Pricing.create(pricingData);
+    return pricing;
+  }
+
+  static async editPricing(id: string, pricingData: Partial<Pricing>) {
+    const pricing = await Pricing.findByPk(id);
+    if (!pricing) {
+      throw new NotFoundError('Gói thành viên không tồn tại!');
+    }
+    await pricing.update(pricingData);
+    return pricing;
+  }
+
+  static async deletePricing(id: string) {
+    const pricing = await Pricing.findByPk(id);
+    if (!pricing) {
+      throw new NotFoundError('Gói thành viên không tồn tại!');
+    }
+    const userPricings = await UserPricing.findOne({
+      where: { pricingId: id },
+    });
+    if (userPricings) {
+      throw new BadRequestError('Không thể xóa gói vì đã có người dùng sử dụng (đang hoặc đã sử dụng)!');
+    }
+    await pricing.destroy();
+    return { message: 'Xóa gói thành công!' };
+  }
+
+
+  static async stopPricing(id: string) {
+    const transaction = await sequelize.transaction();
+    try {
+      const pricing = await Pricing.findByPk(id, { transaction });
+      if (!pricing) {
+        throw new NotFoundError('Gói thành viên không tồn tại!');
+      }
+      if (!pricing.isActive) {
+        throw new BadRequestError('Gói đã được dừng trước đó!');
+      }
+      const activeUserPricings = await UserPricing.findAll({
+        where: {
+          pricingId: id,
+          endDate: { [Op.gt]: new Date() },
+        },
+        include: [{ model: User }, { model: Pricing }],
+        transaction,
+      });
+      for (const userPricing of activeUserPricings) {
+        const user = userPricing.user;
+        const pricing = userPricing.pricing;
+        const totalDays = moment(userPricing.endDate).diff(moment(userPricing.startDate), 'days');
+        const remainingDays = moment(userPricing.endDate).diff(moment(), 'days');
+        if (remainingDays < 0) continue;
+        const refundAmount = (remainingDays / totalDays) * pricing.price;
+        await User.update(
+          { balance: user.balance + refundAmount },
+          { where: { id: user.id }, transaction }
+        );
+        await userPricing.update({ endDate: new Date() }, { transaction });
+      }
+      await pricing.update({ isActive: false }, { transaction });
+      await transaction.commit();
+      return { message: 'Dừng gói thành công và hoàn tiền cho người dùng!' };
+    } catch (error) {
+      await transaction.rollback();
+      throw error;
+    }
+  }
+  
 }
 
 export default PricingService;

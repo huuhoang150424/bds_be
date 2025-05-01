@@ -42,6 +42,57 @@ class PricingController {
 			next(error);
 		}
 	}
+
+	// [Create Pricing]
+	static async createPricing(req: Request, res: Response, next: NextFunction) {
+    const pricingData = req.body;
+    try {
+      const newPricing = await PricingService.createPricing(pricingData);
+      return res.status(201).json(
+        ApiResponse.success(newPricing, 'Tạo gói thành công!')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // [Update Pricing]
+  static async editPricing(req: Request, res: Response, next: NextFunction) {
+    const { id } = req.params;
+    const pricingData = req.body;
+    try {
+      const updatedPricing = await PricingService.editPricing(id, pricingData);
+      return res.status(200).json(
+        ApiResponse.success(updatedPricing, 'Cập nhật gói thành công!')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // [Delete Pricing]
+  static async deletePricing(req: Request, res: Response, next: NextFunction) {
+    const { id } = req.params;
+    try {
+      await PricingService.deletePricing(id);
+      return res.status(200).json(
+        ApiResponse.success(null, 'Xóa gói thành công!')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+	static async stopPricing(req: Request, res: Response, next: NextFunction) {
+    const { id } = req.params;
+    try {
+      const result = await PricingService.stopPricing(id);
+      return res.status(200).json(ApiResponse.success(null, result.message));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

@@ -39,7 +39,7 @@ export const seedUsers = async () => {
     },
   });
 
-  const total = 500_000;
+  const total = 50_000;
   const batchSize = 5_000;
 
   for (let i = 0; i < total; i += batchSize) {
