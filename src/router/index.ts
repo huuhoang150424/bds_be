@@ -26,7 +26,6 @@ const route=(app:Express)=>{
 	app.use("/pricing",pricingRouter)
 	app.use("/new",newRouter)
 	app.use("/reports",reportRouter)
-	app.use("/new",pricingRouter)
 	app.use("/transaction",transactionRouter)
 	app.use("/wishlist",wishlistRouter)
 	app.use("/commentlike", commentlikeRouter)

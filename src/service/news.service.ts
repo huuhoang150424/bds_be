@@ -116,17 +116,23 @@ class NewsService {
     return findNews;
   }
 
-  static async updateNews(newsId: string, userId: string, image: string, updatedData: Partial<News>) {
+  static async updateNews( newsId: string, userId: string, image: string | undefined, updatedData: any, removedImageUrl?: string ) {
     return await sequelize.transaction(async (transaction: Transaction) => {
-      const news = await News.findOne({ where: { id: newsId, userId }, transaction });
+      const news = await News.findOne({ where: { id: newsId }, transaction });
       if (!news) {
         throw new NotFoundError('Tin tức không tồn tại hoặc bạn không có quyền cập nhật');
       }
-      if (Object.keys(updatedData).length === 0) {
+      if (Object.keys(updatedData).length === 0 && !image && !removedImageUrl) {
         throw new BadRequestError('Không có dữ liệu nào để cập nhật');
       }
       await this.saveNewsHistory(newsId, userId, ActionType.UPDATE, transaction);
-      await news.update({ imageUrl: image, ...updatedData }, { transaction });
+      const updatePayload: any = { ...updatedData };
+      if (image) {
+        updatePayload.imageUrl = image;
+      } else if (removedImageUrl && removedImageUrl === news.imageUrl) {
+        updatePayload.imageUrl = null;
+      }
+      await news.update(updatePayload, { transaction });
       return news;
     });
   }

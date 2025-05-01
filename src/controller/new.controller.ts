@@ -51,16 +51,14 @@ class NewsController {
 
 
   // [UpdateNews]
-  static async updateNews(req: Request, res: Response, next: NextFunction) {
-    const newsId = req.params.newsId;
+  static async editNews(req: Request, res: Response, next: NextFunction) {
+    const {newsId} = req.params;
     const { userId } = (req as any).user;
     try {
-      const image = req.file?.path;
-      if (!image) {
-        throw new BadRequestError("ảnh không hợp lệ");
-      }
-      const updatedNews = await NewsService.updateNews(newsId, userId, image, req.body);
-      return res.status(200).json(ApiResponse.success(updatedNews, "Cập nhật tin tức thành công"));
+      const image = req.file?.path; 
+      const removedImageUrl = req.body.removedImageUrl; 
+      const updatedNews = await NewsService.updateNews(newsId, userId, image, req.body, removedImageUrl);
+      return res.status(200).json(ApiResponse.success(updatedNews, 'Cập nhật tin tức thành công'));
     } catch (error) {
       next(error);
     }
