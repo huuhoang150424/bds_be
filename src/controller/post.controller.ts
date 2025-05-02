@@ -59,11 +59,13 @@ class PostController {
 	
 
 	//[verify post]
-	static async approvePost(req: Request, res: Response, next: NextFunction) {
-		const { postId } = req.params;
+	static async bulkApprovePosts(req: Request, res: Response, next: NextFunction) {
+		const { postIds }: { postIds: string[] } = req.body;
 		try {
-			const post = await PostService.approvePost(postId);
-			return res.status(200).json(ApiResponse.success(post, "Duyệt bài thành công"));
+			const posts = await PostService.approvePosts(postIds);
+			return res.status(200).json(
+				ApiResponse.success(posts, `Duyệt ${postIds.length} bài đăng thành công`)
+			);
 		} catch (error) {
 			next(error);
 		}

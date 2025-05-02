@@ -101,6 +101,26 @@ export default class User extends BaseModel<string> {
   @Column(DataType.JSON)
   expertise!: string[]; 
 
+  @Default(0)
+  @Column(DataType.INTEGER)
+  lockCount!: number;
+
+  @Default(null)
+  @Column(DataType.DATE)
+  lockedAt!: Date | null; 
+
+  @Default(null)
+  @Column(DataType.DATE)
+  unlockAt!: Date | null;
+
+  @Default(null)
+  @Column(DataType.DOUBLE)
+  requiredUnlockAmount!: number | null;
+
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  isPermanentlyLocked!: boolean;
+
   @HasMany(() => Post)
   posts!: Post[];
 

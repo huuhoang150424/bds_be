@@ -11,8 +11,8 @@ import { Server } from "socket.io";
 import { swaggerDoc } from 'api-doc/swagger';
 import swaggerUi from "swagger-ui-express";
 import "dotenv/config";
-import {checkAndUpdatePostsOnStartup} from '@helper';
 import {setupNotificationSocket,botSocket, chatSocket} from '@socket';
+import { initAllCronJobs, runStartupTasks } from '@helper/cron';
 
 
 const app = express();
@@ -62,5 +62,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 server.listen(PORT, async () => {
   console.log(`🚀 Server is running at http://localhost:${PORT}`);
-  await checkAndUpdatePostsOnStartup();
+  initAllCronJobs();
+  // Run startup tasks
+  await runStartupTasks();
 });

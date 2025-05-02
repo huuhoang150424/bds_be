@@ -2,25 +2,28 @@ import { UserPricing } from '@models';
 import cron from 'node-cron';
 
 
-
-const resetMonthlyPostFree=async ()=>{
+export const resetMonthlyPostFree = async () => {
   try {
     await UserPricing.update(
-      {remainingPosts: 15},
-      {where:{}}
-    )
+      { remainingPosts: 15 },
+      { where: {} }
+    );
+    console.log('✅ Reset monthly free posts for all users');
   } catch (err) {
-    console.log(err)
+    console.error('❌ Error resetting monthly posts:', err);
   }
-}
+};
 
 
-cron.schedule('0 0 1 * *', resetMonthlyPostFree);
+export const initPostResetCron = () => {
+  cron.schedule('0 0 1 * *', resetMonthlyPostFree);
+  console.log('🔄 Monthly post reset cron job initialized');
+};
 
 export const checkAndUpdatePostsOnStartup = async () => {
   const now = new Date();
   if (now.getDate() === 1) {
-    console.log('🔄 Server restart vào ngày đầu tháng, reset số bài đăng...');
+    console.log('🔄 Server started on 1st of month, resetting posts...');
     await resetMonthlyPostFree();
   }
 };

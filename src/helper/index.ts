@@ -8,7 +8,6 @@ import ForbiddenError from "./error/forbidden-error";
 import CacheRepository from "./cache.repository";
 import ApiResponse from "./response";
 import {verifyPayOSSignature} from "./verify-payos";
-import {checkAndUpdatePostsOnStartup} from "./reset-posts";
 
 export {
 	BadRequestError,
@@ -20,6 +19,5 @@ export {
 	transporter,
 	CacheRepository,
 	ApiResponse,
-	verifyPayOSSignature,
-	checkAndUpdatePostsOnStartup
+	verifyPayOSSignature
 }

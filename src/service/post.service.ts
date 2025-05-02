@@ -238,23 +238,34 @@ class PostService {
     }
   }
 
-  static async approvePost(postId: string) {
-    const post = await Post.findOne({
-      where: { id: postId },
+  static async approvePosts(postIds: string[]) {
+    if (!postIds || postIds.length === 0) {
+      throw new BadRequestError('Danh sách bài đăng không được rỗng');
+    }
+  
+    const posts = await Post.findAll({
+      where: { id: postIds },
     });
-    if (!post) {
-      throw new NotFoundError('Không tìm thấy bài đăng');
+  
+    if (posts.length !== postIds.length) {
+      throw new NotFoundError('Một số bài đăng không tồn tại');
     }
-    if (post.verified) {
-      throw new BadRequestError('Bài đăng đã được duyệt');
+  
+    const alreadyApproved = posts.filter((post) => post.verified);
+    if (alreadyApproved.length > 0) {
+      throw new BadRequestError('Một số bài đăng đã được duyệt');
     }
-    post.verified = true;
-    await post.save();
-    return post;
+  
+    await Post.update(
+      { verified: true },
+      { where: { id: postIds } }
+    );
+    return await Post.findAll({
+      where: { id: postIds },
+    });
   }
 
   static async getPosts(page: number, limit: number, offset: number) {
-    const now = new Date();
     const { count, rows } = await Post.findAndCountAll({
       limit: limit,
       offset: offset,
@@ -269,12 +280,24 @@ class PostService {
 						'imageUrl'
 					],
         },
+        {
+					model: PropertyType,
+          attributes: [
+						'name'
+					],
+					include: [
+						{
+							model: ListingType,
+							attributes: [
+								'listingType'
+							],
+						}
+					]
+				},
       ],
       distinct: true,
-      order: [['createdAt', 'DESC']],
-      where: {
-        // [Op.or]: [{ expiredDate: null }, { expiredDate: { [Op.gt]: now } }],
-      },
+      
+      order: [['createdAt', 'DESC'],['verified', 'ASC'],]
     });
     return {
       totalItems: count,

@@ -13,7 +13,7 @@ Router.get("/:slug/getPost",allowIfAuthenticatedWithRoleOrPublic([Roles.User, Ro
 Router.get("/getAllPosts",verifyRole([Roles.Admin]),paginationMiddleware, PostController.getAllPost as any);
 Router.put("/:postId/updatePost",uploadCloud.array("images"),verifyRole([Roles.Agent,Roles.User]), PostController.updatePost as any);
 Router.delete("/:postId/deletePost",verifyRole([Roles.Agent]), PostController.deletePost as any);
-Router.patch("/:postId/approvePost", verifyRole([Roles.Admin]),PostController.approvePost as any);
+Router.post("/bulkApprovePost", verifyRole([Roles.Admin]),PostController.bulkApprovePosts as any);
 Router.get("/searchPost",paginationMiddleware,PostController.searchPost as any);
 
 
