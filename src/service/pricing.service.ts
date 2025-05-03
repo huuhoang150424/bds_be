@@ -4,6 +4,7 @@ import { NotFoundError, BadRequestError } from '@helper';
 import { sequelize } from '@config/database';
 import { Op } from 'sequelize';
 import moment from 'moment';
+import { Status } from '@models/enums';
 class PricingService {
   static async buyPricing(userId: string, pricingId: string) {
     const transaction = await sequelize.transaction();
@@ -17,6 +18,7 @@ class PricingService {
       });
 
       if (existingUserPricing) {
+        console.log("lỗi 1")
         throw new BadRequestError('Bạn đã có một gói VIP đang hoạt động!');
       }
       const [user, pricing] = await Promise.all([UserService.getUserById(userId), Pricing.findByPk(pricingId)]);
@@ -24,6 +26,7 @@ class PricingService {
         throw new NotFoundError('Gói thành viên không tồn tại!');
       }
       if (!pricing.isActive) {
+        console.log("lỗi 2")
         throw new BadRequestError('Gói vip đã dừng hoạt động');
       }
       if (user.balance < pricing.price) {
@@ -41,6 +44,7 @@ class PricingService {
           displayDay: pricing.displayDay,
           startDate,
           endDate,
+          status:Status.COMPLETED,
           boostDays: pricing.boostDays,
         },
         { transaction },

@@ -101,19 +101,27 @@ class PostController {
 		}
 	}
 	//[update Post]
-	static async updatePost(req: Request, res: Response, next: NextFunction) {
-		const { userId } = (req as any).user;
-		const {postId} = req.params;
-		const updateData = req.body;
-		const imageFiles = req.files as Express.Multer.File[];
-		const imageUrls = imageFiles.map((file) => file.path);
-		try {
-			const newPost = await PostService.updatePost(postId, userId, updateData, imageUrls);
-			return res.status(200).json(ApiResponse.success(newPost, "Cập nhật bài đăng thành công"));
-		} catch (error) {
-			next(error);
-		}
-	}
+  static async updatePost(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userId } = (req as any).user;
+      const { postId } = req.params;
+      const imageFiles = req.files as Express.Multer.File[];
+      const { deletedImageUrls, ...updateData } = req.body;
+			console.log("check ",postId)
+      // Chuyển deletedImageUrls thành mảng
+      const urlsToDelete = deletedImageUrls ? (Array.isArray(deletedImageUrls) ? deletedImageUrls : JSON.parse(deletedImageUrls)) : [];
+      
+      // Lấy URL từ file mới
+      const newImageUrls = imageFiles ? imageFiles.map((file) => file.path) : [];
+
+      // Gọi service để cập nhật
+      const updatedPost = await PostService.updatePost(postId, userId, updateData, urlsToDelete, newImageUrls);
+
+      return res.status(200).json(ApiResponse.success(updatedPost, 'Cập nhật bài đăng thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
 	//[delete Post]
 	static async deletePost(req: Request, res: Response, next: NextFunction) {
 		const { userId } = (req as any).user;

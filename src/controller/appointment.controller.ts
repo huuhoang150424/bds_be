@@ -28,26 +28,24 @@ class AppointmentController {
   }
 
   static async updateAppointment(req: Request, res: Response, next: NextFunction) {
+    const { appointmentId } = req.params;
+    const { userId } = (req as any)?.user;
+    const updatedData = req.body;
     try {
-      const { appointmentId } = req.params;
-			const {userId} = (req as any)?.user;
-      const updatedData = req.body;
-      const changeReason = updatedData.changeReason ?? "Không có lý do cụ thể";
+      await AppointmentService.updateAppointment(appointmentId, userId, updatedData);
+      return res.status(200).json(ApiResponse.success(null, 'Cập nhật lịch hẹn thành công!'));
+    } catch (error) {
+      next(error);
+    }
+  }
 
-      if (!appointmentId) {
-        throw new BadRequestError("Thiếu `appointmentId`!");
-      }
-
-      if (!updatedData || Object.keys(updatedData).length === 0) {
-        throw new BadRequestError("Không có dữ liệu nào để cập nhật!");
-      }
-
-      if (!updatedData.status || !Object.values(AppointmentStatus).includes(updatedData.status)) {
-        throw new BadRequestError("Trạng thái cuộc hẹn không hợp lệ!");
-      }
-
-      const updatedAppointment = await AppointmentService.updateAppointment(appointmentId, userId, updatedData, changeReason);
-      return res.status(200).json(ApiResponse.success(updatedAppointment, "Cập nhật lịch hẹn thành công!"));
+  static async confirmAppointment(req: Request, res: Response, next: NextFunction) {
+    const { appointmentId } = req.params;
+    const { userId } = (req as any)?.user;
+    const { status, changeReason } = req.body;
+    try {
+      await AppointmentService.confirmAppointment(appointmentId, userId, status, changeReason);
+      return res.status(200).json(ApiResponse.success(null, 'Cập nhật trạng thái lịch hẹn thành công!'));
     } catch (error) {
       next(error);
     }
@@ -55,13 +53,9 @@ class AppointmentController {
 
   // [deleteAppointment]
   static async deleteAppointment(req: Request, res: Response, next: NextFunction) {
+    const { appointmentId } = req.params;
+    const {userId} = (req as any)?.user;
     try {
-      const { appointmentId } = req.params;
-			const {userId} = (req as any)?.user;
-
-      if (!appointmentId) {
-        throw new BadRequestError("Thiếu `appointmentId`!");
-      }
       const result = await AppointmentService.deleteAppointment(appointmentId, userId);
       return res.status(200).json(ApiResponse.success(result, "Cuộc hẹn đã bị hủy!"));
     } catch (error) {
@@ -85,6 +79,17 @@ class AppointmentController {
       const appointments = await AppointmentService.getUserAppointments(userId, validStatus);
 
       return res.status(200).json(ApiResponse.success(appointments, "Lấy danh sách cuộc hẹn thành công!"));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getAllAppointmentsByUserId(req: Request, res: Response, next: NextFunction) {
+    const { page, limit, offset } = (req as any).pagination;
+    const {userId} = (req as any)?.user;
+    try {
+      const appointments = await AppointmentService.getAllAppointmentsByUserId(userId, page, limit, offset);
+      return res.status(200).json(ApiResponse.success(appointments, 'thành công!'));
     } catch (error) {
       next(error);
     }

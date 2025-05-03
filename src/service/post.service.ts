@@ -1,7 +1,7 @@
 
 import { ActionType, PriceUnit, ListingTypes } from '@models/enums/post';
 import { User, Post, PostHistory, Tag, TagPost, Image, ListingType, PropertyType, UserPricing, Pricing, UserView, Wishlist, Comment, Rating } from '@models';
-import { NotFoundError, BadRequestError } from '@helper';
+import { NotFoundError, BadRequestError, ForbiddenError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
 import { Op } from 'sequelize';
@@ -421,71 +421,95 @@ class PostService {
     return totals;
   }
 
-  static async updatePost(postId: string, userId: string, data: any, imageUrls: string[]) {
-    const transaction = await sequelize.transaction();
-    try {
-      const post = await this.getPostById(postId);
-      const { tags, propertyType, ...updateData } = data;
-      const listingType = await ListingType.findOne({
-        where: { id: data.listingType },
-      });
-      if (!listingType) {
-        throw new BadRequestError('Loại tin đăng không hợp lệ');
-      }
+// Modify the updatePost method in PostService.js
 
-      if (Array.isArray(imageUrls)) {
-        const existingImages = await Image.findAll({ where: { postId } });
-        const existingUrls = existingImages.map((img) => img.imageUrl);
-        const imagesToDelete = existingImages.filter((img) => !imageUrls.includes(img.imageUrl));
-        if (imagesToDelete.length > 0) {
-          await Image.destroy({
-            where: { id: imagesToDelete.map((img) => img.id) },
+static async updatePost(postId: string, userId: string, data: any, deletedImageUrls: string[], newImageUrls: string[]) {
+  const transaction = await sequelize.transaction();
+  try {
+    const post = await this.getPostById(postId);
+    
+    if (post.userId !== userId) {
+      throw new ForbiddenError('Bạn không có quyền cập nhật bài đăng này');
+    }
+    
+    const { tags, ...updateData } = data;
+    
+    // Handle image updates
+    if (deletedImageUrls.length > 0 || newImageUrls.length > 0) {
+      if (deletedImageUrls.length > 0) {
+        await Image.destroy({
+          where: { postId, imageUrl: deletedImageUrls },
+          transaction,
+        });
+      }
+      
+      if (newImageUrls.length > 0) {
+        await Promise.all(
+          newImageUrls.map(async (imageUrl) => {
+            await Image.create({ id: uuidv4(), imageUrl, postId }, { transaction });
+          })
+        );
+      }
+    }
+    
+    // Handle tags
+    if (Array.isArray(tags)) {
+      await TagPost.destroy({ where: { postId }, transaction });
+      await Promise.all(
+        tags.map(async (tagName: string) => {
+          const [tag] = await Tag.findOrCreate({
+            where: { tagName },
+            defaults: { id: uuidv4(), tagName },
             transaction,
           });
-        }
-        const newImages = imageUrls.filter((url) => !existingUrls.includes(url));
-        await Promise.all(
-          newImages.map(async (imageUrl) => await Image.create({ id: uuidv4(), imageUrl, postId }, { transaction })),
-        );
-      }
-      if (Array.isArray(tags)) {
-        await TagPost.destroy({ where: { postId }, transaction });
-        await Promise.all(
-          tags.map(async (tagName) => {
-            const [tag] = await Tag.findOrCreate({
-              where: { tagName },
-              defaults: { id: uuidv4(), tagName },
-              transaction,
-            });
-            await TagPost.create({ tagId: tag.id, postId }, { transaction });
-          }),
-        );
-      }
-      if (propertyType) {
+          await TagPost.create({ tagId: tag.id, postId }, { transaction });
+        })
+      );
+    }
+    
+    // Handle property type update
+    if (data.propertyType) {
+      // First get the existing property type for this post
+      const existingPropertyType = await PropertyType.findOne({
+        where: { postId },
+        include: [{ model: ListingType }],
+        transaction,
+      });
+      
+      // If existing property type found, use its listingTypeId
+      const listingTypeId = existingPropertyType?.listingTypeId;
+      
+      if (listingTypeId) {
         const [property, created] = await PropertyType.findOrCreate({
-          where: { name: propertyType },
-          defaults: {
-            id: uuidv4(),
-            name: propertyType,
-            postId,
-            listingTypeId: listingType.id,
+          where: { name: data.propertyType },
+          defaults: { 
+            id: uuidv4(), 
+            name: data.propertyType, 
+            postId, 
+            listingTypeId 
           },
           transaction,
         });
+        
         if (!created) {
           await property.update({ postId }, { transaction });
         }
+      } else {
+        // Skip property type update if no listingTypeId is available
+        console.log('Skipping property type update - missing listingTypeId');
       }
-
-      await post.update(updateData, { transaction });
-      await this.savePostHistory(postId, userId, ActionType.UPDATE, transaction);
-      await transaction.commit();
-      return post;
-    } catch (err) {
-      await transaction.rollback();
-      throw err;
     }
+    
+    await post.update(updateData, { transaction });
+    await this.savePostHistory(postId, userId, ActionType.UPDATE, transaction);
+    await transaction.commit();
+    
+    return post;
+  } catch (err) {
+    await transaction.rollback();
+    throw err;
   }
+}
 
   static async savePostHistory(postId: string, userId: string, actionType: ActionType, transaction: any) {
     const findPost = await this.getPostById(postId);

@@ -1,3 +1,4 @@
+import { seedAppointments } from './appoinment';
 import { seedTransactions } from './transaction';
 import { seedNotifications } from './notification';
 import { seedBanners } from './banner';
@@ -28,5 +29,6 @@ export {
 	seedBanners,
 	seedNotifications,
 	seedTransactions,
-	seedUserPricings
+	seedUserPricings,
+	seedAppointments
 }
