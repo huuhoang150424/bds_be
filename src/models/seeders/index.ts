@@ -1,10 +1,11 @@
+import { seedTransactions } from './transaction';
 import { seedNotifications } from './notification';
 import { seedBanners } from './banner';
 import { seedPostHistory } from './post-history';
 import { seedWishlists } from './wishlists';
 import { seedComments, seedCommentLikes } from './comment';
 import {seedUsers} from './user';
-import {seedPricings} from './pricing';
+import { seedPricings, seedUserPricings } from './pricing';
 import {seedListingTypes} from './listing-types';
 import { seederPost, seedUserViews } from './post';
 import {seedNews} from "./news";
@@ -25,5 +26,7 @@ export {
 	seedCommentLikes,
 	seedRatings,
 	seedBanners,
-	seedNotifications
+	seedNotifications,
+	seedTransactions,
+	seedUserPricings
 }

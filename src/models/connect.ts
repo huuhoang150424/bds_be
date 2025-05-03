@@ -1,5 +1,5 @@
 import { sequelize } from "@config/database";
-import {seedUsers,seedPricings,seedListingTypes,seederPost,seedComments,seedWishlists,seedUserViews,seedNews, seedPostHistory,seedCommentLikes, seedReport, seedRatings,seedBanners, seedNotifications} from './seeders';
+import {seedUsers,seedPricings,seedListingTypes,seederPost,seedComments,seedWishlists,seedUserViews,seedNews, seedPostHistory,seedCommentLikes, seedReport, seedRatings,seedBanners, seedNotifications, seedTransactions, seedUserPricings} from './seeders';
 
 export const connectDatabase = async () => {
 	try {
@@ -20,6 +20,8 @@ export const connectDatabase = async () => {
 		// await seedWishlists();
 		// await seedBanners();
 		// await seedNotifications();
+		// await seedTransactions();
+		// await seedUserPricings();
 		// console.log(" migrate successfully");
 		
 	} catch (error) {

@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 const Router = express.Router();
-import {verifyRole} from "@middleware";
+import {paginationMiddleware, verifyRole} from "@middleware";
 import {TransactionController} from '@controller';
 import { Roles } from "@models/enums";
 
@@ -10,6 +10,8 @@ Router.post('/webhook', verifyRole([Roles.User]),TransactionController.handleWeb
 
 Router.get('/success', TransactionController.successPayment as any);
 Router.get('/cancel', TransactionController.cancelPayment as any);
+Router.get('/getAllTransaction/:type', verifyRole([Roles.Agent]), paginationMiddleware,TransactionController.getAllTransactions as any);
+Router.get('/getSummary', verifyRole([Roles.Agent]), TransactionController.getFinancialSummary as any);
 
 
 export default Router;

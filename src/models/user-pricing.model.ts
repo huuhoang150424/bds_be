@@ -10,6 +10,7 @@ import {
 import User from './user.model';
 import Pricing from './pricings.model';
 import BaseModel from './base.model';
+import { Status } from './enums';
 
 @Table({ tableName: 'user_pricings', timestamps: true })
 export default class UserPricing extends BaseModel<string> {
@@ -47,7 +48,12 @@ export default class UserPricing extends BaseModel<string> {
   @Column(DataType.INTEGER)
   boostDays!: number;
 
-  @AllowNull(false)
+  @AllowNull(true)
   @Column(DataType.DATE)
   endDate!: Date;
+
+  @AllowNull(false)
+  @Default(Status.PENDING)
+  @Column(DataType.ENUM(...Object.values(Status)))
+  status!: Status;
 }

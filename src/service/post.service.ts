@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
 import { Op } from 'sequelize';
 import { sequelize } from '@config/database';
+import NotificationService from './notification.service';
 
 
 class PostService {
@@ -234,6 +235,37 @@ class PostService {
       transaction.commit();
     } catch (err) {
       transaction.rollback();
+      throw err;
+    }
+  }
+
+
+  static async deletePosts(postIds: string[], adminId: string, reason: string) {
+    const transaction = await sequelize.transaction();
+    try {
+      const posts = await Post.findAll({
+        where: { id: postIds },
+        include: [{ model: User, attributes: ['id', 'fullName', 'email'] }],
+        transaction,
+      });
+  
+      if (posts.length !== postIds.length) {
+        throw new Error('Một số bài đăng không tồn tại');
+      }
+  
+      for (const post of posts) {
+        await this.savePostHistory(post.id, adminId, ActionType.DELETE, transaction);
+        await NotificationService.createNotification(
+          post.userId,
+          `Bài đăng "${post.title}" đã bị xóa bởi quản trị viên vì: ${reason}`
+        );
+        await post.destroy({ transaction });
+      }
+  
+      await transaction.commit();
+      return { message: `Xóa ${posts.length} bài đăng thành công` };
+    } catch (err) {
+      await transaction.rollback();
       throw err;
     }
   }

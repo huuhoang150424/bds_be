@@ -1,5 +1,10 @@
 import Pricing from "@models/pricings.model";
+import UserPricing from "@models/user-pricing.model";
+import User from "@models/user.model";
 import { v4 as uuidv4 } from "uuid";
+import { addDays } from "date-fns";
+import { Status } from "@models/enums";
+
 
 export const seedPricings = async () => {
   const pricingsData = [
@@ -48,5 +53,39 @@ export const seedPricings = async () => {
         ...pricing,
       },
     });
+  }
+};
+
+export const seedUserPricings = async () => {
+  const users = await User.findAll();
+  const pricings = await Pricing.findAll();
+
+  if (users.length === 0 || pricings.length === 0) {
+    return;
+  }
+
+  const statuses = Object.values(Status);
+
+  for (const user of users) {
+    for (let i = 0; i < 50; i++) {
+      const randomPricing = pricings[Math.floor(Math.random() * pricings.length)];
+      const startDate = new Date();
+      const endDate =
+        randomPricing.expiredDay === -1
+          ? null
+          : addDays(startDate, randomPricing.expiredDay);
+      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+      await UserPricing.create({
+        id: uuidv4(),
+        userId: user.id,
+        pricingId: randomPricing.id,
+        remainingPosts: randomPricing.maxPost === -1 ? 999 : randomPricing.maxPost,
+        displayDay: randomPricing.displayDay,
+        startDate,
+        boostDays: randomPricing.boostDays,
+        endDate: endDate || null,
+        status: randomStatus,
+      });
+    }
   }
 };

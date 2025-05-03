@@ -126,6 +126,21 @@ class PostController {
 		}
 	}
 
+	static async deletePosts(req: Request, res: Response, next: NextFunction) {
+		const { userId } = (req as any).user;
+		
+		const { postIds, reason }: { postIds: string[]; reason: string } = req.body;
+		if (!reason || !reason.trim()) {
+			return res.status(400).json(ApiResponse.error('Lý do xóa là bắt buộc'));
+		}
+	
+		try {
+			const result = await PostService.deletePosts(postIds, userId, reason);
+			return res.status(200).json(ApiResponse.success(null, result.message));
+		} catch (error) {
+			next(error);
+		}
+	}
 
 	//[get post outstanding]
 	static async getPostOutstanding(req: Request, res: Response, next: NextFunction) {
