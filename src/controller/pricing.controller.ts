@@ -93,6 +93,23 @@ class PricingController {
       next(error);
     }
   }
+
+	static async getPurchasedPricings(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+		const { page, limit, offset } = (req as any).pagination;
+    try {
+      const purchasedPricings = await PricingService.getPurchasedPricings(
+        userId,
+        page,
+        limit
+      );
+      return res.status(200).json(
+        ApiResponse.success(purchasedPricings, 'Lấy danh sách gói đã mua thành công!')
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 

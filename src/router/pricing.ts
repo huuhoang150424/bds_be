@@ -7,6 +7,7 @@ import { Roles } from '@models/enums';
 Router.post('/buyPricing', verifyRole([Roles.User, Roles.Agent]), PricingController.buyPricing as any);
 Router.put('/updatePricing', verifyRole([Roles.User, Roles.Agent]), PricingController.updatePricing as any);
 Router.get('/getAllPricing', verifyRole([Roles.User,Roles.Agent]), paginationMiddleware, PricingController.getAllPricing as any);
+Router.get('/getPurchased', verifyRole([Roles.User,Roles.Agent]), paginationMiddleware, PricingController.getPurchasedPricings as any);
 Router.post('/createPricing', verifyRole([Roles.Admin]), PricingController.createPricing as any);
 Router.put('/:id/editPricing', verifyRole([Roles.Admin]), PricingController.editPricing as any);
 Router.delete('/:id/deletePricing', verifyRole([Roles.Admin]), PricingController.deletePricing as any);

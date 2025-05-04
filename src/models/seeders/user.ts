@@ -39,8 +39,8 @@ export const seedUsers = async () => {
     },
   });
 
-  const total = 1_000;
-  const batchSize = 5_00;
+  const total = 1_00;
+  const batchSize = 5_0;
 
   for (let i = 0; i < total; i += batchSize) {
     const batch = Array.from({ length: batchSize }).map((_, idx) => {

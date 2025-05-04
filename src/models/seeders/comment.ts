@@ -6,6 +6,8 @@ import { CommentStatus, LikeStatus } from "@models/enums";
 
 
 
+import { faker } from "@faker-js/faker";
+
 const createCommentsRecursive = async (
   parentId: string | null,
   level: number,
@@ -16,12 +18,13 @@ const createCommentsRecursive = async (
 ) => {
   if (level > maxLevel) return;
 
-  const commentCount = level === 1 ? 3 : 2; 
+  const commentCount = level === 1 ? 3 : 2;
 
   for (let i = 0; i < commentCount; i++) {
     const randomUser = users[Math.floor(Math.random() * users.length)];
     const commentId = uuidv4();
-    const content = `Bình luận cấp ${level}: Đây là một bài viết tuyệt vời!`;
+
+    const content = faker.lorem.sentences(faker.number.int({ min: 1, max: 2 }));
 
     const newComment = {
       id: commentId,
@@ -37,10 +40,10 @@ const createCommentsRecursive = async (
 
     commentsData.push(newComment);
 
-    // Gọi đệ quy tạo comment con
     await createCommentsRecursive(commentId, level + 1, maxLevel, commentsData, users, post);
   }
 };
+
 
 
 export const seedComments = async () => {

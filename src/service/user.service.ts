@@ -25,7 +25,7 @@ class UserService {
   }
   static async getUserProfile(userId: string) {
     const findUser = await User.findOne({
-      where: { id: userId, roles: Roles.Agent },
+      where: { id: userId },
       attributes: [
         'id',
         'fullname',
@@ -52,6 +52,7 @@ class UserService {
     });
 
     if (!findUser) {
+			console.log("check 1")
       throw new NotFoundError('Không tìm thấy người dùng');
     }
     const userPosts = await Post.findAll({

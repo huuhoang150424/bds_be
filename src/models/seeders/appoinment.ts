@@ -15,9 +15,8 @@ export const seedAppointments = async () => {
   const appointments: Partial<Appointment>[] = [];
 
   for (const requester of users) {
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 50; i++) {
       let receiver = faker.helpers.arrayElement(users);
-      // Đảm bảo requester và receiver khác nhau
       while (receiver.id === requester.id) {
         receiver = faker.helpers.arrayElement(users);
       }
