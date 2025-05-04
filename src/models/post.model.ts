@@ -58,6 +58,10 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isFurniture!: boolean;
 
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  isRejected!: boolean;
+
   @Column(DataType.ENUM(...Object.values(Directions)))
   direction!: string;
 

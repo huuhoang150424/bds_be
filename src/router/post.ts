@@ -14,6 +14,7 @@ Router.get("/getAllPosts",verifyRole([Roles.Admin]),paginationMiddleware, PostCo
 Router.put("/:postId/updatePost",uploadCloud.array("images"),verifyRole([Roles.Agent,Roles.User]), PostController.updatePost as any);
 Router.delete("/:postId/deletePost",verifyRole([Roles.Agent]), PostController.deletePost as any);
 Router.post("/bulkApprovePost", verifyRole([Roles.Admin]),PostController.bulkApprovePosts as any);
+Router.post("/bulkRejectPost", verifyRole([Roles.Admin]), PostController.bulkRejectPosts as any);
 Router.get("/searchPost",paginationMiddleware,PostController.searchPost as any);
 
 Router.post('/delete', verifyRole([Roles.Admin]), PostController.deletePosts as any);
