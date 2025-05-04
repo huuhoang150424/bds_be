@@ -38,17 +38,25 @@ class UserController {
   }
 
   //[updateUser]
-  static async updateUser(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+
+  static async updateUser(req: Request, res: Response, next: NextFunction) {
     const user = (req as any).user;
     const { userId } = req.params;
     const data = req.body;
-    const avatar = req.file?.path;
-    if (avatar) {
-      data.avatar = avatar;
-    }
+    const files = (req as any).files; 
+    const { removedAvatarUrl, removedCoverPhotoUrl,removedCertificateUrl } = req.body; 
+
     try {
-      const updatedUser = await UserService.updateUser(userId, data, user);
-      return res.status(200).json(ApiResponse.success(updatedUser, 'Thành công'));
+      const updatedUser = await UserService.updateUser(
+        userId,
+        data,
+        files,
+        user,
+        removedAvatarUrl,
+        removedCoverPhotoUrl,
+        removedCertificateUrl
+      );
+      return res.status(200).json(ApiResponse.success(updatedUser, 'Cập nhật thông tin thành công'));
     } catch (error) {
       next(error);
     }

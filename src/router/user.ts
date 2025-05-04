@@ -10,7 +10,11 @@ Router.get('/getAllUser', verifyRole([Roles.Admin]), paginationMiddleware, UserC
 Router.get('/:userId/getUser', UserController.getUser as any);
 Router.put(
   '/:userId/updateUser',
-  uploadCloud.single('image'),
+  uploadCloud.fields([
+    { name: 'avatar', maxCount: 1 },
+    { name: 'coverPhoto', maxCount: 1 },
+    { name: 'certificates', maxCount: 1 },
+  ]),
   verifyRole([Roles.User, Roles.Agent]),
   UserController.updateUser as any,
 );

@@ -221,27 +221,32 @@ class PostDraftService {
     return findPostDraft;
   }
 
-  static async publishPostDraft(postDraftId:string) {
+  static async publishPostDraft(postDraftId: string) {
     const postDraft = await PostDraft.findByPk(postDraftId, {
       include: [Image, TagPost, PropertyType]
     });
-    if (postDraft?.status===StatusPostDraft.PUBLISHED) {
+    
+    if (postDraft?.status === StatusPostDraft.PUBLISHED) {
       throw new BadRequestError('Bạn đã xuất bài viết nháp này rồi');
     }
-		const existingPost = await Post.findOne({
-			where: { title: postDraft?.title }
-		});
-		if (existingPost) {
-			throw new BadRequestError('Tiêu đề bài viết đã tồn tại. Vui lòng chọn tiêu đề khác!');
-		}
+    
+    const existingPost = await Post.findOne({
+      where: { title: postDraft?.title }
+    });
+    
+    if (existingPost) {
+      throw new BadRequestError('Tiêu đề bài viết đã tồn tại. Vui lòng chọn tiêu đề khác!');
+    }
+    
     let userPricing = await UserPricing.findOne({
-      where: { userId:postDraft?.userId },
+      where: { userId: postDraft?.userId },
       include: [{ model: Pricing }],
       order: [['endDate', 'DESC']],
     });
+    
     if (!userPricing) {
       userPricing = await UserPricing.create({
-        userId:postDraft?.userId,
+        userId: postDraft?.userId,
         pricingId: null,
         remainingPosts: 15,
         displayDays: 10,
@@ -252,16 +257,18 @@ class PostDraftService {
         discountPercent: 0,
       });
     }
-    let priority=0;
+    
+    let priority = 0;
     if (userPricing && userPricing.pricing) {
-      if (userPricing.pricing.name==="VIP_1") {
-        priority=1;
-      } else if (userPricing.pricing.name==="VIP_2") {
-        priority=2;
-      }else if (userPricing.pricing.name==="VIP_3") {
-        priority=3;
-      } 
+      if (userPricing.pricing.name === "VIP_1") {
+        priority = 1;
+      } else if (userPricing.pricing.name === "VIP_2") {
+        priority = 2;
+      } else if (userPricing.pricing.name === "VIP_3") {
+        priority = 3;
+      }
     }
+    
     const pricing = userPricing.pricing;
     if (!pricing || pricing.name === 'VIP_1') {
       if (userPricing.remainingPosts <= 0) {
@@ -270,9 +277,11 @@ class PostDraftService {
         );
       }
     }
+    
     const displayDays = pricing ? pricing.displayDay : 10;
     const expiredDate = displayDays === -1 ? null : new Date(Date.now() + displayDays * 24 * 60 * 60 * 1000);
-    const newPost=await Post.create({
+    
+    const newPost = await Post.create({
       userId: postDraft?.userId,
       id: uuidv4(),
       title: postDraft?.title,
@@ -289,26 +298,44 @@ class PostDraftService {
       price: postDraft?.price,
       expiredDate: expiredDate,
       priority
-    })
-    if (postDraft?.images) {
+    });
+  
+    if (postDraft?.images && postDraft.images.length > 0) {
       await Promise.all(
         postDraft.images.map(async (image) => {
-          await image.update({ postId: newPost.id, postDraftId: null });
+          await Image.create({
+            id: uuidv4(),
+            postId: newPost.id,
+            imageUrl: image.imageUrl,
+            postDraftId: null
+          });
         })
       );
     }
     
-    if (postDraft?.tagPosts) {
+    if (postDraft?.tagPosts && postDraft.tagPosts.length > 0) {
       await Promise.all(
-        postDraft.tagPosts.map(async (tag) => {
-          await tag.update({ postId: newPost.id }); 
+        postDraft.tagPosts.map(async (tagPost) => {
+          await TagPost.create({
+            id: uuidv4(),
+            postId: newPost.id,
+            tagId: tagPost.tagId,
+            postDraftId: null
+          });
         })
       );
     }
-    if (postDraft?.propertyType && Array.isArray(postDraft.propertyType)) {
+    console.log(postDraft)
+    if (postDraft?.propertyType && Array.isArray(postDraft.propertyType) && postDraft.propertyType.length > 0) {
       await Promise.all(
         postDraft.propertyType.map(async (type) => {
-          await type.update({ postId: newPost.id });
+          console.log(type)
+          await PropertyType.create({
+            id: uuidv4(),
+            postId: newPost.id,
+            listingTypeId: type.listingTypeId,
+            name: type.name
+          });
         })
       );
     }
