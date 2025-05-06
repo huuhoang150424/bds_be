@@ -70,6 +70,21 @@ class NotificationController {
       next(error);
     }
   }
+
+	static async sendAllNotification(req: Request, res: Response, next: NextFunction) {
+    const { message, priority, endDate } = req.body;
+    try {
+      const notificationData = {
+        message,
+        priority: priority ? Number(priority) : undefined,
+        endDate,
+      };
+      await NotificationService.enqueueNotification(notificationData);
+      return res.status(201).json(ApiResponse.success(null, 'Gửi thông bao thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default NotificationController;

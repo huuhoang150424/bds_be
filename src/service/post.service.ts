@@ -511,14 +511,11 @@ class PostService {
 
       // Handle property type update
       if (data.propertyType) {
-        // First get the existing property type for this post
         const existingPropertyType = await PropertyType.findOne({
           where: { postId },
           include: [{ model: ListingType }],
           transaction,
         });
-
-        // If existing property type found, use its listingTypeId
         const listingTypeId = existingPropertyType?.listingTypeId;
 
         if (listingTypeId) {
@@ -537,7 +534,6 @@ class PostService {
             await property.update({ postId }, { transaction });
           }
         } else {
-          // Skip property type update if no listingTypeId is available
           console.log('Skipping property type update - missing listingTypeId');
         }
       }

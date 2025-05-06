@@ -22,47 +22,73 @@ export const seedUsers = async () => {
   ];
 
   const genders = Object.values(Gender);
-  
+
+  // Tạo admin trước
   await User.findOrCreate({
     where: { email: "admin@gmail.com" },
     defaults: {
       id: uuidv4(),
       fullname: "Admin User",
-      password: password,
+      password,
       emailVerified: true,
       address: "Hà Nội",
       roles: Roles.Admin,
       gender: Gender.Male,
       phone: "0900000000",
       dateOfBirth: new Date("1985-05-15"),
-      image: avatars[0],
+      avatar: avatars[0],
     },
   });
 
-  const total = 1_00;
-  const batchSize = 5_0;
+  const total = 200;
+  const professionalCount = 100;
+  const normalCount = 100;
+  const batchSize = 50;
+
+  const generateUser = (index: number, isProfessional: boolean) => ({
+    id: uuidv4(),
+    fullname: `User ${index}`,
+    email: `user${index}@gmail.com`,
+    password: password,
+    emailVerified: true,
+    address: faker.helpers.arrayElement(addresses),
+    gender: faker.helpers.arrayElement(genders),
+    phone: `09${faker.string.numeric(8)}`,
+    dateOfBirth: faker.date.birthdate({ min: 18, max: 60, mode: "age" }),
+    roles: Roles.Agent,
+    avatar: faker.helpers.arrayElement(avatars),
+    isProfessional,
+    balance: faker.number.float({ min: 0, max: 10000, fractionDigits: 2 }),
+    score: faker.number.int({ min: 0, max: 100 }),
+    createdAt: new Date(),
+    updatedAt: new Date(),
+
+    ...(isProfessional
+      ? {
+          selfIntroduction: faker.person.bio(),
+          experienceYears: faker.number.int({ min: 1, max: 10 }).toString(),
+          certificates: faker.lorem.words(3),
+          expertise: [faker.word.noun(), faker.word.noun()],
+        }
+      : {}),
+  });
+
+  let currentIndex = 1;
+
+  const createBatch = async (usersArray: any[]) => {
+    await User.bulkCreate(usersArray);
+    console.log(`✅ Đã tạo ${usersArray.length} user`);
+  };
 
   for (let i = 0; i < total; i += batchSize) {
-    const batch = Array.from({ length: batchSize }).map((_, idx) => {
-      const index = i + idx + 1;
-      return {
-        id: uuidv4(),
-        fullname: `User ${index}`,
-        email: `user${index}@gmail.com`,
-        password: password,
-        emailVerified: true,
-        address: faker.helpers.arrayElement(addresses),
-        gender: faker.helpers.arrayElement(genders),
-        phone: `09${faker.string.numeric(8)}`,
-        dateOfBirth: faker.date.birthdate({ min: 18, max: 60, mode: "age" }),
-        roles: Roles.Agent,
-        image: faker.helpers.arrayElement(avatars),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-    });
+    const batch: any[] = [];
 
-    await User.bulkCreate(batch);
-    console.log(`✅ Đã tạo ${i + batch.length}/${total} user`);
+    for (let j = 0; j < batchSize && currentIndex <= total; j++) {
+      const isProfessional = currentIndex <= professionalCount;
+      batch.push(generateUser(currentIndex, isProfessional));
+      currentIndex++;
+    }
+
+    await createBatch(batch);
   }
 };

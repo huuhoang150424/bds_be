@@ -25,7 +25,6 @@ class TransactionController {
     if (!verifyPayOSSignature(req.body, signature)) {
       throw new BadRequestError('Chữ ký không hợp lệ');
     } 
-    console.log('Gọi api')
     try {
       switch (status) {
         case 'completed':

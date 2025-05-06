@@ -105,5 +105,26 @@ class UserController {
 		}
 	}
 	
+
+	static async getProfessionalAgents(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { page, limit } = (req as any).pagination;
+    try {
+      const result = await UserService.getProfessionalAgents(page, limit);
+      return res.status(200).json(ApiResponse.success(result, ' thành công!'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+	static async searchProfessionalAgents(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { page, limit } = (req as any).pagination; 
+		const {keyword}=req.params;
+    try {
+      const result = await UserService.searchProfessionalAgents(page, limit,keyword);
+      return res.status(200).json(ApiResponse.success(result, 'Tìm kiếm thành công!'));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 export default UserController;

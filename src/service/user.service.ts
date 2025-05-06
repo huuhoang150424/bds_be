@@ -1,8 +1,8 @@
-import { Post, Rating, Transaction, User } from '@models';
+import { Comment, Post, Rating, Transaction, User, Wishlist } from '@models';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '@helper';
 import { Roles } from '@models/enums';
 import { sequelize } from '@config/database';
-import { Op } from 'sequelize';
+import { col, fn, literal, Op, type WhereOptions } from 'sequelize';
 
 class UserService {
   static async getAllUser(page: number, limit: number) {
@@ -52,7 +52,7 @@ class UserService {
     });
 
     if (!findUser) {
-			console.log("check 1")
+      console.log('check 1');
       throw new NotFoundError('Không tìm thấy người dùng');
     }
     const userPosts = await Post.findAll({
@@ -223,6 +223,100 @@ class UserService {
     return {
       roles: findUser.roles,
     };
+  }
+
+  private static async findProfessionalAgents(where: any, page: number, limit: number) {
+    const offset = (page - 1) * limit;
+    const agents = await User.findAndCountAll({
+      attributes: [
+        'id',
+        'fullname',
+        'email',
+        'phone',
+        'address',
+        'self_introduction',
+        'experience_years',
+        'certificates',
+        'expertise',
+        'avatar',
+        [literal(`(SELECT COUNT(DISTINCT posts.id) FROM posts WHERE posts.user_id = User.id)`), 'postCount'],
+        [
+          literal(`(
+                    SELECT COALESCE(SUM(
+                        (SELECT COUNT(*) FROM comments WHERE post_id = posts.id)
+                    ), 0)
+                    FROM posts WHERE posts.user_id = User.id
+                )`),
+          'commentCount',
+        ],
+        [
+          literal(`(
+                    SELECT COALESCE(SUM(
+                        (SELECT COUNT(*) FROM wishlists WHERE post_id = posts.id)
+                    ), 0)
+                    FROM posts WHERE posts.user_id = User.id
+                )`),
+          'wishlistCount',
+        ],
+        [
+          literal(`(
+                    SELECT COALESCE(SUM(
+                        (SELECT COUNT(*) FROM ratings WHERE post_id = posts.id)
+                    ), 0)
+                    FROM posts WHERE posts.user_id = User.id
+                )`),
+          'ratingCount',
+        ],
+        [
+          literal(`(
+                    SELECT COALESCE(SUM(
+                        (SELECT COUNT(*) FROM comments WHERE post_id = posts.id) * 0.5 +
+                        (SELECT COUNT(*) FROM wishlists WHERE post_id = posts.id) * 0.3 +
+                        (SELECT COUNT(*) FROM ratings WHERE post_id = posts.id) * 1.5
+                    ), 0)
+                    FROM posts WHERE posts.user_id = User.id
+                )`),
+          'totalScore',
+        ],
+      ],
+      where,
+      order: [[literal('totalScore'), 'DESC']],
+      limit: limit,
+      offset: offset,
+      subQuery: false,
+    });
+
+    return {
+      currentPage: page,
+      totalItems: agents.count,
+      totalPages: Math.ceil(agents.count / limit),
+      data: agents.rows,
+    };
+  }
+  static async getProfessionalAgents(page: number, limit: number) {
+    const where: any = {
+      isProfessional: true,
+      isLock: false,
+      roles: Roles.Agent,
+    };
+
+    return this.findProfessionalAgents(where, page, limit);
+  }
+  static async searchProfessionalAgents(page: number, limit: number, keyword?: string) {
+    const searchQuery = keyword ? `%${keyword}%` : '%';
+    const where: WhereOptions = {
+      is_professional: true,
+      is_lock: false,
+      roles: Roles.Agent,
+      [Op.or]: [
+        { fullname: { [Op.like]: fn('LOWER', searchQuery) } },
+        { email: { [Op.like]: fn('LOWER', searchQuery) } },
+        { phone: { [Op.like]: fn('LOWER', searchQuery) } },
+        { address: { [Op.like]: fn('LOWER', searchQuery) } },
+      ],
+    };
+
+    return this.findProfessionalAgents(where, page, limit);
   }
 }
 

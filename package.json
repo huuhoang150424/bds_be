@@ -60,6 +60,7 @@
 		"mysql2": "^3.12.0",
 		"node-cron": "^3.0.3",
 		"nodemailer": "^6.10.0",
+		"pm2": "^6.0.5",
 		"rate-limit-redis": "^4.2.0",
 		"redis": "^4.7.0",
 		"reflect-metadata": "^0.2.2",

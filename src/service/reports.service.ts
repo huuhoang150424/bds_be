@@ -52,7 +52,7 @@ class ReportsService {
         },
         {
           model: Post,
-          attributes: ["id", "title",  "address","description"],
+          attributes: ["id", "title",  "address","description","slug"],
         },
       ],
       distinct: true,
