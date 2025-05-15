@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: 'my-ts-app',
+      name: 'bds',
       script: 'src/index.ts', 
       interpreter: 'ts-node',
       watch: true,

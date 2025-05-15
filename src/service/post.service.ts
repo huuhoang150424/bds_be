@@ -1,4 +1,4 @@
-import { ActionType, PriceUnit, ListingTypes } from '@models/enums/post';
+import { ActionType, PriceUnit, ListingTypes, Directions, StatusPost } from '@models/enums/post';
 import {
   User,
   Post,
@@ -21,6 +21,12 @@ import { CacheRepository } from '@helper';
 import { Op } from 'sequelize';
 import { sequelize } from '@config/database';
 import NotificationService from './notification.service';
+import type { ApprovalResult } from '@interface/post.interface';
+import redisClient from '@config/redis';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { io } from 'index';
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
 class PostService {
   static async createPost(data: any, images: string[], userId: string) {
@@ -307,44 +313,44 @@ class PostService {
 
   static async rejectPosts(postIds: string[], reason: string) {
     if (!postIds || postIds.length === 0) {
-      console.log("check 1");
+      console.log('check 1');
       throw new BadRequestError('Danh sách bài đăng không được rỗng');
     }
-  
+
     if (!reason || reason.trim() === '') {
-      console.log("check 2");
+      console.log('check 2');
       throw new BadRequestError('Lý do từ chối không được để trống');
     }
-  
+
     const posts = await Post.findAll({
       where: { id: postIds },
       include: [{ model: User }],
     });
-  
+
     if (posts.length !== postIds.length) {
       throw new NotFoundError('Một số bài đăng không tồn tại');
     }
-  
+
     const alreadyRejected = posts.filter((post) => post.isRejected === true);
     if (alreadyRejected.length > 0) {
-      console.log("check 3");
+      console.log('check 3');
       throw new BadRequestError('Một số bài đăng đã bị từ chối');
     }
-  
+
     await Post.update(
       {
         isRejected: true,
       },
       { where: { id: postIds } },
     );
-  
+
     for (const post of posts) {
       await NotificationService.createNotification(
         post.userId,
         `Bài đăng "${post.title}" của bạn đã bị từ chối. Lý do: ${reason}`,
       );
     }
-  
+
     return await Post.findAll({
       where: { id: postIds },
       include: [{ model: User }],
@@ -1095,6 +1101,401 @@ class PostService {
     await listingTypeRecord.save();
 
     return listingTypeRecord;
+  }
+
+  private static readonly MAX_POSTS_PER_RUN = 3;
+  private static readonly REQUEST_INTERVAL = 30000;
+  private static readonly MAX_RETRIES = 3;
+  private static readonly BASE_RETRY_DELAY = 26000;
+  private static readonly QUEUE_KEY = 'post_approval_queue';
+  private static readonly RESULTS_KEY_PREFIX = 'approval_results_';
+
+  private static async delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  static async enqueuePostsForAiApproval(): Promise<string[]> {
+    const posts = await Post.findAll({
+      where: { verified: false, isRejected: false },
+      attributes: [
+        'id',
+        'title',
+        'price',
+        'priceUnit',
+        'squareMeters',
+        'bedroom',
+        'bathroom',
+        'floor',
+        'isFurniture',
+        'direction',
+        'description',
+        'address',
+        'status',
+        'verified',
+      ],
+      include: [{ model: User }],
+      limit: this.MAX_POSTS_PER_RUN,
+    });
+
+    if (posts.length === 0) {
+      throw new BadRequestError('Không có bài đăng nào chưa duyệt để xử lý');
+    }
+
+    const postData = posts.map((post) => JSON.stringify(post.toJSON()));
+    await redisClient.lPush(this.QUEUE_KEY, postData);
+
+    return posts.map((post) => post.id);
+  }
+
+  static async processAiApprovalQueue(): Promise<ApprovalResult[]> {
+    const results: ApprovalResult[] = [];
+    const batch = await redisClient.lRange(this.QUEUE_KEY, 0, this.MAX_POSTS_PER_RUN - 1);
+
+    if (batch.length === 0) {
+      return results;
+    }
+
+    for (let i = 0; i < batch.length; i++) {
+      const postData = batch[i];
+      const post = JSON.parse(postData);
+      const approvalResult = await this.evaluatePostWithAI(post, 0);
+      results.push(approvalResult);
+
+      await Post.update(
+        {
+          verified: approvalResult.approved,
+          isRejected: !approvalResult.approved,
+        },
+        { where: { id: post.id } },
+      );
+      io.emit('approvalProgress', {
+        processed: i + 1,
+        total: batch.length,
+        progress: ((i + 1) / batch.length) * 100,
+      });
+
+      if (i < batch.length - 1) {
+        await this.delay(this.REQUEST_INTERVAL);
+      }
+    }
+
+    await redisClient.lTrim(this.QUEUE_KEY, batch.length, -1);
+
+    const batchId = Date.now().toString();
+    await CacheRepository.set(`${this.RESULTS_KEY_PREFIX}${batchId}`, results, 3600);
+
+    const posts = await Post.findAll({
+      where: { id: results.map((r) => r.postId) },
+      include: [{ model: User }],
+    });
+
+    for (const result of results) {
+      const post = posts.find((p) => p.id === result.postId);
+      if (post && post.user) {
+        const message = result.approved
+          ? `Bài đăng "${post.title}" của bạn đã được duyệt thành công.`
+          : `Bài đăng "${post.title}" của bạn đã bị từ chối. Lý do: ${result.reason || 'Không xác định'}`;
+        await NotificationService.createNotification(post.userId, message);
+      }
+    }
+
+    return results;
+  }
+
+  // Đánh giá bài đăng với AI
+  private static async evaluatePostWithAI(post: any, retryCount: number = 0): Promise<ApprovalResult> {
+    const prompt = `
+      Bạn là một trợ lý AI chuyên đánh giá bài đăng bất động sản tại Việt Nam, với nhiệm vụ phát hiện nội dung lừa đảo hoặc spam. Nhiệm vụ của bạn là phân tích thông tin bài đăng và quyết định xem bài đăng có hợp lý để được duyệt hay không. Trả về một object JSON với định dạng:
+      {
+        "approved": boolean,
+        "reason": string // Để trống nếu duyệt, cung cấp lý do cụ thể nếu từ chối
+      }
+
+      **Thông tin bài đăng**:
+      ${JSON.stringify(post, null, 2)}
+
+      **Tiêu chí đánh giá** (dựa trên thị trường bất động sản Việt Nam):
+      1. **Giá (price)**:
+          - Phải > 0 và hợp lý so với diện tích (squareMeters).
+          - Tham khảo: Giá trung bình 30-100 triệu VND/m² cho căn hộ chung cư, 50-200 triệu VND/m² cho nhà phố.
+          - Giá/m² < 5 triệu hoặc > 500 triệu là dấu hiệu lừa đảo, trừ khi mô tả giải thích rõ (ví dụ: vị trí cao cấp, nội thất xa xỉ).
+      2. **Diện tích (squareMeters)**:
+          - Phải > 0.
+          - Phải đủ lớn cho số phòng ngủ và phòng tắm (tối thiểu 20m²/phòng ngủ, 10m²/phòng tắm).
+      3. **Phòng ngủ (bedroom) và phòng tắm (bathroom)**:
+          - Phải >= 0.
+          - Tổng số phòng (bedroom + bathroom) tối đa 1 phòng/10m².
+          - Nếu số phòng không hợp lý (ví dụ: 5 phòng ngủ trong 30m²), xem là dấu hiệu lừa đảo.
+      4. **Mô tả (description)**:
+          - Phải liên quan đến bất động sản (mô tả nhà, vị trí, tiện ích).
+          - Tối thiểu 20 ký tự, không chỉ chứa số hoặc ký tự đặc biệt.
+          - **Dấu hiệu lừa đảo/spam**:
+            - Ngôn ngữ cường điệu, gây áp lực (ví dụ: "Mua ngay kẻo lỡ!", "Giá rẻ nhất thị trường!").
+            - Nội dung không liên quan (ví dụ: quảng cáo sản phẩm, dịch vụ khác).
+            - Chứa thông tin liên hệ (số điện thoại, email, link URL) trong mô tả.
+            - Nội dung lặp lại, chung chung, hoặc giống bài đăng khác (dấu hiệu spam).
+            - Từ ngữ xúc phạm, thông tin giả mạo, hoặc nội dung không phù hợp.
+      5. **Địa chỉ (address)**:
+          - Phải không rỗng, tối thiểu 10 ký tự.
+          - Phải hợp lệ theo định dạng địa chỉ Việt Nam, bao gồm ít nhất một trong các thành phần: số nhà, tên đường, phường/xã, quận/huyện, tỉnh/thành phố.
+          - **Dấu hiệu lừa đảo**:
+            - Địa chỉ quá chung (ví dụ: "Hà Nội", "TP.HCM").
+            - Địa chỉ không tồn tại hoặc không hợp lý (ví dụ: "123 ABC, Quận 99").
+            - Địa chỉ lặp lại nhiều lần trong các bài đăng khác (dấu hiệu spam).
+      6. **Tầng (floor)**:
+          - Nếu có, phải >= -1 (tầng hầm) và <= 100.
+      7. **Nội thất (isFurniture)**:
+          - Phải là boolean (true/false).
+      8. **Hướng (direction)**:
+          - Phải thuộc danh sách: ${Object.values(Directions).join(', ')}.
+      9. **Trạng thái (status)**:
+          - Phải thuộc danh sách: ${Object.values(StatusPost).join(', ')}.
+
+      **Hướng dẫn**:
+      - Đánh giá từng tiêu chí theo thứ tự, ưu tiên phát hiện lừa đảo/spam.
+      - Dừng lại ngay khi phát hiện vấn đề, cung cấp lý do cụ thể liên quan đến tiêu chí vi phạm.
+      - Lý do từ chối phải ngắn gọn, rõ ràng, và đề cập đến lừa đảo/spam nếu phù hợp.
+      - Nếu tất cả tiêu chí hợp lý và không có dấu hiệu lừa đảo/spam, trả về approved: true và reason: "".
+      - Đặc biệt chú ý đến mô tả và địa chỉ để phát hiện nội dung lừa đảo hoặc spam.
+
+      **Ví dụ**:
+      - Bài đăng: { "price": 100000000, "squareMeters": 50, "address": "Hà Nội", "description": "Bán nhà giá rẻ, liên hệ 0901234567 ngay!" }
+        -> { "approved": false, "reason": "Mô tả chứa số điện thoại và địa chỉ quá chung, có dấu hiệu lừa đảo" }
+      - Bài đăng: { "price": 5000000000, "squareMeters": 30, "bedroom": 5, "address": "123 Nguyễn Huệ, Quận 1, TP.HCM", "description": "Nhà đẹp, mua ngay!" }
+        -> { "approved": false, "reason": "Giá 166 triệu/m² quá cao và 5 phòng ngủ không hợp lý cho 30m², có dấu hiệu lừa đảo" }
+      - Bài đăng: { "address": "TP.HCM", "description": "Căn hộ cao cấp, giá tốt, liên hệ qua zalo.me/abc" }
+        -> { "approved": false, "reason": "Mô tả chứa link liên hệ và địa chỉ quá chung, có dấu hiệu spam" }
+      - Bài đăng: { "price": 3000000000, "squareMeters": 60, "bedroom": 2, "bathroom": 1, "address": "456 Lê Lợi, Phường Bến Nghé, Quận 1, TP.HCM", "description": "Căn hộ 2 phòng ngủ, nội thất đầy đủ, gần trung tâm" }
+        -> { "approved": true, "reason": "" }
+    `;
+
+    try {
+      const result = await model.generateContent(prompt);
+      let responseText = result.response.text();
+      responseText = responseText.replace(/```json|```/g, '').trim();
+      const parsedResult = JSON.parse(responseText);
+
+      return {
+        postId: post.id,
+        approved: parsedResult.approved,
+        reason: parsedResult.reason || undefined,
+      };
+    } catch (error: any) {
+      if (error.status === 429 && retryCount < this.MAX_RETRIES) {
+        const delay = this.BASE_RETRY_DELAY * Math.pow(2, retryCount); // Exponential backoff
+        console.warn(`Lỗi 429, thử lại sau ${delay / 1000} giây...`);
+        await this.delay(delay);
+        return this.evaluatePostWithAI(post, retryCount + 1);
+      }
+
+      console.error('Lỗi khi đánh giá bài đăng với GeminiAI:', error);
+      return {
+        postId: post.id,
+        approved: false,
+        reason: 'Lỗi khi đánh giá bài đăng bằng AI, có thể do vượt quá giới hạn quota',
+      };
+    }
+  }
+
+  static async getPostCountByLocation(address: string) {
+    const invalidAddresses = [undefined, null, '', 'Đang tải...', 'Không xác định', 'Không thể xác định quận/huyện'];
+
+    if (invalidAddresses.includes(address)) {
+      const totalPosts = await Post.count();
+      return [
+        {
+          address: 'Tất cả vị trí',
+          postCount: totalPosts,
+          level: 'all',
+        },
+      ];
+    }
+
+    const searchAddress = address.trim();
+    let where: any = {};
+    let posts: any[] = [];
+
+    const addressParts = searchAddress.split(',').map((part) => part.trim());
+    const districtKeywords = ['quận', 'huyện', 'thị xã'];
+    let district =
+      addressParts.find((part) => districtKeywords.some((keyword) => part.toLowerCase().includes(keyword))) || '';
+
+    if (!district && addressParts.length > 1) {
+      district = addressParts[addressParts.length - 2];
+    }
+    if (district) {
+      where = {
+        address: { [Op.like]: `%${district}%` },
+      };
+
+      posts = await Post.findAll({
+        where,
+        attributes: [
+          ['address', 'full_address'],
+          [sequelize.fn('COUNT', sequelize.col('id')), 'postCount'],
+        ],
+        group: ['address'],
+        raw: true,
+        limit: 100,
+      });
+      // Gộp nhóm theo quận/huyện
+      const districtPostCount: Record<string, number> = {};
+
+      posts.forEach((post) => {
+        const postDistrict =
+          post.full_address
+            .split(',')
+            .map((p: string) => p.trim())
+            .find((p: string) => districtKeywords.some((keyword) => p.toLowerCase().includes(keyword))) || district;
+
+        districtPostCount[postDistrict] = (districtPostCount[postDistrict] || 0) + Number(post.postCount);
+      });
+
+      posts = Object.entries(districtPostCount).map(([districtName, count]) => ({
+        full_address: districtName,
+        postCount: count,
+      }));
+    }
+    if (posts.length === 0) {
+      where = {
+        address: { [Op.like]: `%${searchAddress}%` },
+      };
+
+      posts = await Post.findAll({
+        where,
+        attributes: [
+          ['address', 'full_address'],
+          [sequelize.fn('COUNT', sequelize.col('id')), 'postCount'],
+        ],
+        group: ['address'],
+        raw: true,
+        limit: 100,
+      });
+      if (posts.length === 0) {
+        const searchTerms = [
+          searchAddress,
+          `Quận ${searchAddress}`,
+          `quận ${searchAddress}`,
+          `Huyện ${searchAddress}`,
+          `huyện ${searchAddress}`,
+        ];
+
+        const orConditions = searchTerms.map((term) => ({
+          address: { [Op.like]: `%${term}%` },
+        }));
+
+        where = { [Op.or]: orConditions };
+
+        posts = await Post.findAll({
+          where,
+          attributes: [
+            ['address', 'full_address'],
+            [sequelize.fn('COUNT', sequelize.col('id')), 'postCount'],
+          ],
+          group: ['address'],
+          raw: true,
+          limit: 100,
+        });
+        if (posts.length === 0) {
+          const words = searchAddress.split(/\s+/).filter((word) => word.length > 2);
+
+          if (words.length > 0) {
+            const wordConditions = words.map((word) => ({
+              address: { [Op.like]: `%${word}%` },
+            }));
+
+            where = { [Op.or]: wordConditions };
+
+            posts = await Post.findAll({
+              where,
+              attributes: [
+                ['address', 'full_address'],
+                [sequelize.fn('COUNT', sequelize.col('id')), 'postCount'],
+              ],
+              group: ['address'],
+              raw: true,
+              limit: 100,
+            });
+          }
+        }
+      }
+    }
+    const result = posts.map((post: any) => {
+      const addressParts = post.full_address.split(',').map((part: string) => part.trim());
+      let level: 'full' | 'district' | 'province' = 'full';
+      if (addressParts.length <= 2) {
+        level = 'district';
+      }
+      if (addressParts.length === 1) {
+        level = 'province';
+      }
+      const postAddressLower = post.full_address.toLowerCase();
+      const searchAddressLower = searchAddress.toLowerCase();
+      let relevance = 0;
+
+      if (postAddressLower.includes(searchAddressLower)) {
+        relevance = 100;
+      } else {
+        const searchWords = searchAddressLower.split(/\s+/);
+        const addressWords = postAddressLower.split(/\s+/);
+        let matchCount = 0;
+
+        searchWords.forEach((word: string) => {
+          if (addressWords.some((addrWord: string) => addrWord.includes(word))) {
+            matchCount++;
+          }
+        });
+
+        relevance = Math.round((matchCount / searchWords.length) * 100);
+      }
+
+      return {
+        address: post.full_address,
+        postCount: Number(post.postCount),
+        level,
+        relevance,
+      };
+    });
+    return result.sort((a, b) => b.relevance - a.relevance);
+  }
+
+  static async getPostsByMapBounds(page: number, limit: number, offset: number, adress: string) {
+    const where: any = {};
+    console.log(adress);
+    if (adress) {
+      where.address = { [Op.like]: `%${adress}%` };
+    }
+
+    const { count, rows } = await Post.findAndCountAll({
+      where,
+      limit,
+      offset,
+      include: [
+        {
+          model: User,
+          attributes: ['id', 'fullname', 'avatar'],
+        },
+        {
+          model: Image,
+          attributes: ['imageUrl'],
+          limit: 1,
+        },
+        {
+          model: PropertyType,
+          attributes: ['name'],
+          include: [{ model: ListingType, attributes: ['listingType'] }],
+        },
+      ],
+      distinct: true,
+      order: [['createdAt', 'DESC']],
+    });
+
+    return {
+      totalItems: count,
+      totalPages: Math.ceil(count / limit),
+      currentPage: page,
+      posts: rows,
+    };
   }
 }
 

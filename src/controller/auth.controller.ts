@@ -40,7 +40,6 @@ class AuthController {
         displayName,
         photoUrl
       });
-      console.log(photoUrl,email,displayName)
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',

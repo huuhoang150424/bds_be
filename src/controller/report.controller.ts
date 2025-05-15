@@ -53,6 +53,17 @@ class ReportsController {
       next(error);
     }
   }
+
+	static async updateReport(req: Request, res: Response, next: NextFunction) {
+		const { reportId } = req.params;
+		const data = req.body;
+    try {
+      const report = await ReportsService.updateReport(reportId, data);      
+			return res.status(200).json(ApiResponse.success(report, "Thành công"));
+    } catch (error: any) {
+      next(error);
+    }
+  }
   
 
 }

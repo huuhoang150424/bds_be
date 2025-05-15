@@ -14,6 +14,7 @@ Router.get("/getAllPosts",verifyRole([Roles.Admin]),paginationMiddleware, PostCo
 Router.put("/:postId/updatePost",uploadCloud.array("images"),verifyRole([Roles.Agent,Roles.User]), PostController.updatePost as any);
 Router.delete("/:postId/deletePost",verifyRole([Roles.Agent]), PostController.deletePost as any);
 Router.post("/bulkApprovePost", verifyRole([Roles.Admin]),PostController.bulkApprovePosts as any);
+Router.post("/bulkAiApprovePosts", verifyRole([Roles.Admin]),PostController.bulkAiApprovePosts as any);
 Router.post("/bulkRejectPost", verifyRole([Roles.Admin]), PostController.bulkRejectPosts as any);
 Router.get("/searchPost",paginationMiddleware,PostController.searchPost as any);
 
@@ -28,6 +29,9 @@ Router.get("/getPostClient",paginationMiddleware, PostController.getAllPostForCl
 Router.get("/getPostOutstanding", PostController.getPostOutstanding as any);
 Router.get("/getPostHabit", verifyRole([Roles.Agent,Roles.User]),PostController.getPostHabit as any);
 Router.get("/filterPost", paginationMiddleware,PostController.filterPost as any);
+
+Router.get("/postCountByLocation",PostController.getPostCountByLocation as any);
+Router.get("/postsByMapBounds/:address",paginationMiddleware,PostController.getPostsByMapBounds as any);
 
 
 Router.get("/myPost/:type",verifyRole([Roles.Agent,Roles.User]), paginationMiddleware,PostController.getAllPostByUser as any);

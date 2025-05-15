@@ -234,6 +234,54 @@ class PostController {
       next(error);
     }
   }
+
+  static async bulkAiApprovePosts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const postIds = await PostService.enqueuePostsForAiApproval();
+      const results = await PostService.processAiApprovalQueue();
+
+      const approvedCount = results.filter((r) => r.approved).length;
+      const rejectedCount = results.length - approvedCount;
+      const approvalRate = results.length > 0 ? ((approvedCount / results.length) * 100).toFixed(2) : 0;
+
+      return res.status(200).json(
+        ApiResponse.success(
+          {
+            totalCount: results.length,
+            approvedCount,
+            rejectedCount,
+            approvalRate: `${approvalRate}%`,
+            details: results,
+          },
+          `Duyệt ${postIds.length} bài đăng bằng AI thành công`
+        )
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
+	static async getPostCountByLocation(req: Request, res: Response, next: NextFunction) {
+    const { province } = req.query;
+		try {
+      const postCounts = await PostService.getPostCountByLocation(province as string);
+      return res.status(200).json(ApiResponse.success(postCounts, 'Thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getPostsByMapBounds(req: Request, res: Response, next: NextFunction) {
+    const { page, limit, offset } = (req as any).pagination;
+    const {  address } = req.params;
+    try {
+      const posts = await PostService.getPostsByMapBounds(page, limit, offset, address);
+      return res.status(200).json(ApiResponse.success(posts, 'Thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 export default PostController;

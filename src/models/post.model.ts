@@ -7,15 +7,25 @@ import {
   ForeignKey,
   BelongsTo,
   HasMany,
-	BeforeCreate,
-	BeforeUpdate
+  BeforeCreate,
+  BeforeUpdate,
+  Index,
 } from 'sequelize-typescript';
 import slugify from 'slugify';
-import {User,Report,Comment,Rating,PropertyType,Image,TagPost,Wishlist} from '@models';
+import { User, Report, Comment, Rating, PropertyType, Image, TagPost, Wishlist } from '@models';
 import BaseModel from './base.model';
 import { ListingTypes, Directions, PriceUnit, StatusPost } from './enums';
 
-@Table({ tableName: 'posts', timestamps: true })
+@Table({
+  tableName: 'posts',
+  timestamps: true,
+  indexes: [
+    {
+      name: 'idx_post_address',
+      fields: ['address'],
+    },
+  ],
+})
 export default class Post extends BaseModel<string> {
   @ForeignKey(() => User)
   @Column(DataType.UUID)
@@ -27,7 +37,7 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.STRING)
   title!: string;
 
-	@Column({ type: DataType.ENUM(...Object.values(PriceUnit)) })
+  @Column({ type: DataType.ENUM(...Object.values(PriceUnit)) })
   priceUnit!: string;
 
   @Column(DataType.STRING)
@@ -51,8 +61,8 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.INTEGER)
   bathroom!: number;
 
-	@Default(0)
-	@Column(DataType.INTEGER)
+  @Default(0)
+  @Column(DataType.INTEGER)
   priority!: number;
 
   @Column(DataType.BOOLEAN)
@@ -65,7 +75,7 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.ENUM(...Object.values(Directions)))
   direction!: string;
 
-	@Default(false)
+  @Default(false)
   @Column(DataType.BOOLEAN)
   verified!: boolean;
 
@@ -76,8 +86,8 @@ export default class Post extends BaseModel<string> {
   @Column(DataType.ENUM(...Object.values(StatusPost)))
   status!: 'Còn trống' | 'Đang đám phán' | 'Đã bàn giao';
 
-	@AllowNull(false)
-	@Default('')
+  @AllowNull(false)
+  @Default('')
   @Column(DataType.STRING)
   slug!: string;
 
@@ -99,15 +109,14 @@ export default class Post extends BaseModel<string> {
   @HasMany(() => TagPost)
   tagPosts!: TagPost[];
 
-	@HasMany(() => PropertyType)
+  @HasMany(() => PropertyType)
   propertyType!: PropertyType[];
 
-	@BeforeCreate
+  @BeforeCreate
   @BeforeUpdate
   static generateSlug(instance: Post) {
-    if (instance.title ) {
+    if (instance.title) {
       instance.slug = slugify(instance.title, { lower: true, strict: true });
     }
   }
 }
-//done

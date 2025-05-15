@@ -4,6 +4,7 @@ import { ProcessingStatus, ReportReason, SeverityStatus } from "@models/enums";
 import { NotFoundError, BadRequestError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
+import NotificationService from './notification.service';
 
 
 
@@ -52,7 +53,13 @@ class ReportsService {
         },
         {
           model: Post,
-          attributes: ["id", "title",  "address","description","slug"],
+          attributes: ["id", "title",  "address","description","slug","userId"],
+					include: [
+						{
+							model: User,
+							attributes: ["id", "fullname", "email", "avatar"], 
+						}
+					]
         },
       ],
       distinct: true,
@@ -127,5 +134,34 @@ class ReportsService {
     };
   }
 
+
+  static async updateReport(reportId: string, data: any) {
+    const { status,reason } = data;
+    const report = await Report.findByPk(reportId, {
+      include: [
+        { model: Post, attributes: ['title', 'userId'] },
+        { model: User, attributes: ['id', 'fullname'] },
+      ],
+    });
+    if (!report) {
+      throw new Error('Không tìm thấy báo cáo');
+    }
+    await report.update({ status });
+    if (status === ProcessingStatus.Resolved || status === ProcessingStatus.Rejected) {
+      const endDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+      const message =
+        status === ProcessingStatus.Resolved
+          ? `Báo cáo của bạn với lý do "${reason}" đã được giải quyết.`
+          : `Báo cáo của bạn với lý do "${reason}" đã bị từ chối.`;
+      await NotificationService.sendNotification({
+        userId: report.userId,
+        message,
+        priority: 2,
+        endDate,
+      });
+    }
+
+    return report;
+  }
 }
 export default ReportsService;
