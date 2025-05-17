@@ -1,4 +1,4 @@
-export interface RegionStats {
+export interface RegionPostStats {
   address: string;
   viewCount: number;
   growthPercentage?: number;

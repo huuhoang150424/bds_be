@@ -1,9 +1,3 @@
-export interface AgeGenderStats {
-  ageGroup: string;
-  male: number;
-  female: number;
-  other: number;
-}
 
 export interface TopUsersStats {
   userId: string;
@@ -19,3 +13,28 @@ export interface NotificationData {
   userId?: string;
 }
 
+export interface GenderStats {
+  male: number;
+  female: number;
+  other: number;
+  malePercentage: number;
+  femalePercentage: number;
+  otherPercentage: number;
+}
+
+export interface AgeStats {
+  ageGroup: string;
+  count: number;
+}
+
+export interface RegionStats {
+  name: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DemographicStats {
+  genderDistribution: GenderStats;
+  ageDistribution: AgeStats[];
+  regionDistribution: RegionStats[];
+}

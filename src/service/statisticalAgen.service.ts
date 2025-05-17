@@ -4,7 +4,7 @@ import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } fr
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize, QueryTypes } from "sequelize";
 import {
-  MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats
+  MonthlyPostCount, RegionPostStats, DailyNewsCount, CategoryNewsCount, NewsWithStats
 }
   from "@interface";
 
@@ -174,7 +174,7 @@ class StatisticalAgenService {
     return monthlyData;
   }
 
-  static async getTopSearchRegionsWithGrowth(limit: number = 5): Promise<RegionStats[]> {
+  static async getTopSearchRegionsWithGrowth(limit: number = 5): Promise<RegionPostStats[]> {
     const currentDate = new Date();
     const thirtyDaysAgo = new Date(currentDate);
     thirtyDaysAgo.setDate(currentDate.getDate() - 30);
@@ -233,7 +233,7 @@ class StatisticalAgenService {
       previousMonthMap[item.address] = parseInt(item.viewCount);
     });
 
-    const result: RegionStats[] = currentMonthViews.map((item: any) => {
+    const result: RegionPostStats[] = currentMonthViews.map((item: any) => {
       const address = item.address || 'Không xác định';
       const currentViewCount = parseInt(item.viewCount);
       const previousViewCount = previousMonthMap[address] || 0;

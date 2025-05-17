@@ -7,10 +7,15 @@ import { ApiResponse, BadRequestError, UnauthorizedError } from "@helper";
 class StatisticalAdminController {
 
 
-  static async getUserAgeStatistics(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+  static async getUserDemographicStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     try {
-      const data = await StatisticalAdminService.getUserAgeStatistics();
-      return res.status(200).json(ApiResponse.success(data, "Thống kê độ tuổi người dùng theo giới tính thành công"));
+      const year = req.query.year ? Number(req.query.year) : 2025;
+      const stats = await StatisticalAdminService.getUserDemographicStatistics(year);
+      return res.status(200).json({
+        success: true,
+        message: "Lấy thống kê phân bổ người dùng thành công",
+        data: stats,
+      });
     } catch (error) {
       next(error);
     }

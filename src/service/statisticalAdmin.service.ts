@@ -4,63 +4,132 @@ import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } fr
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize, QueryTypes } from "sequelize";
 import {
-  AgeGenderStats, TopUsersStats, MonthlyStats, MonthlyRevenue, RevenueStats, PropertyTypeStats, RegionDistributionStats, PriceRangeStats, PostDistributionStats
+  TopUsersStats, MonthlyStats, MonthlyRevenue, RevenueStats, PropertyTypeStats, RegionDistributionStats, PriceRangeStats, PostDistributionStats
+  , GenderStats, AgeStats, RegionStats, DemographicStats
 }
   from "@interface";
 
 
 class StatisticalAdminService {
 
-  //[get user age]
-  static async getUserAgeStatistics(): Promise<AgeGenderStats[]> {
-    const currentYear = new Date().getFullYear();
+  //[get ]
+  static async getUserDemographicStatistics(year: number = 2025): Promise<DemographicStats> {
+    // Kiểm tra năm hợp lệ
+    if (year < 2000 || year > 2100) {
+      throw new BadRequestError('Năm không hợp lệ, phải nằm trong khoảng 2000-2100');
+    }
 
-    // Xác định khoảng tuổi
+    // 1. Thống kê theo giới tính
+    const maleCount = await User.count({
+      where: {
+        gender: "Male",
+      },
+    });
+
+    const femaleCount = await User.count({
+      where: {
+        gender: "Female",
+      },
+    });
+
+    const otherCount = await User.count({
+      where: {
+        gender: "Other",
+      },
+    });
+
+    const totalUsers = maleCount + femaleCount + otherCount;
+    if (totalUsers === 0) {
+      throw new BadRequestError('Không có dữ liệu người dùng để thống kê');
+    }
+
+    const genderDistribution: GenderStats = {
+      male: maleCount,
+      female: femaleCount,
+      other: otherCount,
+      malePercentage: totalUsers > 0 ? Number(((maleCount / totalUsers) * 100).toFixed(2)) : 0,
+      femalePercentage: totalUsers > 0 ? Number(((femaleCount / totalUsers) * 100).toFixed(2)) : 0,
+      otherPercentage: totalUsers > 0 ? Number(((otherCount / totalUsers) * 100).toFixed(2)) : 0,
+    };
+
+    // 2. Thống kê theo độ tuổi
     const ageRanges = [
-      { label: "Dưới 18", min: 0, max: 17 },
       { label: "18 - 24", min: 18, max: 24 },
       { label: "25 - 34", min: 25, max: 34 },
       { label: "35 - 44", min: 35, max: 44 },
       { label: "45 - 54", min: 45, max: 54 },
-      { label: "55 - 64", min: 55, max: 64 },
-      { label: "65 trở lên", min: 65, max: 200 },
+      { label: "55+", min: 55, max: 200 },
     ];
 
-    const statsPromises = ageRanges.map(async (range) => {
-      const minBirthYear = currentYear - range.max;
-      const maxBirthYear = currentYear - range.min;
+    const ageStatsPromises = ageRanges.map(async (range) => {
+      const minBirthYear = year - range.max;
+      const maxBirthYear = year - range.min;
 
-      const maleCount = await User.count({
+      const count = await User.count({
         where: {
-          gender: "Male",
-          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
-        },
-      });
-
-      const femaleCount = await User.count({
-        where: {
-          gender: "Female",
-          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
-        },
-      });
-
-      const otherCount = await User.count({
-        where: {
-          gender: "Other",
-          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
+          dateOfBirth: {
+            [Op.and]: [
+              { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
+              { [Op.ne]: null }
+            ]
+          }
         },
       });
 
       return {
         ageGroup: range.label,
-        male: maleCount,
-        female: femaleCount,
-        other: otherCount,
+        count,
       };
     });
 
-    return Promise.all(statsPromises);
+    const ageDistribution: AgeStats[] = await Promise.all(ageStatsPromises);
+
+    // 3. Thống kê theo khu vực (dựa trên cột address trong users)
+    const regionResults = await User.findAll({
+      attributes: ['address', [sequelize.fn('COUNT', sequelize.col('User.id')), 'count']],
+      where: {
+        address: { [Op.ne]: null }
+      },
+      group: ['User.address'],
+      raw: true
+    });
+
+    const regionMap: { [key: string]: number } = {
+      'Hà Nội': 0,
+      'Đà Nẵng': 0,
+      'TP.HCM': 0,
+      'Khác': 0
+    };
+
+    regionResults.forEach((row: any) => {
+      const address: string = row.address || '';
+      let region: string;
+      if (address.includes('Hà Nội')) {
+        region = 'Hà Nội';
+      } else if (address.includes('Đà Nẵng') || address.includes('Đà Năng')) {
+        region = 'Đà Nẵng';
+      } else if (address.includes('HCM')) {
+        region = 'TP.HCM';
+      } else {
+        region = 'Khác';
+      }
+      regionMap[region] += Number(row.count);
+    });
+
+    const totalRegionUsers = Object.values(regionMap).reduce((sum, count) => sum + count, 0);
+    const regionDistribution: RegionStats[] = Object.entries(regionMap).map(([name, count]) => ({
+      name,
+      count,
+      percentage: totalRegionUsers > 0 ? Number(((count / totalRegionUsers) * 100).toFixed(2)) : 0
+    }));
+
+    return {
+      genderDistribution,
+      ageDistribution,
+      regionDistribution
+    };
   }
+
 
   //[get top user by post]
   static async getTopUsersByPost(limit: number = 10): Promise<TopUsersStats[]> {
