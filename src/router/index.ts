@@ -11,7 +11,8 @@ import transactionRouter from "./transaction";
 import wishlistRouter from "./wishlist";
 import commentlikeRouter from "./comment-like";
 import chatRouter from "./chat";
-import statisticalRouter from "./statistical";
+import statisticalAgenRouter from "./statisticalAgen";
+import statisticalAdminRouter from "./statisticalAdmin";
 import notificationRouter from "./notification";
 import ProfessionalAgentRouter from "./professional-agent";
 import BannerRouter from "./banners";
@@ -30,7 +31,8 @@ const route=(app:Express)=>{
 	app.use("/wishlist",wishlistRouter)
 	app.use("/commentlike", commentlikeRouter)
 	app.use("/chat", chatRouter)
-	app.use("/statistical", statisticalRouter)
+	app.use("/statisticalAgen", statisticalAgenRouter)
+	app.use("/statisticalAdmin", statisticalAdminRouter)
 	app.use("/notification", notificationRouter)
 	app.use("/professionalAgent", ProfessionalAgentRouter)
 	app.use("/banner", BannerRouter)

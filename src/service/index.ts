@@ -12,7 +12,8 @@ import RatingService from "./rating.service";
 import PostDraftService from "./post-draft.service";
 import CommentLikeService from "./comment-like.service";
 import ChatService from "./chat.service";
-import StatisticalService from "./statistical.service";
+import StatisticalAgenService from "./statisticalAgen.service";
+import StatisticalAdminService from "./statisticalAdmin.service";
 import ProfessionalAgentService from "./professional-agent.service";
 import BannerService from "./banners.service";
 import AppointmentService from "./appointment.service";
@@ -32,7 +33,8 @@ export {
 	RatingService,
 	CommentLikeService,
 	ChatService,
-	StatisticalService,
+	StatisticalAgenService,
+	StatisticalAdminService,
 	ProfessionalAgentService,
 	BannerService,
 	AppointmentService
