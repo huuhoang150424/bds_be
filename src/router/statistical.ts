@@ -17,5 +17,6 @@ Router.get('/getDirectAccessCount',verifyRole([Roles.Agent,Roles.User]), Statist
 Router.get('/getUserAgeStatistics',verifyRole([Roles.Admin]), StatisticalController.getUserAgeStatistics as any);
 Router.get('/getTopUsersByPost',verifyRole([Roles.Admin]), StatisticalController.getTopUsersByPost as any);
 Router.get('/getMonthlyStats', verifyRole([Roles.Admin]), StatisticalController.getMonthlyStats as any);
+Router.get('/monthly-revenue-stats', verifyRole([Roles.Admin]), StatisticalController.getMonthlyRevenueStats as any);
 
 export default Router;

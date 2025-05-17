@@ -141,5 +141,17 @@ class StatisticalController {
     }
   }
 
+  static async getMonthlyRevenueStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { userId } = (req as any).user;
+    const { year } = req.query;
+    try {
+      const parsedYear = year ? parseInt(year as string, 10) : undefined;
+      const data = await StatisticalService.getMonthlyRevenueStats(parsedYear);
+      return res.status(200).json(ApiResponse.success(data, 'Lấy thống kê doanh thu theo tháng thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
 };
 export default StatisticalController;

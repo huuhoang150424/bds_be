@@ -3,7 +3,7 @@ import { UserView, Post, User, News, Image, Comment, Wishlist, Report, Pricing, 
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize, QueryTypes } from "sequelize";
-import { MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats, MonthlyStats } from "@interface";
+import { MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats, MonthlyStats, MonthlyRevenue, RevenueStats } from "@interface";
 
 
 class StatisticalService {
@@ -572,6 +572,53 @@ class StatisticalService {
     };
   }
 
+  // Doanh Thu Theo từng tháng
+  static async getMonthlyRevenueStats(year?: number): Promise<RevenueStats> {
+    const currentYear = year || new Date().getFullYear(); // Mặc định là năm hiện tại (2025)
+
+    // Kiểm tra năm hợp lệ
+    if (currentYear < 2000 || currentYear > 2100) {
+      throw new BadRequestError('Năm không hợp lệ, phải nằm trong khoảng 2000-2100');
+    }
+
+    // Truy vấn doanh thu từng tháng trong năm được chỉ định
+    const revenueQuery = await sequelize.query(`
+      SELECT 
+        MONTH(up.created_at) as month,
+        COALESCE(SUM(p.price), 0) as revenue
+        FROM user_pricings up
+        JOIN pricings p ON up.pricing_id = p.id
+        WHERE YEAR(up.created_at) = :currentYear
+        AND up.status = :completed
+        GROUP BY MONTH(up.created_at)
+    `, {
+      replacements: {
+        currentYear,
+        completed: Status.COMPLETED
+      },
+      type: QueryTypes.SELECT
+    });
+
+    // Tạo mảng doanh thu cho 12 tháng, mặc định là 0
+    const monthlyRevenue: MonthlyRevenue[] = Array.from({ length: 12 }, (_, index) => ({
+      month: index + 1,
+      revenue: 0
+    }));
+
+    // Gán doanh thu từ truy vấn vào các tháng tương ứng
+    revenueQuery.forEach((row: any) => {
+      const monthIndex = Number(row.month) - 1; // MONTH trả về 1-12, chuyển về index 0-11
+      monthlyRevenue[monthIndex] = {
+        month: Number(row.month),
+        revenue: Number(row.revenue) || 0
+      };
+    });
+
+    return {
+      year: currentYear,
+      monthlyRevenue
+    };
+  }
 
 }
 

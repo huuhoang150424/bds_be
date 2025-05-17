@@ -4,3 +4,13 @@ export interface MonthlyStats {
   soldPricings: number;
   newPosts: number;
 }
+
+export interface MonthlyRevenue {
+  month: number;
+  revenue: number;
+}
+
+export interface RevenueStats {
+  year: number;
+  monthlyRevenue: MonthlyRevenue[];
+}
