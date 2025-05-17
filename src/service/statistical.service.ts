@@ -1,9 +1,9 @@
-import { ActionType, Roles, CategoryNew } from "@models/enums";
-import { UserView, Post, User, News, Image, Comment, Wishlist, Report } from "@models";
+import { ActionType, Roles, CategoryNew, Status } from "@models/enums";
+import { UserView, Post, User, News, Image, Comment, Wishlist, Report, Pricing, UserPricing } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize, QueryTypes } from "sequelize";
-import { MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats } from "@interface";
+import { MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats, MonthlyStats } from "@interface";
 
 
 class StatisticalService {
@@ -509,6 +509,67 @@ class StatisticalService {
     }
 
     return result;
+  }
+
+  //Admin
+  // Lấy thống kê tháng hiện tại
+  static async getMonthlyStats(): Promise<MonthlyStats> {
+    const currentDate = new Date();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    // 1. Tính tổng doanh thu (từ user_pricings liên kết với pricings)
+    const revenueQuery = await sequelize.query(`
+      SELECT SUM(p.price) as totalRevenue
+      FROM user_pricings up
+      JOIN pricings p ON up.pricing_id = p.id
+      WHERE up.created_at >= :startOfMonth 
+        AND up.created_at <= :endOfMonth
+        AND up.status = :completed
+    `, {
+      replacements: {
+        startOfMonth,
+        endOfMonth,
+        completed: Status.COMPLETED
+      },
+      type: QueryTypes.SELECT
+    });
+
+    const totalRevenue = revenueQuery.length > 0 ? Number((revenueQuery[0] as any).totalRevenue) || 0 : 0;
+
+    // 2. Đếm người dùng mới
+    const newUsersCount = await User.count({
+      where: {
+        created_at: {
+          [Op.between]: [startOfMonth, endOfMonth]
+        }
+      }
+    });
+
+    // 3. Đếm số gói dịch vụ đã bán
+    const soldPricingsCount = await UserPricing.count({
+      where: {
+        created_at: {
+          [Op.between]: [startOfMonth, endOfMonth]
+        }
+      }
+    });
+
+    // 4. Đếm số bài đăng mới
+    const newPostsCount = await Post.count({
+      where: {
+        created_at: {
+          [Op.between]: [startOfMonth, endOfMonth]
+        }
+      }
+    });
+
+    return {
+      totalRevenue,
+      newUsers: newUsersCount,
+      soldPricings: soldPricingsCount,
+      newPosts: newPostsCount
+    };
   }
 
 

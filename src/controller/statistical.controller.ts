@@ -130,5 +130,16 @@ class StatisticalController {
   }
 
 
+  // Admin
+  static async getMonthlyStats(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { userId } = (req as any).user;
+    try {
+      const data = await StatisticalService.getMonthlyStats();
+      return res.status(200).json(ApiResponse.success(data, 'Lấy thống kê tháng hiện tại thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
 };
 export default StatisticalController;

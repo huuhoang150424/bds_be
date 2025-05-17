@@ -62,7 +62,7 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
 
 server.listen(PORT, async () => {
   console.log(`🚀 Server is running at http://localhost:${PORT}`);
-  initAllCronJobs();
-  // Run startup tasks
-  await runStartupTasks();
+  // initAllCronJobs();
+  // // Run startup tasks
+  // await runStartupTasks();
 });
