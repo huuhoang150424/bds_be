@@ -69,5 +69,22 @@ class StatisticalAdminController {
     }
   }
 
+  static async getMonthlyPropertyStats(req: Request, res: Response): Promise<void> {
+    try {
+      const year = parseInt(req.query.year as string) || 2025; // Lấy năm từ query string, mặc định là 2025
+      const stats = await StatisticalAdminService.getMonthlyPropertyStats(year);
+      res.status(200).json({
+        success: true,
+        message: 'Lấy thống kê bất động sản theo tháng thành công',
+        data: stats,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        message: error.message || 'Lỗi khi xử lý yêu cầu',
+      });
+    }
+  }
+
 };
 export default StatisticalAdminController;

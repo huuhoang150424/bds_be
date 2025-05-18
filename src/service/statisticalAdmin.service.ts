@@ -1,11 +1,11 @@
 import { ActionType, Roles, CategoryNew, Status } from "@models/enums";
-import { UserView, Post, User, News, Image, Comment, Wishlist, Report, Pricing, UserPricing, PropertyType } from "@models";
+import { UserView, Post, User, News, Image, Comment, Wishlist, Report, Pricing, UserPricing, PropertyType, ListingType } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize, QueryTypes } from "sequelize";
 import {
   TopUsersStats, MonthlyStats, MonthlyRevenue, RevenueStats, PropertyTypeStats, RegionDistributionStats, PriceRangeStats, PostDistributionStats
-  , GenderStats, AgeStats, RegionStats, DemographicStats
+  , GenderStats, AgeStats, RegionStats, DemographicStats, MonthlyPropertyStats, RawPropertyStats
 }
   from "@interface";
 
@@ -400,7 +400,62 @@ class StatisticalAdminService {
     };
   }
 
+  static async getMonthlyPropertyStats(year: number = 2025): Promise<MonthlyPropertyStats[]> {
+    // Kiểm tra năm hợp lệ
+    if (year < 2000 || year > 2100) {
+      throw new BadRequestError('Năm không hợp lệ, phải nằm trong khoảng 2000-2100');
+    }
 
+    // Khởi tạo mảng kết quả cho 12 tháng
+    const months = Array.from({ length: 12 }, (_, i) => `T${i + 1}`);
+    const propertyStats: MonthlyPropertyStats[] = months.map(month => ({
+      month,
+      totalProperties: 0,
+      averagePrice: 0
+    }));
+
+    // Truy vấn dữ liệu từ bảng posts
+    try {
+      const results = (await Post.findAll({
+        attributes: [
+          [sequelize.fn('MONTH', sequelize.col('Post.created_at')), 'month'],
+          [sequelize.fn('COUNT', sequelize.col('Post.id')), 'totalProperties'],
+          [sequelize.fn('AVG', sequelize.col('Post.price')), 'averagePrice']
+        ],
+        where: {
+          created_at: {
+            [Op.between]: [new Date(`${year}-01-01`), new Date(`${year}-12-31`)]
+          },
+          status: { [Op.ne]: 'Đã bàn giao' }
+        },
+        group: [sequelize.fn('MONTH', sequelize.col('Post.created_at'))],
+        raw: true
+      }) as unknown) as RawPropertyStats[];
+
+      // Gán giá trị từ kết quả truy vấn vào mảng propertyStats
+      results.forEach(result => {
+        const monthIndex = Number(result.month) - 1;
+        if (monthIndex >= 0 && monthIndex < 12) {
+          propertyStats[monthIndex] = {
+            month: `T${monthIndex + 1}`,
+            totalProperties: Number(result.totalProperties) || 0,
+            averagePrice: Number(result.averagePrice) || 0
+          };
+        }
+      });
+    } catch (error: any) {
+      console.error('Lỗi truy vấn chi tiết:', {
+        message: error.message,
+        stack: error.stack,
+        sql: error.sql || 'Không có thông tin SQL'
+      });
+      throw new BadRequestError('Lỗi khi truy vấn dữ liệu bất động sản: ' + error.message);
+    }
+
+    // Đảm bảo tất cả các tháng có dữ liệu (nếu không có bài đăng, giữ giá trị 0)
+    return propertyStats;
+  }
+  
 
 }
 

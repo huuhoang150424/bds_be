@@ -34,3 +34,16 @@ export interface PostDistributionStats {
   regionDistribution: RegionDistributionStats[];
   priceRangeDistribution: PriceRangeStats[];
 }
+
+export interface MonthlyPropertyStats {
+  month: string;
+  totalProperties: number; // Tổng số bất động sản
+  averagePrice: number;   // Giá trung bình
+}
+
+// Interface cho kết quả truy vấn thô
+export interface RawPropertyStats {
+  month: number;
+  totalProperties: number;
+  averagePrice: number;
+}
