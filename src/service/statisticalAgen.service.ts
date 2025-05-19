@@ -1,12 +1,15 @@
-import { ActionType, Roles, CategoryNew } from "@models/enums";
-import { UserView, Post, User, News, Image, Comment, Wishlist, Report } from "@models";
+import { ActionType, Roles, CategoryNew, Status } from "@models/enums";
+import { UserView, Post, User, News, Image, Comment, Wishlist, Report, Pricing, UserPricing, PropertyType } from "@models";
 import { NotFoundError, UnauthorizedError, CacheRepository, BadRequestError } from "@helper";
 import { sequelize } from '@config/database';
 import { Op, fn, col, literal, Sequelize, QueryTypes } from "sequelize";
-import { MonthlyPostCount, RegionStats, DailyNewsCount, CategoryNewsCount, NewsWithStats, AgeGenderStats, TopUsersStats } from "@interface";
+import {
+  MonthlyPostCount, RegionPostStats, DailyNewsCount, CategoryNewsCount, NewsWithStats
+}
+  from "@interface";
 
 
-class StatisticalService {
+class StatisticalAgenService {
   // getFeaturedPosts 
   static async getFeaturedPosts(page: number, limit: number, offset: number) {
     const countQuery = await sequelize.query(`
@@ -64,8 +67,6 @@ class StatisticalService {
       data: postsWithDetails,
     };
   }
-
-
 
   //[get user  view by address]
   static async getViewByAddress(userId: string) {
@@ -173,7 +174,7 @@ class StatisticalService {
     return monthlyData;
   }
 
-  static async getTopSearchRegionsWithGrowth(limit: number = 5): Promise<RegionStats[]> {
+  static async getTopSearchRegionsWithGrowth(limit: number = 5): Promise<RegionPostStats[]> {
     const currentDate = new Date();
     const thirtyDaysAgo = new Date(currentDate);
     thirtyDaysAgo.setDate(currentDate.getDate() - 30);
@@ -232,7 +233,7 @@ class StatisticalService {
       previousMonthMap[item.address] = parseInt(item.viewCount);
     });
 
-    const result: RegionStats[] = currentMonthViews.map((item: any) => {
+    const result: RegionPostStats[] = currentMonthViews.map((item: any) => {
       const address = item.address || 'Không xác định';
       const currentViewCount = parseInt(item.viewCount);
       const previousViewCount = previousMonthMap[address] || 0;
@@ -400,74 +401,6 @@ class StatisticalService {
     };
   }
 
-  //[get user age]
-  static async getUserAgeStatistics(): Promise<AgeGenderStats[]> {
-    const currentYear = new Date().getFullYear();
-
-    // Xác định khoảng tuổi
-    const ageRanges = [
-      { label: "Dưới 18", min: 0, max: 17 },
-      { label: "18 - 24", min: 18, max: 24 },
-      { label: "25 - 34", min: 25, max: 34 },
-      { label: "35 - 44", min: 35, max: 44 },
-      { label: "45 - 54", min: 45, max: 54 },
-      { label: "55 - 64", min: 55, max: 64 },
-      { label: "65 trở lên", min: 65, max: 200 },
-    ];
-
-    const statsPromises = ageRanges.map(async (range) => {
-      const minBirthYear = currentYear - range.max;
-      const maxBirthYear = currentYear - range.min;
-
-      const maleCount = await User.count({
-        where: {
-          gender: "Male",
-          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
-        },
-      });
-
-      const femaleCount = await User.count({
-        where: {
-          gender: "Female",
-          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
-        },
-      });
-
-      const otherCount = await User.count({
-        where: {
-          gender: "Other",
-          dateOfBirth: { [Op.between]: [new Date(`${minBirthYear}-01-01`), new Date(`${maxBirthYear}-12-31`)] },
-        },
-      });
-
-      return {
-        ageGroup: range.label,
-        male: maleCount,
-        female: femaleCount,
-        other: otherCount,
-      };
-    });
-
-    return Promise.all(statsPromises);
-  }
-
-  //[get top user by post]
-  static async getTopUsersByPost(limit: number = 10): Promise<TopUsersStats[]> {
-
-    const users = await User.findAll({
-      attributes: [
-        "id",
-        "fullname",
-        "email",
-        "avatar",
-        [sequelize.literal("(SELECT COUNT(*) FROM posts WHERE posts.user_id = User.id)"), "postCount"]
-      ],
-      order: [[sequelize.literal("postCount"), "DESC"]],
-      limit,
-      raw: true,
-    });
-    return users as unknown as TopUsersStats[];
-  }
 
 
   static async getDirectAccessCount(startDate: Date, endDate: Date): Promise<{ date: string; count: number }[]> {
@@ -514,4 +447,4 @@ class StatisticalService {
 
 }
 
-export default StatisticalService;
+export default StatisticalAgenService;

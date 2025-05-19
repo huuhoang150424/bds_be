@@ -11,7 +11,8 @@ import PostDraftController from "./post-draft.controller";
 import WishlistController from "./wishlist.controller";
 import CommentLikeController from "./comment-like.controller";
 import ChatController from "./chat.controller";
-import StatisticalController from "./statistical.controller";
+import StatisticalAgenController from "./statisticalAgen.controller";
+import StatisticalAdminController from "./statisticalAdmin.controller";
 import NotificationController from "./notification.controller";
 import ProfessionalAgentController  from "./professional-agent.controller";
 import BannerController from "./banners.controller";
@@ -31,7 +32,8 @@ export {
 	WishlistController,
 	CommentLikeController,
 	ChatController,
-	StatisticalController,
+	StatisticalAgenController,
+	StatisticalAdminController,
 	NotificationController,
 	ProfessionalAgentController,
 	BannerController,

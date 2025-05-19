@@ -1,15 +1,15 @@
 'use-strict';
 
 import { Request, Response, NextFunction } from 'express';
-import { StatisticalService } from "@service";
+import { StatisticalAgenService } from "@service";
 import { ApiResponse, BadRequestError, UnauthorizedError } from "@helper";
 
-class StatisticalController {
+class StatisticalAgenController {
   //[get view by Address]
   static async getViewByAddress(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
     const { userId } = (req as any).user;
     try {
-      const data = await StatisticalService.getViewByAddress(userId);
+      const data = await StatisticalAgenService.getViewByAddress(userId);
       return res.status(200).json(ApiResponse.success(data, 'Lấy thống kê phân bố khu vực thành công'));
     } catch (error) {
       next(error);
@@ -24,7 +24,7 @@ class StatisticalController {
           ApiResponse.error('UserId không được để trống')
         );
       }
-      const data = await StatisticalService.getPostByMonth(userId);
+      const data = await StatisticalAgenService.getPostByMonth(userId);
       return res.status(200).json(
         ApiResponse.success(data, 'Thống kê số bài đăng theo tháng thành công')
       );
@@ -40,7 +40,7 @@ class StatisticalController {
         return res.status(400).json(ApiResponse.error('Limit phải lớn hơn 0'));
       }
 
-      const data = await StatisticalService.getTopSearchRegionsWithGrowth(limit);
+      const data = await StatisticalAgenService.getTopSearchRegionsWithGrowth(limit);
       return res.status(200).json(
         ApiResponse.success(data, 'Thống kê top khu vực tìm kiếm trong tháng qua thành công')
       );
@@ -60,7 +60,7 @@ class StatisticalController {
       if (days <= 0) {
         return res.status(400).json(ApiResponse.error('Số ngày phải lớn hơn 0'));
       }
-      const data = await StatisticalService.getRecentNewsCount(userId, days);
+      const data = await StatisticalAgenService.getRecentNewsCount(userId, days);
       // Format lại ngày bắt đầu và kết thúc thống kê
       const startDate = data.period.start;
       const endDate = data.period.end;
@@ -79,28 +79,7 @@ class StatisticalController {
     }
   }
 
-  static async getUserAgeStatistics(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    try {
-      const data = await StatisticalService.getUserAgeStatistics();
-      return res.status(200).json(ApiResponse.success(data, "Thống kê độ tuổi người dùng theo giới tính thành công"));
-    } catch (error) {
-      next(error);
-    }
-  }
-
-
-  static async getTopUsersByPost(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
-    const { userId } = (req as any).user;
-    const limit = parseInt(req.query.limit as string) || 10;
-
-    try {
-      const data = await StatisticalService.getTopUsersByPost(limit);
-      return res.status(200).json(ApiResponse.success(data, "Thống kê người dùng đăng bài nhiều nhất thành công"));
-    } catch (error) {
-      console.error("❌ Lỗi khi truy vấn:", error);
-      next(error);
-    }
-  }
+  
 
 
   static async getDirectAccessCount(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
@@ -112,7 +91,7 @@ class StatisticalController {
       if (req.query.startDate) startDate.setTime(Date.parse(req.query.startDate as string));
       if (req.query.endDate) endDate.setTime(Date.parse(req.query.endDate as string));
 
-      const data = await StatisticalService.getDirectAccessCount(startDate, endDate);
+      const data = await StatisticalAgenService.getDirectAccessCount(startDate, endDate);
       return res.status(200).json(ApiResponse.success(data, "Thống kê số lượng người truy cập trực tiếp thành công"));
     } catch (error) {
       next(error);
@@ -122,13 +101,12 @@ class StatisticalController {
   static async getFeaturedPosts(req: Request, res: Response, next: NextFunction) {
     const { page, limit, offset } = (req as any).pagination;
     try {
-      const featuredPosts = await StatisticalService.getFeaturedPosts(page, limit, offset);
+      const featuredPosts = await StatisticalAgenService.getFeaturedPosts(page, limit, offset);
       return res.status(200).json(ApiResponse.success(featuredPosts, "Danh sách BĐS nổi bật đã được lấy"));
     } catch (error) {
       next(error);
     }
   }
 
-
 };
-export default StatisticalController;
+export default StatisticalAgenController;
