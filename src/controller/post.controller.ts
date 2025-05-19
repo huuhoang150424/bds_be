@@ -1,6 +1,6 @@
 'use-strict';
 
-import { ApiResponse } from '@helper';
+import { ApiResponse, BadRequestError } from '@helper';
 import { PostDraftService, PostService } from '@service';
 import { Request, Response, NextFunction } from 'express';
 
@@ -282,6 +282,23 @@ class PostController {
       next(error);
     }
   }
+
+
+  static async getTopPostsByMonth(req: Request, res: Response, next: NextFunction) {
+    const { year, month } = req.query;
+    try {
+      const parsedYear = parseInt(year as string, 10);
+      const parsedMonth = parseInt(month as string, 10);
+      if (isNaN(parsedYear) || isNaN(parsedMonth) || parsedMonth < 1 || parsedMonth > 12) {
+        throw new BadRequestError('Year hoặc month không hợp lệ');
+      }
+      const posts = await PostService.getTopPostsByMonth(parsedYear, parsedMonth);
+      return res.status(200).json(ApiResponse.success(posts, 'Lấy danh sách bài đăng nổi bật thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
+	
 }
 
 export default PostController;

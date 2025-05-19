@@ -49,6 +49,15 @@ class NewsController {
     }
   }
 
+	//
+	static async getLatestNews(req: Request, res: Response, next: NextFunction) {
+    try {
+      const news = await NewsService.getLatestNews();
+      return res.status(200).json(ApiResponse.success(news, 'Lấy danh sách bài đăng mới nhất thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
 
   // [UpdateNews]
   static async editNews(req: Request, res: Response, next: NextFunction) {

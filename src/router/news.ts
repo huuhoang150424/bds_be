@@ -20,6 +20,6 @@ Router.get("/:slug/getNews", NewController.getNews as any);
 Router.delete("/:newsId/delete", verifyRole([Roles.Admin]), NewController.deleteNews as any);
 
 Router.get("/findNews",paginationMiddleware, NewController.findNews as any);
-
+Router.get("/latestNews", NewController.getLatestNews as any);
 
 export default Router;

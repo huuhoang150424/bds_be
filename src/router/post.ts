@@ -32,6 +32,7 @@ Router.get("/filterPost", paginationMiddleware,PostController.filterPost as any)
 
 Router.get("/postCountByLocation",PostController.getPostCountByLocation as any);
 Router.get("/postsByMapBounds/:address",paginationMiddleware,PostController.getPostsByMapBounds as any);
+Router.get("/topPostsByMonth",PostController.getTopPostsByMonth as any);
 
 
 Router.get("/myPost/:type",verifyRole([Roles.Agent,Roles.User]), paginationMiddleware,PostController.getAllPostByUser as any);

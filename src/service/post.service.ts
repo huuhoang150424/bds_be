@@ -18,7 +18,7 @@ import {
 import { NotFoundError, BadRequestError, ForbiddenError } from '@helper';
 import { v4 as uuidv4 } from 'uuid';
 import { CacheRepository } from '@helper';
-import { Op } from 'sequelize';
+import { fn, literal, Op, QueryTypes } from 'sequelize';
 import { sequelize } from '@config/database';
 import NotificationService from './notification.service';
 import type { ApprovalResult } from '@interface/post.interface';
@@ -1496,6 +1496,109 @@ class PostService {
       currentPage: page,
       posts: rows,
     };
+  }
+  static async getTopPostsByMonth(year: number, month: number) {
+    const startDate = new Date(year, month - 1, 1);
+    const endDate = new Date(year, month, 0, 23, 59, 59, 999);
+
+    const replacements = {
+      startDate: startDate.toISOString().slice(0, 19).replace('T', ' '),
+      endDate: endDate.toISOString().slice(0, 19).replace('T', ' '),
+    };
+
+    const postAttributes = [
+      'id',
+      'title',
+      'slug',
+      'price',
+      'priceUnit',
+      'address',
+      'squareMeters',
+      'description',
+      'createdAt',
+      'floor',
+      'bedroom',
+      'bathroom',
+      'priority',
+      'isFurniture',
+      'isRejected',
+      'direction',
+      'verified',
+      'expiredDate',
+      'status',
+      'userId',
+    ];
+
+    const includeModels = [
+      {
+        model: User,
+        attributes: ['id', 'fullname', 'email', 'phone', 'avatar'],
+      },
+      {
+        model: Image,
+        attributes: ['id', 'image_url'],
+      },
+      {
+        model: TagPost,
+        attributes: ['id'],
+        include: [
+          {
+            model: Tag,
+            attributes: ['id', 'tag_name'],
+          },
+        ],
+      },
+    ];
+
+    const interactionCountSQL = `
+    (SELECT COUNT(*) FROM user_views WHERE user_views.post_id = Post.id AND user_views.viewed_at BETWEEN :startDate AND :endDate) +
+    (SELECT COUNT(*) FROM comments WHERE comments.post_id = Post.id AND comments.created_at BETWEEN :startDate AND :endDate) +
+    (SELECT COUNT(*) FROM ratings WHERE ratings.post_id = Post.id AND ratings.created_at BETWEEN :startDate AND :endDate) +
+    (SELECT COUNT(*) FROM wishlists WHERE wishlists.post_id = Post.id AND wishlists.created_at BETWEEN :startDate AND :endDate)
+  `;
+
+    const postsWithInteractions = await Post.findAll({
+      attributes: [...postAttributes, [fn('COALESCE', literal(interactionCountSQL), 0), 'interactionCount']],
+      include: includeModels,
+      where: {
+        status: 'Còn trống',
+        verified: true,
+        createdAt: { [Op.lte]: endDate },
+        [Op.and]: [literal(`${interactionCountSQL} > 0`)],
+      },
+      order: [
+        [literal('interactionCount'), 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
+      replacements,
+      subQuery: false,
+    });
+
+    if (postsWithInteractions.length >= 5) {
+      return postsWithInteractions.slice(0, 5);
+    }
+
+    const remainingCount = 5 - postsWithInteractions.length;
+    const postsWithoutInteractions = await Post.findAll({
+      attributes: [...postAttributes, [literal('0'), 'interactionCount']],
+      include: includeModels,
+      where: {
+        status: 'Còn trống',
+        verified: true,
+        createdAt: { [Op.lte]: endDate },
+        id: { [Op.notIn]: postsWithInteractions.map((post) => post.id) },
+        [Op.and]: [literal(`${interactionCountSQL} = 0`)],
+      },
+      order: [
+        ['priority', 'DESC'],
+        ['createdAt', 'DESC'],
+      ],
+      limit: remainingCount,
+      replacements,
+      subQuery: false,
+    });
+
+    return [...postsWithInteractions, ...postsWithoutInteractions];
   }
 }
 

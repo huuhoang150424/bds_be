@@ -116,6 +116,34 @@ class NewsService {
     return findNews;
   }
 
+	static async getLatestNews() {
+
+    const news = await News.findAll({
+      where: {
+        createdAt: {
+          [Op.lte]: new Date()
+        }
+      },
+      order: [['createdAt', 'DESC']],
+      limit: 5,
+      include: [{
+        model: User,
+        as: 'author',
+        attributes: ['id', 'fullname', 'email']
+      }],
+      attributes: [
+        'id',
+        'title',
+        'slug',
+        'imageUrl',
+        'category',
+        'readingTime',
+        'view',
+        'createdAt'
+      ]
+    });
+    return news;
+  }
   static async updateNews( newsId: string, userId: string, image: string | undefined, updatedData: any, removedImageUrl?: string ) {
     return await sequelize.transaction(async (transaction: Transaction) => {
       const news = await News.findOne({ where: { id: newsId }, transaction });
