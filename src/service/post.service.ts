@@ -384,6 +384,7 @@ class PostService {
       distinct: true,
 
       order: [
+				['isRejected', 'DESC'],
         ['createdAt', 'DESC'],
         ['verified', 'ASC'],
       ],
@@ -907,148 +908,182 @@ class PostService {
       limit,
     });
   }
-  static async filterPosts(query: any, page: number = 1, limit: number = 10, offset: number) {
-    const {
-      keyword,
-      tagIds,
-      minPrice,
-      maxPrice,
-      floor,
-      minSquareMeters,
-      maxSquareMeters,
-      directions,
-      bedrooms,
-      bathrooms,
-      propertyTypeIds,
-      listingTypeIds,
-      sortBy,
-      order,
-      ratings,
-      isProfessional,
-      status,
-      isFurniture,
-    } = query;
-    const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
-      if (!value) return [];
-      if (Array.isArray(value)) return value.map(parser);
-      return [parser(value)];
-    };
-    const whereCondition: any = {};
-    if (status) {
-      const statusArray = toArray(status, String);
-      if (statusArray.length > 0) {
-        whereCondition.status = { [Op.in]: statusArray };
-      }
+static async filterPosts(query: any, page: number = 1, limit: number = 10, offset: number) {
+  const {
+    keyword,
+    tagIds,
+    minPrice,
+    maxPrice,
+    floor,
+    minSquareMeters,
+    maxSquareMeters,
+    directions,
+    bedrooms,
+    bathrooms,
+    propertyTypeIds,
+    listingTypeIds,
+    sortBy,
+    order,
+    ratings,
+    isProfessional,
+    status,
+    isFurniture,
+  } = query;
+  const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.map(parser);
+    return [parser(value)];
+  };
+  const whereCondition: any = {};
+  if (status) {
+    const statusArray = toArray(status, String);
+    if (statusArray.length > 0) {
+      whereCondition.status = { [Op.in]: statusArray };
     }
-    if (keyword) {
-      whereCondition[Op.or] = [
-        { title: { [Op.like]: `%${keyword}%` } },
-        { description: { [Op.like]: `%${keyword}%` } },
-        { address: { [Op.like]: `%${keyword}%` } },
-      ];
-    }
-    if (minPrice || maxPrice) {
-      whereCondition.price = {
-        ...(minPrice ? { [Op.gte]: Number(minPrice) } : {}),
-        ...(maxPrice ? { [Op.lte]: Number(maxPrice) } : {}),
-      };
-    }
-    if (minSquareMeters || maxSquareMeters) {
-      whereCondition.squareMeters = {
-        ...(minSquareMeters ? { [Op.gte]: Number(minSquareMeters) } : {}),
-        ...(maxSquareMeters ? { [Op.lte]: Number(maxSquareMeters) } : {}),
-      };
-    }
-    const directionArray = toArray(directions, String);
-    if (directionArray.length > 0) {
-      whereCondition.direction = { [Op.in]: directionArray };
-    }
-    const bedroomArray = toArray(bedrooms, Number);
-    if (bedroomArray.length > 0) {
-      whereCondition.bedroom = { [Op.in]: bedroomArray };
-    }
-    const bathroomArray = toArray(bathrooms, Number);
-    if (bathroomArray.length > 0) {
-      whereCondition.bathroom = { [Op.in]: bathroomArray };
-    }
-    if (floor) {
-      whereCondition.floor = Number(floor);
-    }
-    if (typeof isFurniture !== 'undefined') {
-      whereCondition.isFurniture = isFurniture === 'true';
-    }
-    const includeConditions: any = [
-      { model: Image, attributes: ['image_url'] },
-      {
-        model: User,
-        attributes: ['fullname', 'id', 'phone', 'isProfessional'],
-        where: isProfessional === 'true' ? { isProfessional: true } : undefined,
-        required: isProfessional === 'true' ? true : false,
-      },
+  }
+  if (keyword) {
+    whereCondition[Op.or] = [
+      { title: { [Op.like]: `%${keyword}%` } },
+      { description: { [Op.like]: `%${keyword}%` } },
+      { address: { [Op.like]: `%${keyword}%` } },
     ];
-    const ratingArray = toArray(ratings, Number);
-    if (ratingArray.length > 0) {
-      includeConditions.push({
-        model: Rating,
-        where: {
-          rating: { [Op.in]: ratingArray },
-        },
-        required: true,
-      });
-    }
-    const tagIdArray = toArray(tagIds, String);
-    if (tagIdArray.length > 0) {
-      includeConditions.push({
-        model: TagPost,
-        where: { tagId: { [Op.in]: tagIdArray } },
-        required: true,
-      });
-    }
-    const propertyTypeNameArray = toArray(propertyTypeIds, String);
-    const listingTypeEnumArray = toArray(listingTypeIds, String);
-    if (listingTypeEnumArray.length > 0) {
-      whereCondition.id = {
-        [Op.in]: sequelize.literal(`(
-					SELECT propertyType.post_id 
-					FROM property_types AS propertyType
-					INNER JOIN listing_types AS listingType 
-					ON propertyType.listing_type_id = listingType.id
-					AND listingType.listing_type IN (${listingTypeEnumArray.map((type) => `'${type}'`).join(',')})
-					WHERE propertyType.post_id IS NOT NULL
-				)`),
-      };
-    }
-    if (propertyTypeNameArray.length > 0) {
-      includeConditions.push({
-        model: PropertyType,
-        where: {
-          slug: { [Op.in]: propertyTypeNameArray },
-        },
-        required: true,
-      });
-    }
-
-    let orderCondition: any = [['createdAt', 'DESC']];
-    if (sortBy) {
-      const orderType = order === 'asc' ? 'ASC' : 'DESC';
-      orderCondition = [[sortBy, orderType]];
-    }
-    const { count, rows } = await Post.findAndCountAll({
-      where: whereCondition,
-      include: includeConditions,
-      limit,
-      offset: offset || (page - 1) * limit,
-      order: orderCondition,
-      distinct: true,
-    });
-
-    return {
-      total: count,
-      posts: rows,
-      page,
-      totalPages: Math.ceil(count / limit),
+  }
+  if (minPrice || maxPrice) {
+    whereCondition.price = {
+      ...(minPrice ? { [Op.gte]: Number(minPrice) } : {}),
+      ...(maxPrice ? { [Op.lte]: Number(maxPrice) } : {}),
     };
   }
+  if (minSquareMeters || maxSquareMeters) {
+    whereCondition.squareMeters = {
+      ...(minSquareMeters ? { [Op.gte]: Number(minSquareMeters) } : {}),
+      ...(maxSquareMeters ? { [Op.lte]: Number(maxSquareMeters) } : {}),
+    };
+  }
+  const directionArray = toArray(directions, String);
+  if (directionArray.length > 0) {
+    whereCondition.direction = { [Op.in]: directionArray };
+  }
+  const bedroomArray = toArray(bedrooms, Number);
+  if (bedroomArray.length > 0) {
+    whereCondition.bedroom = { [Op.in]: bedroomArray };
+  }
+  const bathroomArray = toArray(bathrooms, Number);
+  if (bathroomArray.length > 0) {
+    whereCondition.bathroom = { [Op.in]: bathroomArray };
+  }
+  if (floor) {
+    whereCondition.floor = Number(floor);
+  }
+  if (typeof isFurniture !== 'undefined') {
+    whereCondition.isFurniture = isFurniture === 'true';
+  }
+  const includeConditions: any = [
+    { model: Image, attributes: ['image_url'] },
+    {
+      model: User,
+      attributes: ['fullname', 'id', 'phone', 'isProfessional'],
+      where: isProfessional === 'true' ? { isProfessional: true } : undefined,
+      required: isProfessional === 'true' ? true : false,
+    },
+  ];
+  const ratingArray = toArray(ratings, Number);
+  if (ratingArray.length > 0) {
+    includeConditions.push({
+      model: Rating,
+      where: {
+        rating: { [Op.in]: ratingArray },
+      },
+      required: true,
+    });
+  }
+  
+  // Fixed tag filtering
+  const tagIdArray = toArray(tagIds, String);
+  if (tagIdArray.length > 0) {
+    whereCondition.id = {
+      [Op.in]: sequelize.literal(`(
+        SELECT tp.postId 
+        FROM tag_posts AS tp
+        WHERE tp.tagId IN (${tagIdArray.map(id => `'${id}'`).join(',')})
+        AND tp.postId IS NOT NULL
+        GROUP BY tp.postId
+        HAVING COUNT(DISTINCT tp.tagId) = ${tagIdArray.length}
+      )`)
+    };
+  }
+  
+  const propertyTypeNameArray = toArray(propertyTypeIds, String);
+  const listingTypeEnumArray = toArray(listingTypeIds, String);
+  if (listingTypeEnumArray.length > 0) {
+    whereCondition.id = {
+      ...whereCondition.id,
+      [Op.in]: sequelize.literal(`(
+        SELECT propertyType.post_id 
+        FROM property_types AS propertyType
+        INNER JOIN listing_types AS listingType 
+        ON propertyType.listing_type_id = listingType.id
+        AND listingType.listing_type IN (${listingTypeEnumArray.map((type) => `'${type}'`).join(',')})
+        WHERE propertyType.post_id IS NOT NULL
+      )`),
+    };
+  }
+  if (propertyTypeNameArray.length > 0) {
+    includeConditions.push({
+      model: PropertyType,
+      where: {
+        slug: { [Op.in]: propertyTypeNameArray },
+      },
+      required: true,
+    });
+  }
+
+  let orderCondition: any = [['createdAt', 'DESC']];
+  if (sortBy) {
+    const orderType = order === 'asc' ? 'ASC' : 'DESC';
+    orderCondition = [[sortBy, orderType]];
+  }
+  
+  // Handle case where we have both tag filter and listing type filter
+  if (tagIdArray.length > 0 && listingTypeEnumArray.length > 0) {
+    whereCondition.id = {
+      [Op.and]: [
+        sequelize.literal(`id IN (
+          SELECT tp.postId 
+          FROM tag_posts AS tp
+          WHERE tp.tagId IN (${tagIdArray.map(id => `'${id}'`).join(',')})
+          AND tp.postId IS NOT NULL
+          GROUP BY tp.postId
+          HAVING COUNT(DISTINCT tp.tagId) = ${tagIdArray.length}
+        )`),
+        sequelize.literal(`id IN (
+          SELECT propertyType.post_id 
+          FROM property_types AS propertyType
+          INNER JOIN listing_types AS listingType 
+          ON propertyType.listing_type_id = listingType.id
+          AND listingType.listing_type IN (${listingTypeEnumArray.map((type) => `'${type}'`).join(',')})
+          WHERE propertyType.post_id IS NOT NULL
+        )`)
+      ]
+    };
+  }
+
+  const { count, rows } = await Post.findAndCountAll({
+    where: whereCondition,
+    include: includeConditions,
+    limit,
+    offset: offset || (page - 1) * limit,
+    order: orderCondition,
+    distinct: true,
+  });
+
+  return {
+    total: count,
+    posts: rows,
+    page,
+    totalPages: Math.ceil(count / limit),
+  };
+}
 
   static async getListingTypes(): Promise<{ id: string; listingType: string }[]> {
     const listingTypes = await ListingType.findAll({
@@ -1147,60 +1182,78 @@ class PostService {
     return posts.map((post) => post.id);
   }
 
-  static async processAiApprovalQueue(): Promise<ApprovalResult[]> {
-    const results: ApprovalResult[] = [];
-    const batch = await redisClient.lRange(this.QUEUE_KEY, 0, this.MAX_POSTS_PER_RUN - 1);
+static async processAiApprovalQueue(): Promise<ApprovalResult[]> {
+  const results: ApprovalResult[] = [];
+  const batch = await redisClient.lRange(this.QUEUE_KEY, 0, this.MAX_POSTS_PER_RUN - 1);
 
-    if (batch.length === 0) {
-      return results;
+  if (batch.length === 0) {
+    return results;
+  }
+
+  for (let i = 0; i < batch.length; i++) {
+    const postData = batch[i];
+    let post;
+    try {
+      post = JSON.parse(postData);
+    } catch (parseError) {
+      console.error(`Lỗi parse dữ liệu bài đăng từ queue:`, postData, parseError);
+      continue;
     }
 
-    for (let i = 0; i < batch.length; i++) {
-      const postData = batch[i];
-      const post = JSON.parse(postData);
-      const approvalResult = await this.evaluatePostWithAI(post, 0);
-      results.push(approvalResult);
+    console.log(`Đang xử lý bài đăng ${post.id}`);
+    const approvalResult = await this.evaluatePostWithAI(post, 0);
+    console.log(`Kết quả đánh giá AI cho bài đăng ${post.id}:`, approvalResult);
 
-      await Post.update(
+    try {
+      const [affectedRows] = await Post.update(
         {
           verified: approvalResult.approved,
           isRejected: !approvalResult.approved,
         },
         { where: { id: post.id } },
       );
-      io.emit('approvalProgress', {
-        processed: i + 1,
-        total: batch.length,
-        progress: ((i + 1) / batch.length) * 100,
-      });
-
-      if (i < batch.length - 1) {
-        await this.delay(this.REQUEST_INTERVAL);
+      if (affectedRows === 0) {
+        console.warn(`Không có bản ghi nào được cập nhật cho bài đăng ${post.id}. Có thể bài đăng không tồn tại.`);
       }
+    } catch (updateError) {
+      console.error(`Lỗi khi cập nhật bài đăng ${post.id}:`, updateError);
     }
 
-    await redisClient.lTrim(this.QUEUE_KEY, batch.length, -1);
+    results.push(approvalResult);
 
-    const batchId = Date.now().toString();
-    await CacheRepository.set(`${this.RESULTS_KEY_PREFIX}${batchId}`, results, 3600);
-
-    const posts = await Post.findAll({
-      where: { id: results.map((r) => r.postId) },
-      include: [{ model: User }],
+    io.emit('approvalProgress', {
+      processed: i + 1,
+      total: batch.length,
+      progress: ((i + 1) / batch.length) * 100,
     });
 
-    for (const result of results) {
-      const post = posts.find((p) => p.id === result.postId);
-      if (post && post.user) {
-        const message = result.approved
-          ? `Bài đăng "${post.title}" của bạn đã được duyệt thành công.`
-          : `Bài đăng "${post.title}" của bạn đã bị từ chối. Lý do: ${result.reason || 'Không xác định'}`;
-        await NotificationService.createNotification(post.userId, message);
-      }
+    if (i < batch.length - 1) {
+      await this.delay(this.REQUEST_INTERVAL);
     }
-
-    return results;
   }
+
+  await redisClient.lTrim(this.QUEUE_KEY, batch.length, -1);
+
+  const batchId = Date.now().toString();
+  await CacheRepository.set(`${this.RESULTS_KEY_PREFIX}${batchId}`, results, 3600);
+
+  const posts = await Post.findAll({
+    where: { id: results.map((r) => r.postId) },
+    include: [{ model: User }],
+  });
+
+  for (const result of results) {
+    const post = posts.find((p) => p.id === result.postId);
+    if (post && post.user) {
+      const message = result.approved
+        ? `Bài đăng "${post.title}" của bạn đã được duyệt thành công.`
+        : `Bài đăng "${post.title}" của bạn đã bị từ chối. Lý do: ${result.reason || 'Không xác định'}`;
+      await NotificationService.createNotification(post.userId, message);
+    }
+  }
+
+  return results;
+}
 
   // Đánh giá bài đăng với AI
   private static async evaluatePostWithAI(post: any, retryCount: number = 0): Promise<ApprovalResult> {

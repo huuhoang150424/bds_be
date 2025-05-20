@@ -13,7 +13,7 @@ export const seedPostHistory = async () => {
     }
 
     const postHistoryData = [];
-    const updatesPerPost = 20; 
+    const updatesPerPost = 5; 
 
     for (const post of posts) {
       let currentPrice = post.price;
