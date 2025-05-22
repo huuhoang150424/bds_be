@@ -126,5 +126,15 @@ class UserController {
       next(error);
     }
   }
+
+	static async registerProfessionalAgent(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    const { userId } = (req as any).user;
+    try {
+      const result = await UserService.registerProfessionalAgent(userId);
+      return res.status(200).json(ApiResponse.success(result, result.message));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 export default UserController;

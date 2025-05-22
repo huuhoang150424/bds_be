@@ -1,6 +1,6 @@
-import { Comment, Post, Rating, Transaction, User, Wishlist } from '@models';
+import { Comment, Post, Rating, Transaction, User, UserPricing, Wishlist } from '@models';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '@helper';
-import { Roles } from '@models/enums';
+import { Roles, Status } from '@models/enums';
 import { sequelize } from '@config/database';
 import { col, fn, literal, Op, type WhereOptions } from 'sequelize';
 
@@ -317,6 +317,123 @@ class UserService {
     };
 
     return this.findProfessionalAgents(where, page, limit);
+  }
+
+  static async registerProfessionalAgent(userId: string) {
+    const user = await this.getUserById(userId);
+    const conditionsMet = await this.checkProfessionalAgentConditions(user);
+
+    if (!conditionsMet.allMet) {
+      return {
+        success: false,
+        message: 'Người dùng không đáp ứng đủ các điều kiện để đăng ký môi giới chuyên nghiệp',
+        data: {
+          isProfessional: false,
+          missingConditions: conditionsMet.missing,
+        },
+      };
+    }
+
+    user.isProfessional = true;
+    await user.save();
+
+    return {
+      success: true,
+      message: 'Đăng ký môi giới chuyên nghiệp thành công',
+      data: {
+        isProfessional: true,
+        missingConditions: [],
+      },
+    };
+  }
+
+  private static async checkProfessionalAgentConditions(user: User) {
+    const missing: string[] = [];
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+    if (!user.phone || !user.emailVerified) {
+      missing.push('Đã xác minh SĐT & Email');
+    }
+    if (user.isLock || user.isPermanentlyLocked) {
+      missing.push('Không bị khóa tài khoản');
+    }
+    const transactions = await Transaction.count({
+      where: { userId: user.id, status: Status.COMPLETED },
+    });
+    if (transactions < 1) {
+      missing.push('Có ít nhất 1 giao dịch nạp tiền');
+    }
+    if (!user.createdAt || user.createdAt > oneYearAgo) {
+      missing.push('Hoạt động ít nhất 1 năm');
+    }
+
+    const posts = await Post.count({ where: { userId: user.id } });
+    if (posts < 20) {
+      missing.push('Đã đăng ít nhất 20 bài viết');
+    }
+    const approvedPosts = await Post.count({
+      where: { userId: user.id, verified: true, isRejected: false },
+    });
+    const approvalRate = posts > 0 ? (approvedPosts / posts) * 100 : 0;
+    if (approvalRate <= 80) {
+      missing.push('Bài viết có tỷ lệ duyệt >80%');
+    }
+    const comments = await Comment.count({
+      where: {
+        postId: { [Op.in]: (await Post.findAll({ where: { userId: user.id } })).map((p) => p.id) },
+        userId: { [Op.ne]: user.id },
+      },
+    });
+    if (comments < 10) {
+      missing.push('Có ít nhất 10 comment từ người khác');
+    }
+    const ratings = await Rating.findAll({
+      where: { postId: { [Op.in]: (await Post.findAll({ where: { userId: user.id } })).map((p) => p.id) } },
+    });
+    const avgRating = ratings.length > 0 ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length : 0;
+    if (avgRating < 4.0) {
+      missing.push('Điểm đánh giá trung bình ≥ 4.0/5');
+    }
+
+    const userPricings = await UserPricing.findAll({ where: { userId: user.id } });
+    const hasVipPackage = userPricings.some(
+      (up) =>
+        up.status === Status.COMPLETED &&
+        up.startDate &&
+        up.endDate &&
+        up.endDate >= new Date(new Date().setDate(new Date().getDate() - 30)),
+    );
+    if (!hasVipPackage) {
+      missing.push('Mua gói Vip 1 tháng');
+    }
+    const totalDeposited = await Transaction.sum('amount', {
+      where: { userId: user.id, status: Status.COMPLETED },
+    });
+    if (!totalDeposited || totalDeposited < 1000000) {
+      missing.push('Từng nạp 1 triệu đồng');
+    }
+    if (userPricings.length === 0) {
+      missing.push('Từng mua gói thành viên');
+    }
+
+    if (!user.selfIntroduction) {
+      missing.push('Đã điền giới thiệu bản thân');
+    }
+    if (
+      user.avatar ===
+      'https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg'
+    ) {
+      missing.push('Có ảnh đại diện cá nhân');
+    }
+    if (!user.experienceYears) {
+      missing.push('Cung cấp số năm kinh nghiệm');
+    }
+
+    return {
+      allMet: missing.length === 0,
+      missing,
+    };
   }
 }
 

@@ -630,38 +630,62 @@ class PostService {
 
   private static bufferPool: any[] = [];
 
-  static async getVerifiedPosts() {
-    const cacheKey = `verified_posts`;
-    const cachedData = await CacheRepository.get(cacheKey);
-    if (cachedData) {
-      if (Array.isArray(cachedData)) {
-        return cachedData;
-      } else {
-        await CacheRepository.delete(cacheKey);
-      }
-    }
-    const posts = await Post.findAll({
-      where: { verified: true },
-      include: [
-        {
-          model: Image,
-          attributes: ['image_url'],
-          limit: 1,
-        },
-      ],
-      //raw: true,
-    });
-    const formattedPosts = posts.map((post) => {
-      const postData = post.toJSON();
-      return {
-        ...postData,
-        image_url: postData.Image ? postData.Image.image_url : null,
-      };
-    });
-
-    await CacheRepository.set(cacheKey, formattedPosts, 600);
-    return posts;
+static async getVerifiedPosts(page: number = 1, limit: number = 1000) {
+  const cacheKey = `verified_posts_page_${page}_limit_${limit}_month_${new Date().getFullYear()}_${new Date().getMonth() + 1}`;
+  const cachedData = await CacheRepository.get(cacheKey);
+  if (cachedData && Array.isArray(cachedData)) {
+    console.log(`Returning ${cachedData.length} cached posts`);
+    return cachedData;
   }
+
+  const startTime = Date.now();
+  // Tính ngày đầu tiên và cuối cùng của tháng hiện tại
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+  const posts = await Post.findAll({
+    where: {
+      verified: true,
+      created_at: {
+        [Op.between]: [startOfMonth, endOfMonth], 
+      },
+    },
+    attributes: [
+      'id',
+      'title',
+      'price',
+      'address',
+      'square_meters',
+      'priority',
+      'slug',
+      'created_at',
+    ],
+    include: [
+      {
+        model: Image,
+        attributes: ['image_url'],
+        limit: 1,
+        required: false, // LEFT JOIN để trả về bài đăng không có ảnh
+      },
+    ],
+    limit,
+    offset: (page - 1) * limit,
+    order: [['created_at', 'DESC']], // Sắp xếp theo bài đăng mới nhất
+  });
+
+  const formattedPosts = posts.map((post) => {
+    const postData = post.toJSON();
+    return {
+      ...postData,
+      image_url: postData.Image ? postData.Image.image_url : null,
+    };
+  });
+
+  await CacheRepository.set(cacheKey, formattedPosts, 3600); // Cache 1 giờ
+  console.log(`getVerifiedPosts took ${Date.now() - startTime}ms`);
+  return formattedPosts;
+}
 
   static shuffleArray(array: any[]) {
     for (let i = array.length - 1; i > 0; i--) {

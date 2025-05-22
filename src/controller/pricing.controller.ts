@@ -110,6 +110,28 @@ class PricingController {
       next(error);
     }
   }
+
+
+	static async cancelPricing(req: Request, res: Response, next: NextFunction) {
+  const { userId } = (req as any).user;
+  try {
+    const result = await PricingService.cancelPricing(userId);
+    if (!result.success) {
+      return res.status(400).json(result);
+    }
+    return res.status(200).json(
+      ApiResponse.success(
+        {
+          pricing: result.pricing,
+          refundAmount: result.refundAmount,
+        },
+        result.message
+      )
+    );
+  } catch (error) {
+    next(error);
+  }
+}
 }
 
 

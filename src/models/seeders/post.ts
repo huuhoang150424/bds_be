@@ -116,7 +116,7 @@ export const seederPost = async () => {
       tag = await Tag.create({ id: uuidv4(), tagName: 'Nhà đất bán' });
     }
 
-    const totalPosts = 10000;
+    const totalPosts = 50000;
     const batchSize = 100;
 
     for (let batchIndex = 0; batchIndex < totalPosts / batchSize; batchIndex++) {

@@ -23,7 +23,7 @@ class AuthService {
 
 		const user = await User.findOne({
 			where: { email },
-			attributes: ["id", "fullname", "email", "isLock","phone", "avatar", "balance", "score", "password","roles","emailVerified"],
+			attributes: ["id", "fullname", "email", "isLock","phone", "avatar", "balance", "score", "password","roles","emailVerified","isProfessional"],
 		});
 		
     if (!user) {
@@ -51,7 +51,7 @@ class AuthService {
     try {
       let user = await User.findOne({
         where: { email: googleData.email },
-        attributes: ["id", "fullname","isLock", "email", "phone", "avatar", "balance", "score", "roles", "emailVerified"],
+        attributes: ["id","isProfessional", "fullname","isLock", "email", "phone", "avatar", "balance", "score", "roles", "emailVerified"],
       });
       if (!user) {
         

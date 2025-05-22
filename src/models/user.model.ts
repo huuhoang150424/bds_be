@@ -5,6 +5,21 @@ import { Roles, Gender } from './enums';
 import BaseModel from './base.model';
 import bcrypt from 'bcrypt';
 
+@Table({ 
+  tableName: 'users', 
+  timestamps: true,
+  underscored: true,
+  indexes: [
+    {
+      name: 'idx_user_created_at',
+      fields: ['created_at'],
+    },
+    {
+      name: 'idx_user_fullname',
+      fields: ['fullname'],
+    },
+  ],
+})
 @Table({ tableName: 'users', timestamps: true })
 export default class User extends BaseModel<string> {
   @AllowNull(false)

@@ -9,6 +9,9 @@ class PricingService {
   static async buyPricing(userId: string, pricingId: string) {
     const transaction = await sequelize.transaction();
     try {
+      // Log múi giờ
+      console.log(`Múi giờ máy chủ: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+
       // Lấy thông tin user và gói mới
       const user = await UserService.getUserById(userId);
       const newPricing = await Pricing.findByPk(pricingId);
@@ -19,6 +22,10 @@ class PricingService {
       if (!newPricing.isActive) {
         throw new BadRequestError('Gói VIP đã dừng hoạt động');
       }
+
+      console.log(
+        `Gói mới: ${newPricing.name}, expiredDay: ${newPricing.expiredDay}, displayDay: ${newPricing.displayDay}`,
+      );
 
       // Kiểm tra gói hiện tại
       const existingUserPricing = await UserPricing.findOne({
@@ -32,46 +39,53 @@ class PricingService {
       });
 
       let refundAmount = 0;
+      let actionMessage = 'mua';
       if (existingUserPricing) {
         const currentPricing = existingUserPricing.pricing;
-        // Kiểm tra xem gói mới có phải là nâng cấp không
+        // Xóa kiểm tra nâng cấp để cho phép hạ cấp
         const pricingOrder = ['VIP_1', 'VIP_2', 'VIP_3'];
         const currentIndex = pricingOrder.indexOf(currentPricing.name);
         const newIndex = pricingOrder.indexOf(newPricing.name);
-        if (newIndex <= currentIndex) {
-          throw new BadRequestError('Bạn chỉ có thể nâng cấp lên gói cao hơn!');
-        }
+        actionMessage = newIndex > currentIndex ? 'nâng cấp' : 'chuyển sang';
 
-        // Tính số tiền hoàn lại
         const currentDate = new Date();
         const endDate = new Date(existingUserPricing.endDate);
-        const totalDays = currentPricing.expiredDay === -1 ? 365 : currentPricing.expiredDay; // Giả định 1 năm cho gói không giới hạn
-        const remainingDays = Math.max(0, Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)));
+        const totalDays = 30; // Tất cả gói có hiệu lực 30 ngày
+        const remainingDays = Math.max(
+          0,
+          Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24)),
+        );
         refundAmount = (remainingDays / totalDays) * currentPricing.price;
 
-        // Hủy gói hiện tại
         await existingUserPricing.update({ status: Status.CANCELLED, endDate: currentDate }, { transaction });
       }
 
-      // Tính giá gói mới sau giảm giá
       const finalPrice = newPricing.discountPercent
         ? newPricing.price * (1 - newPricing.discountPercent / 100)
         : newPricing.price;
 
-      // Kiểm tra số dư
+      // Kiểm tra số dư, trả về message thay vì throw lỗi
       if (user.balance + refundAmount < finalPrice) {
-        throw new BadRequestError('Số dư không đủ để mua gói này!');
+        await transaction.rollback();
+        return {
+          success: false,
+          message: 'Số dư không đủ để mua gói này!',
+        };
       }
 
-      // Cập nhật số dư
       await user.update({ balance: user.balance + refundAmount - finalPrice }, { transaction });
 
       // Tính startDate và endDate
       const startDate = new Date();
-      const endDate = newPricing.expiredDay === -1 ? null : new Date(startDate.getTime() + newPricing.expiredDay * 24 * 60 * 60 * 1000);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 30); // Tất cả gói có hiệu lực 30 ngày
+      if (isNaN(endDate.getTime())) {
+        throw new Error(`Lỗi tính toán endDate cho gói ${newPricing.name}`);
+      }
 
-      // Tạo UserPricing mới
-      await UserPricing.create(
+      console.log(`startDate: ${startDate.toISOString()}, endDate: ${endDate.toISOString()}`);
+
+      const newUserPricing = await UserPricing.create(
         {
           userId,
           pricingId,
@@ -82,19 +96,25 @@ class PricingService {
           status: Status.COMPLETED,
           boostDays: newPricing.boostDays,
         },
-        { transaction }
+        { transaction },
       );
+
+      console.log(`UserPricing vừa tạo: ${JSON.stringify(newUserPricing, null, 2)}`);
 
       await transaction.commit();
 
-      // Gửi thông báo
       const message = refundAmount
-        ? `Bạn đã nâng cấp từ gói ${existingUserPricing?.pricing.name} lên gói ${newPricing.name} thành công! Số tiền hoàn lại: ${refundAmount.toLocaleString('vi-VN')} VNĐ.`
+        ? `Bạn đã ${actionMessage} từ gói ${existingUserPricing?.pricing.name} sang gói ${newPricing.name} thành công! Số tiền hoàn lại: ${refundAmount.toLocaleString('vi-VN')} VNĐ.`
         : `Bạn đã mua gói ${newPricing.name} thành công!`;
       await NotificationService.createNotification(userId, message);
 
-      return { message: 'Mua gói thành công!', pricing: newPricing, refundAmount };
-    } catch (error:any) {
+      return {
+        success: true,
+        message,
+        pricing: newPricing,
+        refundAmount,
+      };
+    } catch (error: any) {
       await transaction.rollback();
       console.error(`Lỗi khi mua gói pricing: ${error.message}`);
       throw error;
@@ -209,7 +229,6 @@ class PricingService {
     return { message: 'Xóa gói thành công!' };
   }
 
-
   static async stopPricing(id: string) {
     const transaction = await sequelize.transaction();
     try {
@@ -235,10 +254,7 @@ class PricingService {
         const remainingDays = moment(userPricing.endDate).diff(moment(), 'days');
         if (remainingDays < 0) continue;
         const refundAmount = (remainingDays / totalDays) * pricing.price;
-        await User.update(
-          { balance: user.balance + refundAmount },
-          { where: { id: user.id }, transaction }
-        );
+        await User.update({ balance: user.balance + refundAmount }, { where: { id: user.id }, transaction });
         await userPricing.update({ endDate: new Date() }, { transaction });
       }
       await pricing.update({ isActive: false }, { transaction });
@@ -249,8 +265,8 @@ class PricingService {
       throw error;
     }
   }
-  
-	static async getPurchasedPricings(userId: string, page: number, limit: number) {
+
+  static async getPurchasedPricings(userId: string, page: number, limit: number) {
     const offset = (page - 1) * limit;
     const { rows, count } = await UserPricing.findAndCountAll({
       where: { userId },
@@ -275,6 +291,90 @@ class PricingService {
     };
   }
 
+	static async cancelPricing(userId: string) {
+    const transaction = await sequelize.transaction();
+    try {
+      // Log múi giờ
+      console.log(`Múi giờ máy chủ: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+
+      // Lấy thông tin user
+      const user = await UserService.getUserById(userId);
+      if (!user) {
+        await transaction.rollback();
+        return {
+          success: false,
+          message: 'Người dùng không tồn tại!',
+        };
+      }
+
+      // Tìm gói hiện tại
+      const existingUserPricing = await UserPricing.findOne({
+        where: {
+          userId,
+          endDate: { [Op.gt]: new Date() },
+          status: Status.COMPLETED,
+        },
+        include: [{ model: Pricing, as: 'pricing' }],
+        order: [['endDate', 'DESC']],
+      });
+
+      if (!existingUserPricing) {
+        await transaction.rollback();
+        return {
+          success: false,
+          message: 'Bạn hiện không có gói VIP nào để hủy!',
+        };
+      }
+
+      const currentPricing = existingUserPricing.pricing;
+      const startDate = new Date(existingUserPricing.startDate);
+      const currentDate = new Date();
+      const daysSincePurchase = Math.ceil(
+        (currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      );
+
+      // Kiểm tra thời gian hủy (trong 3 ngày)
+      if (daysSincePurchase > 3) {
+        await transaction.rollback();
+        return {
+          success: false,
+          message: 'Chỉ có thể hủy gói trong vòng 3 ngày kể từ ngày mua!',
+        };
+      }
+
+      // Tính số tiền hoàn lại (100% giá gói sau giảm giá)
+      const refundAmount = currentPricing.discountPercent
+        ? currentPricing.price * (1 - currentPricing.discountPercent / 100)
+        : currentPricing.price;
+
+      // Cập nhật số dư người dùng
+      await user.update({ balance: user.balance + refundAmount }, { transaction });
+
+      // Hủy gói hiện tại
+      await existingUserPricing.update(
+        { status: Status.CANCELLED, endDate: currentDate },
+        { transaction }
+      );
+
+      console.log(`Hủy gói: ${currentPricing.name}, refundAmount: ${refundAmount}`);
+
+      await transaction.commit();
+
+      const message = `Bạn đã hủy gói ${currentPricing.name} thành công! Số tiền hoàn lại: ${refundAmount.toLocaleString('vi-VN')} VNĐ.`;
+      await NotificationService.createNotification(userId, message);
+
+      return {
+        success: true,
+        message,
+        refundAmount,
+        pricing: currentPricing,
+      };
+    } catch (error: any) {
+      await transaction.rollback();
+      console.error(`Lỗi khi hủy gói: ${error.message}`);
+      throw error;
+    }
+}
 }
 
 export default PricingService;

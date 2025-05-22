@@ -19,10 +19,23 @@ import { ListingTypes, Directions, PriceUnit, StatusPost } from './enums';
 @Table({
   tableName: 'posts',
   timestamps: true,
+	underscored: true,
   indexes: [
     {
       name: 'idx_post_address',
       fields: ['address'],
+    },
+    {
+      name: 'idx_post_verified',
+      fields: ['verified'],
+    },
+    {
+      name: 'idx_post_priority',
+      fields: ['priority'],
+    },
+{
+      name: 'idx_post_created_at', 
+      fields: ['created_at'], 
     },
   ],
 })
