@@ -2,16 +2,15 @@ module.exports = {
   apps: [
     {
       name: 'bds',
-      script: 'src/index.ts', 
-      interpreter: 'ts-node',
+      script: 'src/index.ts',
+      interpreter: 'node',
       watch: true,
       ignore_watch: ['node_modules', 'dist'],
       env: {
         NODE_ENV: 'development',
+        TS_NODE_PROJECT: 'tsconfig.json',
       },
-      env_production: {
-        NODE_ENV: 'production',
-      },
+      node_args: '-r ts-node/register -r tsconfig-paths/register',
     },
   ],
 };
