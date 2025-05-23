@@ -66,7 +66,7 @@ export const seedNews = async () => {
       origin_post: 'https://nasa.gov/mars-mission',
       view: 100,
       imageUrl:
-        'https://hnsofa.com/wp-content/uploads/2023/03/chiem-nguong-50-hinh-anh-phong-canh-buon-tam-trang-cuc-dep_15.jpg',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR9uIvYZBJrYFnQvHlwsFE2ic7bAHmoyGcKQQ&s',
       category: CategoryNew.BUSINESS,
       readingTime: 5,
     },
@@ -76,7 +76,7 @@ export const seedNews = async () => {
       origin_post: 'https://ai-news.com/trend-2025',
       view: 250,
       imageUrl:
-        'https://hnsofa.com/wp-content/uploads/2023/03/chiem-nguong-50-hinh-anh-phong-canh-buon-tam-trang-cuc-dep_15.jpg',
+        'https://i.ytimg.com/vi/rJBE5GlzhDE/hq720.jpg?sqp=-oaymwEhCK4FEIIDSFryq4qpAxMIARUAAAAAGAElAADIQj0AgKJD&rs=AOn4CLBjPYw-pfhdnHmVMbGfGg5mbJayfw',
       category: CategoryNew.SCIENCE,
       readingTime: 6,
     },
@@ -90,7 +90,7 @@ export const seedNews = async () => {
         content: content,
         origin_post: `https://example.com/news-${i + 1}`,
         view: Math.floor(Math.random() * 500),
-        imageUrl: `https://hnsofa.com/wp-content/uploads/2023/03/chiem-nguong-50-hinh-anh-phong-canh-buon-tam-trang-cuc-dep_15.jpg`,
+        imageUrl: `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRA0a28JI-ioiXBsatm-tSx9aTPF9DqIRR-XA&s`,
         category: Object.values(CategoryNew)[i % Object.values(CategoryNew).length],
         readingTime: Math.floor(Math.random() * 10) + 1,
         createdAt: createdAt,

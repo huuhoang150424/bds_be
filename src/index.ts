@@ -20,8 +20,11 @@ const PORT = process.env.PORT || 3000;
 const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:5173', 
+    origin: (origin, callback) => {
+      callback(null, true); 
+    },
     methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token'],
     credentials: true,
   },
 });
@@ -34,13 +37,18 @@ app.use(express.json());
 app.use(body_parser.json({ limit: '50mb' }));
 app.use(morgan('combined'));
 
-app.use(cors({
-  origin: "http://localhost:5173",
-  methods: "GET,POST,PUT,DELETE,OPTIONS,PATCH",
-  allowedHeaders: "Content-Type,Authorization,token",
-  credentials: true,  
-}));
-
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      callback(null, true); 
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'token'],
+    credentials: true,
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
+  }),
+);
 app.use(cookieParser());
 
 app.get('/', (req: Request, res: Response) => {

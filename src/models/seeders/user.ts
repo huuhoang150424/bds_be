@@ -12,13 +12,13 @@ export const seedUsers = async () => {
   ];
 
   const avatars = [
-    "https://anhnail.com/wp-content/uploads/2024/10/Hinh-gai-xinh-k8-cute.jpg",
-    "https://lh7-rt.googleusercontent.com/docsz/AD_4nXe6g6fUIDLESXqrjVvxPI1BpjGMRmu16pWwI2lafSq4bkfjph9_DSDzxQpVruf5VnftjRKnd3e0bFJTOpLvZnVirb01Bg496jf1tJGhseS5OWEaeyJx4DpeonIHHsH0Jsw-vflitP6EA0X2nN7Vag=s412?key=EaGBO2t3RnOp9uiHUHPIVg",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTmS6YQROniNylqAg3QWhl5S2A2DLP9USXCRA&s",
+    "https://i.pinimg.com/564x/24/21/85/242185eaef43192fc3f9646932fe3b46.jpg",
     "https://uuc.edu.vn/uploads/blog/2025/01/16/92291b68d1c3a5391111046b5059de42139dec9e-1736979877.webp",
-    "https://cdn-media.sforum.vn/storage/app/media/ctv_seo3/anh-co-gai-xinh-dep-71.jpg",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRMDGGxnaZ5oCLmiT6Fps0LL15z2R1tPcSivg&s",
     "https://img.tripi.vn/cdn-cgi/image/width=700,height=700/https://gcs.tripi.vn/public-tripi/tripi-feed/img/483329swL/anh-mo-ta.png",
-    "https://cdn.pixabay.com/photo/2018/10/23/08/18/sexy-girl-3767276_640.jpg",
-    "https://anhnail.com/wp-content/uploads/2024/11/Hinh-anh-gai-xinh-2009-ca-tinh.jpg"
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTZbMPqYroYd4Hmfi_qj2Sxb4v7YBZeL6U07w&s",
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIgjZTSL_kLHGL4_iIWNAEuPiA5uhN4fgE4Q&s"
   ];
 
   const genders = Object.values(Gender);
