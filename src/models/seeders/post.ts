@@ -3,6 +3,7 @@ import { faker } from '@faker-js/faker';
 import { Post, ListingType, PropertyType, Image, Tag, TagPost, User, UserView, PostDraft } from '@models';
 import { cities } from '@config/constant/adress';
 import { propertyLinks } from '@config/constant/image';
+import slugify from 'slugify';
 
 interface City {
   name: string;
@@ -28,6 +29,34 @@ interface PriceRange {
 interface BasePrice {
   [key: string]: PriceRange;
 }
+
+export const menuItemsSell = [
+  'Căn hộ',
+  'Biệt thự',
+  'Bán nhà riêng',
+  'Bán nhà biệt thự, liền kề',
+  'Bán nhà mặt phố',
+  'Bán shophouse, nhà phố thương mại',
+  'Bán đất nền dự án',
+  'Bán đất',
+  'Bán trang trại, khu nghỉ dưỡng',
+  'Bán condotel',
+  'Bán kho, nhà xưởng',
+  'Bán loại bất động sản khác',
+];
+
+export const menuItemsRent = [
+  'Cho thuê chung cư mini, căn hộ dịch vụ',
+  'Cho thuê nhà riêng',
+  'Cho thuê nhà biệt thự, liền kề',
+  'Cho thuê nhà mặt phố',
+  'Cho thuê shophouse, nhà phố thương mại',
+  'Cho thuê nhà trọ, phòng trọ',
+  'Cho thuê văn phòng',
+  'Cho thuê, sang nhượng cửa hàng, ki ốt',
+  'Cho thuê kho, nhà xưởng',
+  'Cho thuê loại bất động sản khác',
+];
 
 const generateAddress = (): Address => {
   if (!cities || !Array.isArray(cities)) {
@@ -57,15 +86,33 @@ const generateAddress = (): Address => {
 
 const getPriceRange = (propertyType: string, city: string): PriceRange => {
   const basePrice: BasePrice = {
-    'Căn hộ chung cư': { min: 1000000000, max: 6000000000 },
-    'Nhà phố': { min: 2000000000, max: 10000000000 },
+    'Căn hộ': { min: 1000000000, max: 6000000000 },
     'Biệt thự': { min: 4000000000, max: 12000000000 },
-    'Đất nền': { min: 1000000000, max: 8000000000 },
+    'Bán nhà riêng': { min: 2000000000, max: 8000000000 },
+    'Bán nhà biệt thự, liền kề': { min: 3000000000, max: 10000000000 },
+    'Bán nhà mặt phố': { min: 5000000000, max: 15000000000 },
+    'Bán shophouse, nhà phố thương mại': { min: 4000000000, max: 12000000000 },
+    'Bán đất nền dự án': { min: 1000000000, max: 8000000000 },
+    'Bán đất': { min: 800000000, max: 6000000000 },
+    'Bán trang trại, khu nghỉ dưỡng': { min: 2000000000, max: 10000000000 },
+    'Bán condotel': { min: 1500000000, max: 7000000000 },
+    'Bán kho, nhà xưởng': { min: 2000000000, max: 10000000000 },
+    'Bán loại bất động sản khác': { min: 1000000000, max: 5000000000 },
+    'Cho thuê chung cư mini, căn hộ dịch vụ': { min: 3000000, max: 15000000 },
+    'Cho thuê nhà riêng': { min: 5000000, max: 20000000 },
+    'Cho thuê nhà biệt thự, liền kề': { min: 10000000, max: 50000000 },
+    'Cho thuê nhà mặt phố': { min: 15000000, max: 100000000 },
+    'Cho thuê shophouse, nhà phố thương mại': { min: 20000000, max: 80000000 },
+    'Cho thuê nhà trọ, phòng trọ': { min: 1000000, max: 5000000 },
+    'Cho thuê văn phòng': { min: 5000000, max: 30000000 },
+    'Cho thuê, sang nhượng cửa hàng, ki ốt': { min: 5000000, max: 40000000 },
+    'Cho thuê kho, nhà xưởng': { min: 10000000, max: 50000000 },
+    'Cho thuê loại bất động sản khác': { min: 2000000, max: 20000000 },
   };
   const multiplier: number = city === 'Hà Nội' || city === 'TP. Hồ Chí Minh' ? 1.2 : 1;
   return {
     min: basePrice[propertyType].min * multiplier,
-    max: Math.min(basePrice[propertyType].max * multiplier, 12000000000),
+    max: Math.min(basePrice[propertyType].max * multiplier, 15000000000),
   };
 };
 
@@ -94,11 +141,37 @@ const generateDescription = ({
   `;
 };
 
+export const seedListingTypes = async () => {
+  const ListingTypesData = [
+    { listingType: 'Bán' },
+    { listingType: 'Cho thuê' },
+  ];
+  for (const item of ListingTypesData) {
+    await ListingType.findOrCreate({
+      where: { listingType: item.listingType },
+      defaults: {
+        id: uuidv4(),
+        listingType: item.listingType,
+        slug: slugify(item.listingType, { lower: true, strict: true }),
+      },
+    });
+  }
+};
+
 export const seederPost = async () => {
   try {
+    // Seed ListingTypes first
+    await seedListingTypes();
+    const listingTypes = await ListingType.findAll();
+    const sellListingType = listingTypes.find(lt => lt.listingType === 'Bán');
+    const rentListingType = listingTypes.find(lt => lt.listingType === 'Cho thuê');
+
+    if (!sellListingType || !rentListingType) {
+      throw new Error('Failed to seed or find ListingTypes');
+    }
+
     let users = await User.findAll({ limit: 100 });
     if (users.length < 100) {
-      console.log(`Chỉ có ${users.length} user, đang tạo thêm...`);
       const newUsers = Array.from({ length: 100 - users.length }, () => ({
         id: uuidv4(),
         username: faker.internet.userName(),
@@ -108,8 +181,6 @@ export const seederPost = async () => {
       await User.bulkCreate(newUsers);
       users = await User.findAll({ limit: 100 });
     }
-
-    const listingType = (await ListingType.findOne()) || (await ListingType.create({ id: uuidv4(), name: 'Bán' }));
 
     let tag = await Tag.findOne({ where: { tagName: 'Nhà đất bán' } });
     if (!tag) {
@@ -127,16 +198,22 @@ export const seederPost = async () => {
         const postIndex = batchIndex * batchSize + i;
         const user = faker.helpers.arrayElement(users);
         const { address, city, district, ward, street } = generateAddress();
-        const propertyType = faker.helpers.arrayElement(['Căn hộ chung cư', 'Nhà phố', 'Biệt thự', 'Đất nền']);
         const listingTypeName = faker.helpers.arrayElement(['Bán', 'Cho thuê']);
+        const propertyType = faker.helpers.arrayElement(
+          listingTypeName === 'Bán' ? menuItemsSell : menuItemsRent
+        );
         const priceRange = getPriceRange(propertyType, city);
         const price = faker.number.int(priceRange);
         const squareMeters = faker.number.int({
-          min: propertyType === 'Đất nền' ? 100 : 50,
+          min: propertyType.includes('đất') ? 100 : 50,
           max: 300,
         });
-        const bedroom = propertyType === 'Đất nền' ? null : faker.number.int({ min: 1, max: 5 });
-        const bathroom = propertyType === 'Đất nền' ? null : faker.number.int({ min: 1, max: 4 });
+        const bedroom = propertyType.includes('đất') || propertyType.includes('kho') || propertyType.includes('văn phòng')
+          ? null
+          : faker.number.int({ min: 1, max: 5 });
+        const bathroom = propertyType.includes('đất') || propertyType.includes('kho') || propertyType.includes('văn phòng')
+          ? null
+          : faker.number.int({ min: 1, max: 4 });
         const direction = faker.helpers.arrayElement([
           'Bắc', 'Nam', 'Đông', 'Tây', 'Đông Bắc', 'Đông Nam', 'Tây Bắc', 'Tây Nam',
         ]);
@@ -159,7 +236,9 @@ export const seederPost = async () => {
             price,
             listingType: listingTypeName,
           }),
-          floor: propertyType === 'Căn hộ chung cư' ? faker.number.int({ min: 1, max: 30 }) : null,
+          floor: propertyType.includes('Căn hộ') || propertyType.includes('chung cư')
+            ? faker.number.int({ min: 1, max: 30 })
+            : null,
           bedroom,
           bathroom,
           priority: faker.number.int({ min: 0, max: 3 }),
@@ -172,7 +251,6 @@ export const seederPost = async () => {
         });
       }
 
-      console.log(`Creating ${postsData.length} posts...`);
       const posts = await Post.bulkCreate(postsData, { validate: true });
 
       const propertyTypes = [];
@@ -181,20 +259,18 @@ export const seederPost = async () => {
 
       for (let i = 0; i < posts.length; i++) {
         const post = posts[i];
-
-        const propertyTypeName = post.title.includes('Căn hộ')
-          ? 'Căn hộ chung cư'
-          : post.title.includes('Nhà phố')
-            ? 'Nhà phố'
-            : post.title.includes('Biệt thự')
-              ? 'Biệt thự'
-              : 'Đất nền';
+        const listingTypeName = post.title.startsWith('Bán') ? 'Bán' : 'Cho thuê';
+        const listingTypeId = listingTypeName === 'Bán' ? sellListingType.id : rentListingType.id;
+        const propertyTypeName = listingTypeName === 'Bán'
+          ? faker.helpers.arrayElement(menuItemsSell)
+          : faker.helpers.arrayElement(menuItemsRent);
 
         propertyTypes.push({
           id: uuidv4(),
-          listingTypeId: listingType.id,
+          listingTypeId,
           postId: post.id,
           name: propertyTypeName,
+          slug: slugify(propertyTypeName, { lower: true, strict: true }),
         });
 
         tagPosts.push({
@@ -208,7 +284,7 @@ export const seederPost = async () => {
           const imageUrl = faker.helpers.arrayElement(propertyLinks);
           images.push({
             id: uuidv4(),
-            postId: post.id, 
+            postId: post.id,
             postDraftId: null,
             imageUrl,
           });

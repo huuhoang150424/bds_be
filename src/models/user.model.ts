@@ -136,6 +136,14 @@ export default class User extends BaseModel<string> {
   @Column(DataType.BOOLEAN)
   isPermanentlyLocked!: boolean;
 
+	@Default(null)
+  @Column(DataType.STRING)
+  twoFactorSecret!: string | null;
+
+  @Default(false)
+  @Column(DataType.BOOLEAN)
+  is2FAEnabled!: boolean;
+
   @HasMany(() => Post)
   posts!: Post[];
 

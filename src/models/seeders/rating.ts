@@ -23,7 +23,7 @@ export const seedRatings = async () => {
 
     console.log(`Chuẩn bị tạo ${ratingsToInsert.length} đánh giá...`);
 
-    const batchSize = 100; 
+    const batchSize = 1000; 
     for (let i = 0; i < ratingsToInsert.length; i += batchSize) {
       const batch = ratingsToInsert.slice(i, i + batchSize);
       await Rating.bulkCreate(batch, { validate: true });

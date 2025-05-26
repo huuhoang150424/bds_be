@@ -6,92 +6,123 @@ import { NotFoundError, UnauthorizedError, transporter, CacheRepository, TokenEr
 import { v4 as uuidv4 } from 'uuid';
 import "dotenv/config";
 import { Gender, Roles } from '@models/enums';
-
+import speakeasy from 'speakeasy';
 
 
 class AuthService {
   static async login(email: string, password: string) {
-		const loginAttemptKey=`login_attempt:${email}`;
-		const lockKey=`login_lock:${email}`;
+    const loginAttemptKey = `login_attempt:${email}`;
+    const lockKey = `login_lock:${email}`;
 
-		const isLocked=await CacheRepository.get(lockKey);
-		if (isLocked) {
-			throw new BadRequestError('Bạn đã nhập sai quá 10 lần, vui lòng thử lại sau 5 phút')
-		}
-		const attempt=await CacheRepository.get(loginAttemptKey);
-		const failedAttempt = attempt ? parseInt(attempt) : 0;
+    const isLocked = await CacheRepository.get(lockKey);
+    if (isLocked) {
+      throw new BadRequestError('Bạn đã nhập sai quá 10 lần, vui lòng thử lại sau 5 phút');
+    }
+    const attempt = await CacheRepository.get(loginAttemptKey);
+    const failedAttempt = attempt ? parseInt(attempt) : 0;
 
-		const user = await User.findOne({
-			where: { email },
-			attributes: ["id", "fullname", "email", "isLock","phone", "avatar", "balance", "score", "password","roles","emailVerified","isProfessional"],
-		});
-		
+    const user = await User.findOne({
+      where: { email },
+      attributes: [
+        'id', 'fullname', 'email', 'isLock', 'phone', 'avatar', 'balance', 
+        'score', 'password', 'roles', 'emailVerified', 'isProfessional', 
+        'is2FAEnabled', 'twoFactorSecret'
+      ],
+    });
+
     if (!user) {
       throw new NotFoundError('Người dùng không tồn tại');
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-			await CacheRepository.set(loginAttemptKey,failedAttempt+1,300);
-			if (failedAttempt+1>=10) {
-				await CacheRepository.set(lockKey,'locked',300);
-			}
+      await CacheRepository.set(loginAttemptKey, failedAttempt + 1, 300);
+      if (failedAttempt + 1 >= 10) {
+        await CacheRepository.set(lockKey, 'locked', 300);
+      }
       throw new UnauthorizedError('Mật khẩu không chính xác');
     }
 
-		delete (user as any).password;
-		await CacheRepository.delete(loginAttemptKey);
+    if (user.is2FAEnabled && user.twoFactorSecret) {
+      await CacheRepository.delete(loginAttemptKey);
+      return { twoFactorRequired: true, userId: user.id };
+    }
+
+    delete (user as any).password;
+    delete (user as any).twoFactorSecret;
+    await CacheRepository.delete(loginAttemptKey);
 
     const accessToken = await generaAccessToken(user);
     const refreshToken = await generaRefreshToken(user);
     return { accessToken, refreshToken, user };
   }
 
-	static async googleLogin(googleData: { email: string, displayName: string, photoUrl: string }) {
+  static async googleLogin(googleData: { email: string; displayName: string; photoUrl: string }) {
     try {
       let user = await User.findOne({
         where: { email: googleData.email },
-        attributes: ["id","isProfessional", "fullname","isLock", "email", "phone", "avatar", "balance", "score", "roles", "emailVerified"],
+        attributes: [
+          'id',
+          'isProfessional',
+          'fullname',
+          'isLock',
+          'email',
+          'phone',
+          'avatar',
+          'balance',
+          'score',
+          'roles',
+          'emailVerified',
+          'is2FAEnabled', 
+        ],
       });
+
       if (!user) {
-        
-        user = await User.create({
-          email: googleData.email,
-          fullname: googleData.displayName || 'User',
-          password:  Math.random().toString(36).slice(2, 12),
-          avatar: googleData.photoUrl || "https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg",
-          emailVerified: true,
-          roles: Roles.User,
-          gender: Gender.Other,
-          active: true
-        }, {
-          hooks: false
-        });
+        user = await User.create(
+          {
+            email: googleData.email,
+            fullname: googleData.displayName || 'User',
+            password: Math.random().toString(36).slice(2, 12),
+            avatar:
+              googleData.photoUrl ||
+              'https://img.freepik.com/premium-vector/user-icons-includes-user-icons-people-icons-symbols-premiumquality-graphic-design-elements_981536-526.jpg',
+            emailVerified: true,
+            roles: Roles.User,
+            gender: Gender.Other,
+            active: true,
+          },
+          { hooks: false },
+        );
       } else {
-        const needsUpdate = (
+        const needsUpdate =
           (googleData.displayName && googleData.displayName !== user.fullname) ||
           (googleData.photoUrl && googleData.photoUrl !== user.avatar) ||
-          (user.emailVerified === false)
-        );
-        
+          !user.emailVerified;
+
         if (needsUpdate) {
           await user.update({
             fullname: googleData.displayName || user.fullname,
             avatar: googleData.photoUrl || user.avatar,
-            emailVerified: true
+            emailVerified: true,
           });
         }
       }
+
       await User.update(
         { lastActive: new Date() },
-        { where: { id: user.id }, hooks: false }
+        { where: { id: user.id }, hooks: false },
       );
+
+      if (user.is2FAEnabled) {
+        return { requires2FA: true, userId: user.id };
+      }
+
       const accessToken = await generaAccessToken(user);
       const refreshToken = await generaRefreshToken(user);
 
       return { accessToken, refreshToken, user };
-    } catch (error:any) {
-      throw new BadRequestError('Đăng nhập với Google thất bại: ' + (error.message));
+    } catch (error: any) {
+      throw new BadRequestError('Đăng nhập với Google thất bại: ' + error.message);
     }
   }
 
@@ -253,7 +284,100 @@ class AuthService {
 
     return { message: 'Email đã được xác thực thành công' };
   }
+  static async verify2FA(userId: string, token: string) {
+    const user = await User.findOne({
+      where: { id: userId },
+      attributes: [
+        'id', 'fullname', 'email', 'isLock', 'phone', 'avatar', 'balance', 
+        'score', 'roles', 'emailVerified', 'isProfessional', 'twoFactorSecret','is2FAEnabled'
+      ],
+    });
 
+    if (!user || !user.twoFactorSecret) {
+      throw new NotFoundError('Người dùng hoặc 2FA không tồn tại');
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token,
+    });
+
+    if (!verified) {
+      throw new UnauthorizedError('Mã OTP không hợp lệ');
+    }
+
+    delete (user as any).twoFactorSecret;
+    const accessToken = await generaAccessToken(user);
+    const refreshToken = await generaRefreshToken(user);
+    return { accessToken, refreshToken, user };
+  }
+
+  static async generate2FASecret(userId: string) {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      throw new NotFoundError('Người dùng không tồn tại');
+    }
+    console.log('User:', user.toJSON());
+
+    const secretKey = `2fa_temp_secret:${userId}`;
+    await CacheRepository.delete(secretKey);
+    console.log(`Cleared old secret key: ${secretKey}`);
+
+    const secret = speakeasy.generateSecret({ name: `MyApp:${user.email}` });
+    const base32Secret = secret.base32;
+    await CacheRepository.set(secretKey, base32Secret, 300); 
+    console.log(`Stored new secret: ${base32Secret} for key: ${secretKey}`);
+
+    return base32Secret;
+  }
+
+  static async enable2FA(userId: string, token: string) {
+    const user = await User.findByPk(userId);
+    if (!user) {
+      throw new NotFoundError('Người dùng không tồn tại');
+    }
+
+    const secretKey = `2fa_temp_secret:${userId}`;
+    const tempSecret = await CacheRepository.get(secretKey);
+    if (!tempSecret) {
+      throw new BadRequestError('Secret key đã hết hạn, vui lòng tạo lại');
+    }
+		const tempSecretParsed=JSON.parse(tempSecret)
+    const verified = speakeasy.totp.verify({
+      secret: tempSecretParsed,
+      encoding: 'base32',
+      token,
+    });
+
+    if (!verified) {
+      throw new UnauthorizedError('Mã OTP không hợp lệ');
+    }
+
+    await user.update({ twoFactorSecret: tempSecretParsed, is2FAEnabled: true });
+    await CacheRepository.delete(secretKey);
+    return true;
+  }
+
+  static async disable2FA(userId: string, token: string) {
+    const user = await User.findByPk(userId);
+    if (!user || !user.is2FAEnabled || !user.twoFactorSecret) {
+      throw new BadRequestError('2FA chưa được kích hoạt');
+    }
+
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret,
+      encoding: 'base32',
+      token,
+    });
+
+    if (!verified) {
+      throw new UnauthorizedError('Mã OTP không hợp lệ');
+    }
+
+    await user.update({ is2FAEnabled: false, twoFactorSecret: null });
+    return true;
+  }
 }
 
 export default AuthService;

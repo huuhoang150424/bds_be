@@ -1,29 +1,37 @@
 'use-strict';
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from "@service";
-import { ApiResponse } from "@helper";
+import { ApiResponse, UnauthorizedError } from "@helper";
+import qrcode from 'qrcode';
 import "dotenv/config";
+import User from '@models/user.model';
 class AuthController {
   //[login]
   static async login(req: Request, res: Response, next: NextFunction) {
     const { email, password } = req.body;
     try {
-      const { accessToken, refreshToken, user } = await AuthService.login(email, password);
+      const result = await AuthService.login(email, password);
 
-      res.cookie('refreshToken', refreshToken, {
+      if (result.twoFactorRequired) {
+        return res.status(200).json(
+          ApiResponse.success(
+            { twoFactorRequired: true, userId: result.userId },
+            'Yêu cầu xác thực 2FA',
+          ),
+        );
+      }
+
+      res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
-				secure: process.env.NODE_ENV === 'production',
-				sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
         path: '/',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
       return res.status(200).json(
         ApiResponse.success(
-          {
-            accessToken,
-            user,
-          },
+          { accessToken: result.accessToken, user: result.user },
           'Đăng nhập thành công',
         ),
       );
@@ -32,27 +40,33 @@ class AuthController {
     }
   }
 	//[login with google]
-	static async googleLogin(req: Request, res: Response, next: NextFunction) {
-		const { email, displayName, photoUrl } = req.body;
+  static async googleLogin(req: Request, res: Response, next: NextFunction) {
+    const { email, displayName, photoUrl } = req.body;
     try {
-      const { accessToken, refreshToken, user } = await AuthService.googleLogin({
-        email,
-        displayName,
-        photoUrl
-      });
-      res.cookie('refreshToken', refreshToken, {
+      const result = await AuthService.googleLogin({ email, displayName, photoUrl });
+
+      if (result.requires2FA) {
+        return res.status(200).json(
+          ApiResponse.success(
+            { requires2FA: true, userId: result.userId },
+            'Yêu cầu xác thực hai bước',
+          ),
+        );
+      }
+
+      res.cookie('refreshToken', result.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
         path: '/',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 ngày
       });
-      
+
       return res.status(200).json(
         ApiResponse.success(
           {
-            accessToken,
-            user,
+            accessToken: result.accessToken,
+            user: result.user,
           },
           'Đăng nhập với Google thành công',
         ),
@@ -118,7 +132,7 @@ class AuthController {
 
   //[changePassword]
   static async changePassword(req: Request, res: Response, next: NextFunction) {
-    const { userId } = (req as any).user;
+const { userId } = (req as any).user;
     const { oldPassword, newPassword, confirmPassword } = req.body;
     try {
       const data = await AuthService.changePassword(userId, oldPassword, newPassword, confirmPassword);
@@ -155,6 +169,80 @@ class AuthController {
     try {
       const data = await AuthService.resetPassword(email, newPassword, resetToken);
       return res.status(200).json(ApiResponse.success(data, 'Đổi mật khẩu thành công'));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+	static async verify2FA(req: Request, res: Response, next: NextFunction) {
+    const { userId, token } = req.body;
+    try {
+			console.log("check ", userId, token)
+      const { accessToken, refreshToken, user } = await AuthService.verify2FA(userId, token);
+
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+      });
+
+      return res.status(200).json(
+        ApiResponse.success(
+          { accessToken, user },
+          'Xác thực 2FA thành công',
+        ),
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async get2FASecret(req: Request, res: Response, next: NextFunction) {
+    const { userId } = (req as any).user;
+    try {
+      if (!userId) throw new UnauthorizedError('Không tìm thấy người dùng');
+      const user = await User.findByPk(userId, { attributes: ['email'] });
+      if (!user || !user.email) throw new UnauthorizedError('Không tìm thấy email người dùng');
+      const secret = await AuthService.generate2FASecret(userId);
+      const otpauthUrl = `otpauth://totp/MyApp:${user.email}?secret=${secret}&issuer=MyApp`;
+      return res.status(200).json(
+        ApiResponse.success(
+          { qrCodeUrl: otpauthUrl, secret },
+          'Mã QR cho 2FA đã được tạo',
+        ),
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async enable2FA(req: Request, res: Response, next: NextFunction) {
+    const { token } = req.body;
+    const { userId } = (req as any).user;
+    try {
+      if (!userId){
+				throw new UnauthorizedError('Không tìm thấy người dùng');
+			} 
+      await AuthService.enable2FA(userId, token);
+      return res.status(200).json(
+        ApiResponse.success({}, '2FA được kích hoạt thành công'),
+      );
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async disable2FA(req: Request, res: Response, next: NextFunction) {
+    const { token } = req.body;
+    const { userId } = (req as any).user;
+    try {
+      if (!userId) throw new UnauthorizedError('Không tìm thấy người dùng');
+      await AuthService.disable2FA(userId, token);
+      return res.status(200).json(
+        ApiResponse.success({}, '2FA đã được tắt thành công'),
+      );
     } catch (error) {
       next(error);
     }
