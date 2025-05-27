@@ -26,7 +26,7 @@ export const seedBanners = async () => {
       startDate: new Date("2025-12-01"),
       endDate: new Date("2025-12-12")
     },
-    ...Array.from({ length: 50 }, (_, i) => ({
+    ...Array.from({ length: 20 }, (_, i) => ({
       title: `Banner ${i + 1}`,
       imageUrls: [
         `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR_umzpKRxONJfgaZoxkYMRUR5XWfYHkUxOpCoWM3dehKAa7XkV_itqdXAA9UFPBJdFFr4&usqp=CAU`,

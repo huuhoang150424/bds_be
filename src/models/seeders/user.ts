@@ -72,12 +72,11 @@ export const seedUsers = async () => {
       },
     });
 
-    const total = 10000;
+    const total = 8000;
     const professionalCount = 5000;
     const batchSize = 500;
     let currentIndex = 1;
 
-    // Mẫu selfIntroduction cho người dùng chuyên nghiệp
     const bioTemplates = [
       `Chuyên gia bất động sản tại ${faker.location.city()}, có kinh nghiệm trong lĩnh vực mua bán ${faker.helpers.arrayElement([
         "căn hộ chung cư",
@@ -95,7 +94,6 @@ export const seedUsers = async () => {
       `Chuyên viên tư vấn bất động sản, chuyên về ${faker.helpers.arrayElement(["căn hộ cao cấp", "nhà phố thương mại", "đất nền dự án"])}.`,
     ];
 
-    // Mẫu danh từ cho expertise
     const expertiseTemplates = [
       "căn hộ chung cư",
       "nhà phố",

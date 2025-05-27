@@ -23,7 +23,6 @@ export const connectDatabase = async () => {
 		// await seedNotifications();
 		// await seedTransactions();
 		// await seedUserPricings();
-
 		// await seedProfessionalUsers();
 		// await seedAppointments();
 		// console.log(" migrate successfully");

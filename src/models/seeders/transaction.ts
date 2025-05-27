@@ -6,13 +6,13 @@ import Transaction from "@models/transactions.model";
 
 export const seedTransactions = async () => {
   const users = await User.findAll({ attributes: ["id", "balance"] });
-  const transactionsPerUser = 5;
+  const transactionsPerUser = 3;
   const batchSize = 5000;
 
   let totalInserted = 0;
 
   for (const user of users) {
-    user.balance = 0; // reset trước mỗi lần seed
+    user.balance = 0; 
   
     const batch: any[] = [];
   

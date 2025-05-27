@@ -16,7 +16,7 @@ export const seedReport = async () => {
     const reportReasons = Object.values(ReportReason);
     const reportStatuses = Object.values(ProcessingStatus);
     const severityLevels = Object.values(SeverityStatus);
-    const total = 10000;
+    const total = 5000;
     const batchSize = 1000;
 
     for (let i = 0; i < total; i += batchSize) {

@@ -60,7 +60,7 @@ export const seedNotifications = async () => {
       },
     ];
 
-    const total = 1000;
+    const total = 500;
     const batchSize = 100;
 
     for (let i = 0; i < total; i += batchSize) {

@@ -22,10 +22,9 @@ export const seedAppointments = async () => {
 
     const statuses = Object.values(AppointmentStatus);
     const appointments: Partial<Appointment>[] = [];
-    const batchSize = 100; // Chia nhỏ lô để tránh quá tải
-    const maxAppointmentsPerUser = 5; // Giảm số lịch hẹn mỗi người dùng để tránh tạo quá nhiều
+    const batchSize = 100;
+    const maxAppointmentsPerUser = 3; 
 
-    // Mẫu tin nhắn liên quan đến bất động sản
     const messageTemplates = [
       (post: Post) => `Tôi muốn hẹn xem "${post.title}" vào cuối tuần này.`,
       (post: Post) => `Vui lòng sắp xếp lịch xem bất động sản "${post.title}" tại ${post.address}.`,
@@ -34,15 +33,13 @@ export const seedAppointments = async () => {
       (post: Post) => `Liên hệ để xem "${post.title}" và thảo luận giá cả.`,
     ];
 
-    // Tạo lịch hẹn
     for (const requester of users) {
-      // Chỉ tạo lịch hẹn cho người dùng có vai trò User hoặc Agent
       if (requester.roles === "Admin") continue;
 
       for (let i = 0; i < maxAppointmentsPerUser; i++) {
         let receiver = faker.helpers.arrayElement(users);
         while (receiver.id === requester.id || receiver.roles === "Admin") {
-          receiver = faker.helpers.arrayElement(users); // Đảm bảo requester và receiver khác nhau, không là Admin
+          receiver = faker.helpers.arrayElement(users); 
         }
 
         const post = faker.helpers.arrayElement(posts);
@@ -57,14 +54,13 @@ export const seedAppointments = async () => {
           appointmentTime,
           duration: faker.number.int({ min: 15, max: 60 }),
           status: faker.helpers.arrayElement(statuses),
-          message: faker.helpers.arrayElement(messageTemplates)(post), // Sử dụng mẫu tin nhắn
+          message: faker.helpers.arrayElement(messageTemplates)(post),
           createdAt,
           updatedAt: new Date(),
         });
       }
     }
 
-    // Phân lô để chèn dữ liệu
     for (let i = 0; i < appointments.length; i += batchSize) {
       const batch = appointments.slice(i, i + batchSize);
       await Appointment.bulkCreate(batch, { validate: true });
