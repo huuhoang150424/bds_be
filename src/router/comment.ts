@@ -5,11 +5,11 @@ import {validatorUpdateComment, validatorCreateComment, validatorReplyToComment 
 import { Roles } from "@models/enums";
 const Router = express.Router();
 
-Router.post('/createComment', validatorCreateComment, verifyRole([Roles.User]),  CommentController.createComment as any);
+Router.post('/createComment', validatorCreateComment, verifyRole([Roles.User, Roles.Agent]),  CommentController.createComment as any);
 Router.get('/:postId/getCommentByPostId',allowIfAuthenticatedWithRoleOrPublic([Roles.User, Roles.Agent]) , paginationMiddleware,CommentController.getCommentsByPost as any);
-Router.put('/:commentId/updateComment',validatorUpdateComment, verifyRole([Roles.User]), CommentController.updateComment as any);
-Router.delete('/:commentId/deleteComment', verifyRole([Roles.User]), CommentController.deleteComment as any);
-Router.post("/reply", validatorReplyToComment, verifyRole([Roles.User]), CommentController.replyToComment as any);
+Router.put('/:commentId/updateComment',validatorUpdateComment, verifyRole([Roles.User, Roles.Agent]), CommentController.updateComment as any);
+Router.delete('/:commentId/deleteComment', verifyRole([Roles.User, Roles.Agent]), CommentController.deleteComment as any);
+Router.post("/reply", validatorReplyToComment, verifyRole([Roles.User, Roles.Agent]), CommentController.replyToComment as any);
 Router.get("/:commentId/replies",allowIfAuthenticatedWithRoleOrPublic([Roles.User, Roles.Agent]), CommentController.getReplies as any);
 
 

@@ -384,7 +384,7 @@ class PostService {
       distinct: true,
 
       order: [
-				['isRejected', 'DESC'],
+        ['isRejected', 'DESC'],
         ['createdAt', 'DESC'],
         ['verified', 'ASC'],
       ],
@@ -630,71 +630,57 @@ class PostService {
 
   private static bufferPool: any[] = [];
 
-static async getVerifiedPosts(page: number = 1, limit: number = 1000) {
-  const cacheKey = `verified_posts_page_${page}_limit_${limit}_month_${new Date().getFullYear()}_${new Date().getMonth() + 1}`;
-  const cachedData = await CacheRepository.get(cacheKey);
-  if (cachedData && Array.isArray(cachedData)) {
-    console.log(`Returning ${cachedData.length} cached posts`);
-    return cachedData;
+  static async getVerifiedPosts(page: number = 1, limit: number = 1000) {
+    const startTime = Date.now();
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+
+    const posts = await Post.findAll({
+      where: {
+        verified: true,
+        created_at: {
+          [Op.between]: [startOfMonth, endOfMonth],
+        },
+      },
+      attributes: ['id', 'title', 'price', 'address', 'square_meters', 'priority', 'slug', 'created_at'],
+      include: [
+        {
+          model: Image,
+          attributes: ['image_url'],
+          limit: 1,
+          required: false,
+        },
+      ],
+      limit,
+      offset: (page - 1) * limit,
+      order: [['created_at', 'DESC']],
+    });
+
+    const formattedPosts = posts.map((post) => {
+      const postData = post.toJSON();
+      return {
+        ...postData,
+        image_url: postData.Image ? postData.Image.image_url : null,
+      };
+    });
+
+    console.log(`getVerifiedPosts fetched ${formattedPosts.length} posts in ${Date.now() - startTime}ms`);
+    return formattedPosts;
   }
 
-  const startTime = Date.now();
-  // Tính ngày đầu tiên và cuối cùng của tháng hiện tại
-  const now = new Date();
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
-
-  const posts = await Post.findAll({
-    where: {
-      verified: true,
-      created_at: {
-        [Op.between]: [startOfMonth, endOfMonth], 
-      },
-    },
-    attributes: [
-      'id',
-      'title',
-      'price',
-      'address',
-      'square_meters',
-      'priority',
-      'slug',
-      'created_at',
-    ],
-    include: [
-      {
-        model: Image,
-        attributes: ['image_url'],
-        limit: 1,
-        required: false, // LEFT JOIN để trả về bài đăng không có ảnh
-      },
-    ],
-    limit,
-    offset: (page - 1) * limit,
-    order: [['created_at', 'DESC']], // Sắp xếp theo bài đăng mới nhất
-  });
-
-  const formattedPosts = posts.map((post) => {
-    const postData = post.toJSON();
-    return {
-      ...postData,
-      image_url: postData.Image ? postData.Image.image_url : null,
-    };
-  });
-
-  await CacheRepository.set(cacheKey, formattedPosts, 3600); // Cache 1 giờ
-  console.log(`getVerifiedPosts took ${Date.now() - startTime}ms`);
-  return formattedPosts;
-}
-
-  static shuffleArray(array: any[]) {
-    for (let i = array.length - 1; i > 0; i--) {
+  static shuffleArray(array: any[], preserveTopN: number = 0) {
+    // Preserve the top N items to keep newest posts at the start
+    const topItems = array.slice(0, preserveTopN);
+    const shuffleItems = array.slice(preserveTopN);
+    for (let i = shuffleItems.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [array[i], array[j]] = [array[j], array[i]];
+      [shuffleItems[i], shuffleItems[j]] = [shuffleItems[j], shuffleItems[i]];
     }
+    return [...topItems, ...shuffleItems];
   }
 
-  static async getRandomPosts(totalPosts = 20) {
+  static async getRandomPosts(totalPosts = 50) {
     const allPosts = await this.getVerifiedPosts();
     if (!Array.isArray(allPosts)) {
       throw new BadRequestError('getVerifiedPosts() did not return an array');
@@ -704,22 +690,63 @@ static async getVerifiedPosts(page: number = 1, limit: number = 1000) {
       priorityGroups[post.priority].push(post);
     });
 
+    Object.keys(priorityGroups).forEach((key) => {
+      priorityGroups[Number(key)].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    });
+
     const finalPosts: any[] = [];
     const priorityLevels = [3, 2, 1, 0];
+
+    const distribution: {
+      3: number;
+      2: number;
+      1: number;
+      0: number;
+    } = {
+      3: 0.5,
+      2: 0.3,
+      1: 0.15,
+      0: 0.05,
+    };
+
     for (const level of priorityLevels) {
-      const needed = totalPosts - finalPosts.length;
-      if (needed <= 0) break;
-      finalPosts.push(...priorityGroups[level].slice(0, needed));
+      const maxPosts = Math.floor(totalPosts * distribution[level as keyof typeof distribution]);
+      const selectedPosts = priorityGroups[level].slice(0, maxPosts);
+      finalPosts.push(...selectedPosts);
     }
 
-    this.shuffleArray(finalPosts);
-    return finalPosts;
+    const selectedCounts = finalPosts.reduce(
+      (acc, post) => {
+        acc[post.priority] = (acc[post.priority] || 0) + 1;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
+    console.log('Selected posts by priority:', selectedCounts);
+
+    const shuffledPosts = this.shuffleArray(finalPosts, 5);
+    console.log(`getRandomPosts selected ${shuffledPosts.length} posts`);
+
+    return shuffledPosts;
   }
 
   static async getPostsForClient(page: number, limit: number) {
-    if (this.bufferPool.length === 0) {
-      this.bufferPool = await this.getRandomPosts(35);
+    if (page < 1 || limit < 1) {
+      throw new BadRequestError('Invalid page or limit');
     }
+
+    this.bufferPool = await this.getRandomPosts(50);
+    console.log(`getPostsForClient bufferPool size: ${this.bufferPool.length}`);
+
+    console.log(
+      'Top 5 posts in bufferPool:',
+      this.bufferPool.slice(0, 5).map((p) => ({
+        id: p.id,
+        priority: p.priority,
+        created_at: p.created_at,
+      })),
+    );
+
     return this.paginateData(this.bufferPool, page, limit);
   }
 
@@ -737,10 +764,10 @@ static async getVerifiedPosts(page: number = 1, limit: number = 1000) {
   }
 
   static async getPostOutstanding() {
-    const cachedData = await CacheRepository.get('outstanding_posts');
-    if (cachedData) {
-      return JSON.parse(cachedData);
-    }
+    // const cachedData = await CacheRepository.get('outstanding_posts');
+    // if (cachedData) {
+    //   return JSON.parse(cachedData);
+    // }
     const posts = await Post.findAll({
       attributes: [
         'id',
@@ -778,7 +805,7 @@ static async getVerifiedPosts(page: number = 1, limit: number = 1000) {
       ],
       limit: 20,
     });
-    await CacheRepository.set('outstanding_posts', posts, 300);
+    // await CacheRepository.set('outstanding_posts', posts, 300);
     return posts;
   }
 
@@ -932,117 +959,117 @@ static async getVerifiedPosts(page: number = 1, limit: number = 1000) {
       limit,
     });
   }
-static async filterPosts(query: any, page: number = 1, limit: number = 10, offset: number) {
-  const {
-    keyword,
-    tagIds,
-    minPrice,
-    maxPrice,
-    floor,
-    minSquareMeters,
-    maxSquareMeters,
-    directions,
-    bedrooms,
-    bathrooms,
-    propertyTypeIds,
-    listingTypeIds,
-    sortBy,
-    order,
-    ratings,
-    isProfessional,
-    status,
-    isFurniture,
-  } = query;
-  const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
-    if (!value) return [];
-    if (Array.isArray(value)) return value.map(parser);
-    return [parser(value)];
-  };
-  const whereCondition: any = {};
-  if (status) {
-    const statusArray = toArray(status, String);
-    if (statusArray.length > 0) {
-      whereCondition.status = { [Op.in]: statusArray };
+  static async filterPosts(query: any, page: number = 1, limit: number = 10, offset: number) {
+    const {
+      keyword,
+      tagIds,
+      minPrice,
+      maxPrice,
+      floor,
+      minSquareMeters,
+      maxSquareMeters,
+      directions,
+      bedrooms,
+      bathrooms,
+      propertyTypeIds,
+      listingTypeIds,
+      sortBy,
+      order,
+      ratings,
+      isProfessional,
+      status,
+      isFurniture,
+    } = query;
+    const toArray = <T>(value: any, parser: (v: any) => T): T[] => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value.map(parser);
+      return [parser(value)];
+    };
+    const whereCondition: any = {};
+    if (status) {
+      const statusArray = toArray(status, String);
+      if (statusArray.length > 0) {
+        whereCondition.status = { [Op.in]: statusArray };
+      }
     }
-  }
-  if (keyword) {
-    whereCondition[Op.or] = [
-      { title: { [Op.like]: `%${keyword}%` } },
-      { description: { [Op.like]: `%${keyword}%` } },
-      { address: { [Op.like]: `%${keyword}%` } },
-    ];
-  }
-  if (minPrice || maxPrice) {
-    whereCondition.price = {
-      ...(minPrice ? { [Op.gte]: Number(minPrice) } : {}),
-      ...(maxPrice ? { [Op.lte]: Number(maxPrice) } : {}),
-    };
-  }
-  if (minSquareMeters || maxSquareMeters) {
-    whereCondition.squareMeters = {
-      ...(minSquareMeters ? { [Op.gte]: Number(minSquareMeters) } : {}),
-      ...(maxSquareMeters ? { [Op.lte]: Number(maxSquareMeters) } : {}),
-    };
-  }
-  const directionArray = toArray(directions, String);
-  if (directionArray.length > 0) {
-    whereCondition.direction = { [Op.in]: directionArray };
-  }
-  const bedroomArray = toArray(bedrooms, Number);
-  if (bedroomArray.length > 0) {
-    whereCondition.bedroom = { [Op.in]: bedroomArray };
-  }
-  const bathroomArray = toArray(bathrooms, Number);
-  if (bathroomArray.length > 0) {
-    whereCondition.bathroom = { [Op.in]: bathroomArray };
-  }
-  if (floor) {
-    whereCondition.floor = Number(floor);
-  }
-  if (typeof isFurniture !== 'undefined') {
-    whereCondition.isFurniture = isFurniture === 'true';
-  }
-  const includeConditions: any = [
-    { model: Image, attributes: ['image_url'] },
-    {
-      model: User,
-      attributes: ['fullname', 'id', 'phone', 'isProfessional'],
-      where: isProfessional === 'true' ? { isProfessional: true } : undefined,
-      required: isProfessional === 'true' ? true : false,
-    },
-  ];
-  const ratingArray = toArray(ratings, Number);
-  if (ratingArray.length > 0) {
-    includeConditions.push({
-      model: Rating,
-      where: {
-        rating: { [Op.in]: ratingArray },
+    if (keyword) {
+      whereCondition[Op.or] = [
+        { title: { [Op.like]: `%${keyword}%` } },
+        { description: { [Op.like]: `%${keyword}%` } },
+        { address: { [Op.like]: `%${keyword}%` } },
+      ];
+    }
+    if (minPrice || maxPrice) {
+      whereCondition.price = {
+        ...(minPrice ? { [Op.gte]: Number(minPrice) } : {}),
+        ...(maxPrice ? { [Op.lte]: Number(maxPrice) } : {}),
+      };
+    }
+    if (minSquareMeters || maxSquareMeters) {
+      whereCondition.squareMeters = {
+        ...(minSquareMeters ? { [Op.gte]: Number(minSquareMeters) } : {}),
+        ...(maxSquareMeters ? { [Op.lte]: Number(maxSquareMeters) } : {}),
+      };
+    }
+    const directionArray = toArray(directions, String);
+    if (directionArray.length > 0) {
+      whereCondition.direction = { [Op.in]: directionArray };
+    }
+    const bedroomArray = toArray(bedrooms, Number);
+    if (bedroomArray.length > 0) {
+      whereCondition.bedroom = { [Op.in]: bedroomArray };
+    }
+    const bathroomArray = toArray(bathrooms, Number);
+    if (bathroomArray.length > 0) {
+      whereCondition.bathroom = { [Op.in]: bathroomArray };
+    }
+    if (floor) {
+      whereCondition.floor = Number(floor);
+    }
+    if (typeof isFurniture !== 'undefined') {
+      whereCondition.isFurniture = isFurniture === 'true';
+    }
+    const includeConditions: any = [
+      { model: Image, attributes: ['image_url'] },
+      {
+        model: User,
+        attributes: ['fullname', 'id', 'phone', 'isProfessional'],
+        where: isProfessional === 'true' ? { isProfessional: true } : undefined,
+        required: isProfessional === 'true' ? true : false,
       },
-      required: true,
-    });
-  }
-  
-  // Fixed tag filtering
-  const tagIdArray = toArray(tagIds, String);
-  if (tagIdArray.length > 0) {
-    whereCondition.id = {
-      [Op.in]: sequelize.literal(`(
+    ];
+    const ratingArray = toArray(ratings, Number);
+    if (ratingArray.length > 0) {
+      includeConditions.push({
+        model: Rating,
+        where: {
+          rating: { [Op.in]: ratingArray },
+        },
+        required: true,
+      });
+    }
+
+    // Fixed tag filtering
+    const tagIdArray = toArray(tagIds, String);
+    if (tagIdArray.length > 0) {
+      whereCondition.id = {
+        [Op.in]: sequelize.literal(`(
         SELECT tp.postId 
         FROM tag_posts AS tp
-        WHERE tp.tagId IN (${tagIdArray.map(id => `'${id}'`).join(',')})
+        WHERE tp.tagId IN (${tagIdArray.map((id) => `'${id}'`).join(',')})
         AND tp.postId IS NOT NULL
         GROUP BY tp.postId
         HAVING COUNT(DISTINCT tp.tagId) = ${tagIdArray.length}
-      )`)
-    };
-  }
-  
-  const propertyTypeNameArray = toArray(propertyTypeIds, String);
-  const listingTypeEnumArray = toArray(listingTypeIds, String);
-  if (listingTypeEnumArray.length > 0) {
-    whereCondition.id = {
-      ...whereCondition.id,
-      [Op.in]: sequelize.literal(`(
+      )`),
+      };
+    }
+
+    const propertyTypeNameArray = toArray(propertyTypeIds, String);
+    const listingTypeEnumArray = toArray(listingTypeIds, String);
+    if (listingTypeEnumArray.length > 0) {
+      whereCondition.id = {
+        ...whereCondition.id,
+        [Op.in]: sequelize.literal(`(
         SELECT propertyType.post_id 
         FROM property_types AS propertyType
         INNER JOIN listing_types AS listingType 
@@ -1050,64 +1077,64 @@ static async filterPosts(query: any, page: number = 1, limit: number = 10, offse
         AND listingType.listing_type IN (${listingTypeEnumArray.map((type) => `'${type}'`).join(',')})
         WHERE propertyType.post_id IS NOT NULL
       )`),
-    };
-  }
-  if (propertyTypeNameArray.length > 0) {
-    includeConditions.push({
-      model: PropertyType,
-      where: {
-        slug: { [Op.in]: propertyTypeNameArray },
-      },
-      required: true,
-    });
-  }
+      };
+    }
+    if (propertyTypeNameArray.length > 0) {
+      includeConditions.push({
+        model: PropertyType,
+        where: {
+          slug: { [Op.in]: propertyTypeNameArray },
+        },
+        required: true,
+      });
+    }
 
-  let orderCondition: any = [['createdAt', 'DESC']];
-  if (sortBy) {
-    const orderType = order === 'asc' ? 'ASC' : 'DESC';
-    orderCondition = [[sortBy, orderType]];
-  }
-  
-  // Handle case where we have both tag filter and listing type filter
-  if (tagIdArray.length > 0 && listingTypeEnumArray.length > 0) {
-    whereCondition.id = {
-      [Op.and]: [
-        sequelize.literal(`id IN (
+    let orderCondition: any = [['createdAt', 'DESC']];
+    if (sortBy) {
+      const orderType = order === 'asc' ? 'ASC' : 'DESC';
+      orderCondition = [[sortBy, orderType]];
+    }
+
+    // Handle case where we have both tag filter and listing type filter
+    if (tagIdArray.length > 0 && listingTypeEnumArray.length > 0) {
+      whereCondition.id = {
+        [Op.and]: [
+          sequelize.literal(`id IN (
           SELECT tp.postId 
           FROM tag_posts AS tp
-          WHERE tp.tagId IN (${tagIdArray.map(id => `'${id}'`).join(',')})
+          WHERE tp.tagId IN (${tagIdArray.map((id) => `'${id}'`).join(',')})
           AND tp.postId IS NOT NULL
           GROUP BY tp.postId
           HAVING COUNT(DISTINCT tp.tagId) = ${tagIdArray.length}
         )`),
-        sequelize.literal(`id IN (
+          sequelize.literal(`id IN (
           SELECT propertyType.post_id 
           FROM property_types AS propertyType
           INNER JOIN listing_types AS listingType 
           ON propertyType.listing_type_id = listingType.id
           AND listingType.listing_type IN (${listingTypeEnumArray.map((type) => `'${type}'`).join(',')})
           WHERE propertyType.post_id IS NOT NULL
-        )`)
-      ]
+        )`),
+        ],
+      };
+    }
+
+    const { count, rows } = await Post.findAndCountAll({
+      where: whereCondition,
+      include: includeConditions,
+      limit,
+      offset: offset || (page - 1) * limit,
+      order: orderCondition,
+      distinct: true,
+    });
+
+    return {
+      total: count,
+      posts: rows,
+      page,
+      totalPages: Math.ceil(count / limit),
     };
   }
-
-  const { count, rows } = await Post.findAndCountAll({
-    where: whereCondition,
-    include: includeConditions,
-    limit,
-    offset: offset || (page - 1) * limit,
-    order: orderCondition,
-    distinct: true,
-  });
-
-  return {
-    total: count,
-    posts: rows,
-    page,
-    totalPages: Math.ceil(count / limit),
-  };
-}
 
   static async getListingTypes(): Promise<{ id: string; listingType: string }[]> {
     const listingTypes = await ListingType.findAll({
@@ -1206,78 +1233,78 @@ static async filterPosts(query: any, page: number = 1, limit: number = 10, offse
     return posts.map((post) => post.id);
   }
 
-static async processAiApprovalQueue(): Promise<ApprovalResult[]> {
-  const results: ApprovalResult[] = [];
-  const batch = await redisClient.lRange(this.QUEUE_KEY, 0, this.MAX_POSTS_PER_RUN - 1);
+  static async processAiApprovalQueue(): Promise<ApprovalResult[]> {
+    const results: ApprovalResult[] = [];
+    const batch = await redisClient.lRange(this.QUEUE_KEY, 0, this.MAX_POSTS_PER_RUN - 1);
 
-  if (batch.length === 0) {
-    return results;
-  }
-
-  for (let i = 0; i < batch.length; i++) {
-    const postData = batch[i];
-    let post;
-    try {
-      post = JSON.parse(postData);
-    } catch (parseError) {
-      console.error(`Lỗi parse dữ liệu bài đăng từ queue:`, postData, parseError);
-      continue;
+    if (batch.length === 0) {
+      return results;
     }
 
-    console.log(`Đang xử lý bài đăng ${post.id}`);
-    const approvalResult = await this.evaluatePostWithAI(post, 0);
-    console.log(`Kết quả đánh giá AI cho bài đăng ${post.id}:`, approvalResult);
-
-    try {
-      const [affectedRows] = await Post.update(
-        {
-          verified: approvalResult.approved,
-          isRejected: !approvalResult.approved,
-        },
-        { where: { id: post.id } },
-      );
-      if (affectedRows === 0) {
-        console.warn(`Không có bản ghi nào được cập nhật cho bài đăng ${post.id}. Có thể bài đăng không tồn tại.`);
+    for (let i = 0; i < batch.length; i++) {
+      const postData = batch[i];
+      let post;
+      try {
+        post = JSON.parse(postData);
+      } catch (parseError) {
+        console.error(`Lỗi parse dữ liệu bài đăng từ queue:`, postData, parseError);
+        continue;
       }
-    } catch (updateError) {
-      console.error(`Lỗi khi cập nhật bài đăng ${post.id}:`, updateError);
+
+      console.log(`Đang xử lý bài đăng ${post.id}`);
+      const approvalResult = await this.evaluatePostWithAI(post, 0);
+      console.log(`Kết quả đánh giá AI cho bài đăng ${post.id}:`, approvalResult);
+
+      try {
+        const [affectedRows] = await Post.update(
+          {
+            verified: approvalResult.approved,
+            isRejected: !approvalResult.approved,
+          },
+          { where: { id: post.id } },
+        );
+        if (affectedRows === 0) {
+          console.warn(`Không có bản ghi nào được cập nhật cho bài đăng ${post.id}. Có thể bài đăng không tồn tại.`);
+        }
+      } catch (updateError) {
+        console.error(`Lỗi khi cập nhật bài đăng ${post.id}:`, updateError);
+      }
+
+      results.push(approvalResult);
+
+      io.emit('approvalProgress', {
+        processed: i + 1,
+        total: batch.length,
+        progress: ((i + 1) / batch.length) * 100,
+      });
+
+      if (i < batch.length - 1) {
+        await this.delay(this.REQUEST_INTERVAL);
+      }
     }
 
-    results.push(approvalResult);
+    await redisClient.lTrim(this.QUEUE_KEY, batch.length, -1);
 
-    io.emit('approvalProgress', {
-      processed: i + 1,
-      total: batch.length,
-      progress: ((i + 1) / batch.length) * 100,
+    const batchId = Date.now().toString();
+    await CacheRepository.set(`${this.RESULTS_KEY_PREFIX}${batchId}`, results, 3600);
+
+    const posts = await Post.findAll({
+      where: { id: results.map((r) => r.postId) },
+      include: [{ model: User }],
     });
 
-    if (i < batch.length - 1) {
-      await this.delay(this.REQUEST_INTERVAL);
+    for (const result of results) {
+      const post = posts.find((p) => p.id === result.postId);
+      if (post && post.user) {
+        const message = result.approved
+          ? `Bài đăng "${post.title}" của bạn đã được duyệt thành công.`
+          : `Bài đăng "${post.title}" của bạn đã bị từ chối. Lý do: ${result.reason || 'Không xác định'}`;
+        await NotificationService.createNotification(post.userId, message);
+      }
     }
+
+    return results;
   }
-
-  await redisClient.lTrim(this.QUEUE_KEY, batch.length, -1);
-
-  const batchId = Date.now().toString();
-  await CacheRepository.set(`${this.RESULTS_KEY_PREFIX}${batchId}`, results, 3600);
-
-  const posts = await Post.findAll({
-    where: { id: results.map((r) => r.postId) },
-    include: [{ model: User }],
-  });
-
-  for (const result of results) {
-    const post = posts.find((p) => p.id === result.postId);
-    if (post && post.user) {
-      const message = result.approved
-        ? `Bài đăng "${post.title}" của bạn đã được duyệt thành công.`
-        : `Bài đăng "${post.title}" của bạn đã bị từ chối. Lý do: ${result.reason || 'Không xác định'}`;
-      await NotificationService.createNotification(post.userId, message);
-    }
-  }
-
-  return results;
-}
 
   // Đánh giá bài đăng với AI
   private static async evaluatePostWithAI(post: any, retryCount: number = 0): Promise<ApprovalResult> {

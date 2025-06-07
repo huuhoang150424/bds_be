@@ -72,8 +72,8 @@ export const seedUsers = async () => {
       },
     });
 
-    const total = 8000;
-    const professionalCount = 5000;
+    const total = 4000;
+    const professionalCount = 2000;
     const batchSize = 500;
     let currentIndex = 1;
 

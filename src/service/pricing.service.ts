@@ -266,30 +266,27 @@ class PricingService {
     }
   }
 
-  static async getPurchasedPricings(userId: string, page: number, limit: number) {
-    const offset = (page - 1) * limit;
-    const { rows, count } = await UserPricing.findAndCountAll({
-      where: { userId },
-      include: [
-        {
-          model: Pricing,
-          attributes: ['id', 'name', 'price', 'displayDay', 'boostDays', 'expiredDay'],
-        },
-      ],
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']],
-    });
-    if (count === 0) {
-      throw new NotFoundError('Không tìm thấy gói nào đã mua.');
-    }
-    return {
-      totalItems: count,
-      totalPages: Math.ceil(count / limit),
-      currentPage: page,
-      data: rows,
-    };
-  }
+	static async getPurchasedPricings(userId: string, page: number, limit: number) {
+		const offset = (page - 1) * limit;
+		const { rows, count } = await UserPricing.findAndCountAll({
+			where: { userId },
+			include: [
+				{
+					model: Pricing,
+					attributes: ['id', 'name', 'price', 'displayDay', 'boostDays', 'expiredDay'],
+				},
+			],
+			limit,
+			offset,
+			order: [['createdAt', 'DESC']],
+		});
+		return {
+			totalItems: count,
+			totalPages: Math.ceil(count / limit) || 1,
+			currentPage: page,
+			data: rows,
+		};
+	}
 
 	static async cancelPricing(userId: string) {
     const transaction = await sequelize.transaction();

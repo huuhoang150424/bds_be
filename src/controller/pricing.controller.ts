@@ -97,6 +97,7 @@ class PricingController {
 	static async getPurchasedPricings(req: Request, res: Response, next: NextFunction) {
     const { userId } = (req as any).user;
 		const { page, limit, offset } = (req as any).pagination;
+		console.log('userId ', userId)
     try {
       const purchasedPricings = await PricingService.getPurchasedPricings(
         userId,

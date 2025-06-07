@@ -11,8 +11,7 @@ export enum SeverityStatus {
   Feedback = "góp ý",
   Suggestion = "đề xuất",
   Bug = "lỗi hệ thống",
-  Inappropriate = "nội dung không phù hợp",
-  AIFlagged = "AI phát hiện",
+  Inappropriate = "nội dung không phù hợp"
 }
 
 export enum ReportReason  {
